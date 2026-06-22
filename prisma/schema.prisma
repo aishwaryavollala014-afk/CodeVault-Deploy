@@ -1,0 +1,54 @@
+// CodeVault data model
+// Tracks users, their connected coding platforms, and synced problems.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(cuid())
+  githubLogin String       @unique
+  email       String?
+  createdAt   DateTime     @default(now())
+  connections Connection[]
+  problems    Problem[]
+}
+
+// Path B: a one-time authorized connection to a coding platform.
+model Connection {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  platform     String // "leetcode" | "codeforces" | "codechef" | "hackerrank"
+  username     String // public handle, used for stats (Path A)
+  sessionToken String? // authorized session for code fetch (Path B)
+  isActive     Boolean  @default(true)
+  lastSyncedAt DateTime?
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, platform])
+}
+
+// A single solved problem that has been (or will be) synced to GitHub.
+model Problem {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  platform    String
+  number      String // e.g. "369"
+  title       String
+  slug        String
+  difficulty  String? // "Easy" | "Medium" | "Hard"
+  topics      String? // comma-separated tags
+  language    String?
+  solvedAt    DateTime?
+  syncedToGit Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, platform, slug])
+}
