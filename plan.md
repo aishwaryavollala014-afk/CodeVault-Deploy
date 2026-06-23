@@ -84,15 +84,15 @@ Build bottom‑up so each layer can rely on the one below it.
 |------|---------------|
 | `backend/src/services/auth.service.ts` | Exchange the GitHub OAuth code for a token, fetch the GitHub profile, upsert the User, create a session/JWT. |
 | `backend/src/services/user.service.ts` | Fetch/update a user and their connections from the DB via Prisma. |
-| `backend/src/services/sync.service.ts` | The orchestrator: for a user's active connections, fetch recent accepted submissions (platform service), diff against already‑synced `Problem` rows, push new ones via `github.service`, regenerate the index README, and update `lastSyncedAt`. |
+| `backend/src/services/sync.service.ts` | The orchestrator: for a user's active connections, fetch recent accepted submissions (platform service), fetch each problem's statement, diff against already‑synced `Problem` rows, and for each new one push a folder named by the **problem number** containing `question.md` + `solution.<ext>` via `github.service`, regenerate the index README, and update `lastSyncedAt`. |
 | `backend/src/services/stats.service.ts` | For each connection, call the platform service's stats function, then merge into a unified totals object (by difficulty, by topic, per platform, streaks). |
 | `backend/src/services/platforms/index.ts` | A registry/factory that maps a platform name string to its service, plus a shared `PlatformService` interface (`getStats`, `getRecentSubmissions`). |
-| `backend/src/services/platforms/leetcode.service.ts` | `getStats(username)` via public GraphQL. `getRecentSubmissions(session)` via authorized GraphQL, then fetch each submission's source code. Handle expired sessions explicitly. |
+| `backend/src/services/platforms/leetcode.service.ts` | `getStats(username)` via public GraphQL. `getRecentSubmissions(session)` via authorized GraphQL, then fetch each submission's source code. `getQuestion(slug)` via public GraphQL to fetch the problem statement (title, difficulty, tags, content) for `question.md`. Handle expired sessions explicitly. |
 | `backend/src/services/platforms/codeforces.service.ts` | `getStats(handle)` via official `user.info` + `user.status` API; count distinct solved problems. (No source code available.) |
 | `backend/src/services/platforms/codechef.service.ts` | `getStats(username)` by parsing the public profile page; return solved count, rating. |
 | `backend/src/services/platforms/hackerrank.service.ts` | `getStats(username)` from the public profile/badges; return solved/badge counts. |
-| `backend/src/services/github/github.service.ts` | Using the GitHub REST API + token: ensure the target repo exists, create/update a solution file at the organized path, and commit it. |
-| `backend/src/services/github/readme.generator.ts` | Take all synced problems and render a sorted Markdown index table (number, title, type, difficulty, language, date, link); return the README string to commit. |
+| `backend/src/services/github/github.service.ts` | Using the GitHub REST API + token: ensure the target repo exists, then for a problem create/update the folder named by its **problem number** with `question.md` (statement) and `solution.<ext>` (the user's code), and commit them. |
+| `backend/src/services/github/readme.generator.ts` | Take all synced problems and render a sorted Markdown index table (number → folder link, title, type, difficulty, language, date, problem link); return the README string to commit at the repo root. |
 
 ## Middlewares
 
@@ -118,7 +118,7 @@ Build bottom‑up so each layer can rely on the one below it.
 | `backend/src/lib/logger.ts` | Configure and export a pino logger using `env.LOG_LEVEL`. |
 | `backend/src/lib/httpClient.ts` | Export a pre‑configured axios instance (base timeouts, retry, default headers) used by platform/github services. |
 | `backend/src/types/index.ts` | Shared backend types barrel (e.g. `AuthedRequest`, common response shapes). |
-| `backend/src/types/platform.types.ts` | Interfaces: `PlatformStats`, `Submission`, `SolutionToSync`, `PlatformName` union. |
+| `backend/src/types/platform.types.ts` | Interfaces: `PlatformStats`, `Submission`, `Question` (statement for `question.md`), `SolutionToSync` (number, slug, language, code, question), `PlatformName` union. |
 | `backend/src/utils/errors.ts` | Typed error classes: `AppError` (base, with statusCode), `NotFoundError`, `UnauthorizedError`, `ValidationError`, `ExpiredSessionError`. |
 | `backend/src/utils/helpers.ts` | Small pure helpers: pad problem numbers, slugify titles, map language → file extension, date formatting. |
 | `backend/src/validators/auth.validator.ts` | Zod schemas for auth request bodies (OAuth callback params). |
@@ -149,7 +149,7 @@ Build bottom‑up so each layer can rely on the one below it.
 | `frontend/src/app/globals.css` | Tailwind directives + base global styles (dark theme background/text). |
 | `frontend/src/app/(auth)/login/page.tsx` | Login screen with a "Sign in with GitHub" button that hits the backend auth route. |
 | `frontend/src/app/connect/page.tsx` | Form to add a platform username and (optionally) authorize a session; submits via `usePlatforms`. |
-| `frontend/src/app/dashboard/page.tsx` | Dashboard: use `useStats` + `usePlatforms`, render `StatsGrid`, `PlatformList`, `ActivityHeatmap`. |
+| `frontend/src/app/dashboard/page.tsx` | Dashboard: use `useStats` + `usePlatforms`, render the full analytics — `StatsGrid` (totals, difficulty, language), topic strengths, `PlatformList` (rankings + reconnect), `ActivityHeatmap`, and GitHub sync status. |
 
 ## Components
 
