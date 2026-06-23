@@ -68,10 +68,37 @@ CodeVault/
 
 ## ✨ Core features
 
-- 📊 **Unified stats dashboard** — total solved, difficulty & topic breakdown, streaks, rankings, heatmap.
-- 🔄 **Auto‑sync to GitHub** — solutions organized into folders + a README index (problem no, title, type, difficulty, language, date, link).
+- 📊 **Unified analytics dashboard** — every platform in one view: total solved, difficulty & topic breakdown, language usage, streaks, rankings, activity heatmap, and progress over time.
+- 🔄 **Auto‑sync to GitHub** — the moment you solve a problem, it is pushed to your linked repo as a **folder named by its problem number**, holding the **question** and your **answer**, plus an auto‑updated README index.
 - 🔐 **Connect once, automate forever** — authorize a platform a single time; syncing then runs on a schedule.
 - 🤖 **(Planned) AI layer** — auto‑explain solutions, auto‑tag problem type, recommend the next problem by your weakest topic.
+
+---
+
+## 📂 How your synced repo looks
+
+When you solve a problem, CodeVault auto‑commits it to your linked repo (for example `LeetCodeQuestions`). **Each problem becomes a folder named by its problem number**, containing both the **question** and your **answer**:
+
+```
+LeetCodeQuestions/
+├── README.md                  # auto-generated index of every solved problem
+├── 0001/
+│   ├── question.md            # the problem statement
+│   └── solution.py            # your accepted solution
+├── 0369/
+│   ├── question.md
+│   └── solution.cpp
+└── 0704/
+    ├── question.md
+    └── solution.java
+```
+
+- **Folder name = problem number** (zero‑padded) so problems sort naturally.
+- `question.md` — the problem statement: title, difficulty, topic tags, link, and description.
+- `solution.<ext>` — your accepted code, in the language you solved it in.
+- The top‑level `README.md` is an auto‑updated table indexing every solved problem.
+
+> So when someone searches "LeetCode 369", they land on `0369/` and instantly see the question **and** exactly how you solved it.
 
 ---
 
