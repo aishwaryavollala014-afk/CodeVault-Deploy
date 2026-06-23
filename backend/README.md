@@ -228,15 +228,15 @@ backend/
 |------|---------|
 | `auth.service.ts` | Authentication & token handling logic. |
 | `user.service.ts` | User CRUD and settings logic. |
-| `sync.service.ts` | Orchestrates: fetch new submissions → diff against DB → push via GitHub. |
-| `stats.service.ts` | Aggregates stats across all connected platforms. |
+| `sync.service.ts` | Orchestrates: fetch new submissions → fetch the question statement → diff against DB → push the `<number>/question.md` + `<number>/solution.<ext>` folder via GitHub → regenerate the index README. |
+| `stats.service.ts` | Aggregates stats across all connected platforms for the dashboard. |
 | `platforms/index.ts` | Registry that returns the right platform service by name. |
-| `platforms/leetcode.service.ts` | LeetCode public stats + authorized submission/code fetch. |
+| `platforms/leetcode.service.ts` | LeetCode public stats + authorized submission/code fetch + public question‑statement fetch. |
 | `platforms/codeforces.service.ts` | Codeforces stats via official API. |
 | `platforms/codechef.service.ts` | CodeChef stats (public profile). |
 | `platforms/hackerrank.service.ts` | HackerRank stats (public profile). |
-| `github/github.service.ts` | Commits & pushes solution files via the GitHub REST API. |
-| `github/readme.generator.ts` | Builds the synced‑repo README index table. |
+| `github/github.service.ts` | Creates the per‑problem folder (named by problem number) and commits `question.md` + `solution.<ext>` via the GitHub REST API. |
+| `github/readme.generator.ts` | Builds the synced‑repo README index table (number, title, type, difficulty, language, date, link). |
 
 ### Middlewares / Jobs / Lib / Utils / Types / Validators
 | File | Purpose |
@@ -272,6 +272,22 @@ backend/
 | `GET`  | `/api/platforms` | List the user's connections. |
 | `POST` | `/api/sync` | Trigger a sync run now. |
 | `GET`  | `/api/stats` | Aggregated multi‑platform dashboard stats. |
+
+---
+
+## 📂 Synced repo layout (output)
+
+The backend writes solutions into the user's linked GitHub repo with **one folder per problem, named by its problem number**:
+
+```
+<problem-number>/
+├── question.md          # statement: title, difficulty, tags, link, description
+└── solution.<ext>       # the user's accepted code (ext from the language)
+```
+
+- `sync.service.ts` builds this for each new accepted submission.
+- `github.service.ts` creates/updates the two files and commits them.
+- `readme.generator.ts` regenerates the top‑level index README after each run.
 
 ---
 
