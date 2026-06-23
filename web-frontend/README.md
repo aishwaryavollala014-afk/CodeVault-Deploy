@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🎨 CodeVault — Frontend
+# 🎨 CodeVault — Web Frontend
 
-### The dashboard UI for CodeVault.
+### The analytics website UI for CodeVault.
 
-A **Next.js (App Router) + TypeScript + Tailwind CSS** application that lets users connect their coding platforms, view unified stats, and manage GitHub sync. It talks to the [backend](../backend) over a REST API.
+A **Next.js (App Router) + TypeScript + Tailwind CSS** application that lets users connect their coding platforms, view unified stats, share a public profile, and manage GitHub sync. It talks to **two backends** over REST: the [web‑backend](../web-backend) for auth/stats/profiles, and the [git‑service](../git-service) for GitHub sync.
 
 </div>
 
@@ -26,7 +26,11 @@ A **Next.js (App Router) + TypeScript + Tailwind CSS** application that lets use
 
 ## 🧩 Overview
 
-The frontend is a **pure presentation layer** — it renders UI and calls the backend API. It never talks to the database or external platforms directly; all of that lives in the backend. This keeps the UI fast, simple, and easy to test.
+The frontend is a **pure presentation layer** — it renders UI and calls the two backend APIs. It never talks to the database or external platforms directly; all of that lives in the backends. This keeps the UI fast, simple, and easy to test.
+
+It calls **two services**:
+- **web‑backend** (`NEXT_PUBLIC_API_URL`) — auth, stats, public profiles.
+- **git‑service** (`NEXT_PUBLIC_GIT_SERVICE_URL`) — connect for sync, trigger sync, sync status.
 
 Main screens:
 - **Landing** (`/`) — intro + call to action.
@@ -165,7 +169,7 @@ frontend/
 | `next.config.mjs` | Next.js settings. |
 | `tailwind.config.ts` | Theme tokens & which files Tailwind scans. |
 | `postcss.config.mjs` | Runs Tailwind + autoprefixer. |
-| `.env.example` | Public env vars (e.g. `NEXT_PUBLIC_API_URL`). |
+| `.env.example` | Public env vars: `NEXT_PUBLIC_API_URL` (web-backend) and `NEXT_PUBLIC_GIT_SERVICE_URL` (git-service). |
 | `.gitignore` | Frontend-specific ignores. |
 
 ### Routes (`src/app`)
@@ -203,9 +207,11 @@ frontend/
 | `features/platforms/types.ts` | TypeScript shapes for platforms. |
 | `features/profile/api.ts` | Fetch a user's public total analysis by username (no auth). |
 | `features/profile/types.ts` | TypeScript shapes for the public profile. |
+| `features/sync/api.ts` | Calls the **git-service**: connect for sync, trigger a sync, read sync status. |
+| `features/sync/types.ts` | TypeScript shapes for sync requests/status. |
 | `hooks/useStats.ts` | Hook to load & cache dashboard stats. |
 | `hooks/usePlatforms.ts` | Hook to load & manage connections. |
-| `lib/api-client.ts` | Single configured HTTP client (base URL, auth header). |
+| `lib/api-client.ts` | Configured HTTP client supporting **two base URLs** (web-backend + git-service); attaches auth header, parses JSON, throws typed errors. |
 | `lib/utils.ts` | Small helpers (date/number formatting, classnames). |
 | `types/index.ts` | Shared type barrel. |
 | `constants/platforms.ts` | Platform metadata (name, icon, brand color). |
@@ -252,7 +258,8 @@ cd frontend
 npm install
 
 # 2. Configure
-cp .env.example .env.local     # set NEXT_PUBLIC_API_URL=http://localhost:4000
+cp .env.example .env.local     # NEXT_PUBLIC_API_URL=http://localhost:4000
+                               # NEXT_PUBLIC_GIT_SERVICE_URL=http://localhost:5000
 
 # 3. Run
 npm run dev                    # open http://localhost:3000
