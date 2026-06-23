@@ -67,6 +67,7 @@ Build bottom‑up so each layer can rely on the one below it.
 | `backend/src/routes/platform.routes.ts` | `POST /connect` (with validator), `GET /` (list), `DELETE /:id` → platform controller. |
 | `backend/src/routes/sync.routes.ts` | `POST /` to trigger a sync run (auth‑protected) → sync controller. |
 | `backend/src/routes/stats.routes.ts` | `GET /` returns aggregated dashboard stats → stats controller. |
+| `backend/src/routes/public.routes.ts` | `GET /:username` returns public total analysis (no auth) → public controller. Powers the shareable profile website. |
 
 ## Controllers (HTTP only)
 
@@ -77,6 +78,7 @@ Build bottom‑up so each layer can rely on the one below it.
 | `backend/src/controllers/platform.controller.ts` | Connect a platform, list connections, remove one — delegating to `platform`/`user` services. |
 | `backend/src/controllers/sync.controller.ts` | Call `sync.service.runSync` for the current user, return a summary (counts of synced problems). |
 | `backend/src/controllers/stats.controller.ts` | Call `stats.service.getAggregatedStats` and return it. |
+| `backend/src/controllers/public.controller.ts` | Take a `:username`, call `stats.service` using only public data (no auth), and return the total analysis for the public profile page. Cache results to limit upstream calls. |
 
 ## Services (business logic)
 
@@ -150,6 +152,7 @@ Build bottom‑up so each layer can rely on the one below it.
 | `frontend/src/app/(auth)/login/page.tsx` | Login screen with a "Sign in with GitHub" button that hits the backend auth route. |
 | `frontend/src/app/connect/page.tsx` | Form to add a platform username and (optionally) authorize a session; submits via `usePlatforms`. |
 | `frontend/src/app/dashboard/page.tsx` | Dashboard: use `useStats` + `usePlatforms`, render the full analytics — `StatsGrid` (totals, difficulty, language), topic strengths, `PlatformList` (rankings + reconnect), `ActivityHeatmap`, and GitHub sync status. |
+| `frontend/src/app/u/[username]/page.tsx` | Public profile website: read the `username` route param, fetch public total analysis via `features/profile/api`, render `ProfileHeader` + `AnalysisSection`. No auth; server‑render for shareable links and SEO. |
 
 ## Components
 
@@ -164,6 +167,8 @@ Build bottom‑up so each layer can rely on the one below it.
 | `frontend/src/components/dashboard/ActivityHeatmap.tsx` | Render a calendar heatmap of solve activity. |
 | `frontend/src/components/layout/Navbar.tsx` | Top nav: logo, links, auth state. |
 | `frontend/src/components/layout/Footer.tsx` | Footer with author/links. |
+| `frontend/src/components/profile/ProfileHeader.tsx` | Public profile header: avatar, name, platform handles, headline totals. |
+| `frontend/src/components/profile/AnalysisSection.tsx` | Public profile body: full analysis (difficulty, topics, languages, heatmap, rankings). |
 
 ## Features / Hooks / Lib / Types / Constants / Styles
 
@@ -173,6 +178,8 @@ Build bottom‑up so each layer can rely on the one below it.
 | `frontend/src/features/stats/types.ts` | DTOs for stats (totals, by‑difficulty, by‑topic, per‑platform). |
 | `frontend/src/features/platforms/api.ts` | Functions: connect platform, list connections, remove — via `api-client`. |
 | `frontend/src/features/platforms/types.ts` | DTOs for platform/connection objects. |
+| `frontend/src/features/profile/api.ts` | Fetch a user's public total analysis by username via `GET /api/public/:username` (no auth). |
+| `frontend/src/features/profile/types.ts` | DTOs for the public profile analysis. |
 | `frontend/src/hooks/useStats.ts` | Hook that loads stats (loading/error/data state) from `features/stats/api`. |
 | `frontend/src/hooks/usePlatforms.ts` | Hook to list/connect/remove platforms with state. |
 | `frontend/src/lib/api-client.ts` | Single fetch/axios wrapper: base URL from env, attach auth header, parse JSON, throw typed errors. |
