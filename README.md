@@ -29,10 +29,12 @@ CodeVault brings every competitive‑programming platform you use into **one das
 
 When you solve problems on LeetCode, Codeforces, CodeChef, or HackerRank, all that hard work stays trapped — split across different sites, hidden behind logins, and impossible to show off in one place.
 
-**CodeVault fixes that.** It:
+**CodeVault fixes that.** It delivers **two separate things**:
 
-- Pulls your **public stats** from every platform into a single dashboard.
-- Automatically copies your **accepted solutions** into a well‑organized GitHub repo with an auto‑generated index, so anyone (a recruiter, a friend, or future‑you) can search a problem and instantly see how you solved it.
+1. 🌐 **An analytics website** — your own page that pulls **public stats** from every platform into one place, showing your *total* analysis across all of them. It can be viewed privately on your dashboard and shared publicly by username (`/u/your-name`), like a coding profile.
+2. 📦 **An auto‑synced GitHub repo** — your **accepted solutions** are automatically organized into a GitHub repo with an auto‑generated index, so anyone (a recruiter, a friend, or future‑you) can search a problem and instantly see how you solved it.
+
+> These two are independent: the website works from a **username alone** (stats), while the code repo needs a **one‑time connect** (your private solution code).
 
 > 📌 This repository is a **monorepo skeleton** — the full folder structure with an empty file for every planned module. Code is added module‑by‑module. The READMEs are the single source of truth for the architecture.
 
