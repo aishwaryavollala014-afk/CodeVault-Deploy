@@ -32,7 +32,19 @@ Main screens:
 - **Landing** (`/`) — intro + call to action.
 - **Login** (`/login`) — GitHub sign‑in.
 - **Connect** (`/connect`) — add a platform username / authorize sync.
-- **Dashboard** (`/dashboard`) — unified stats across all platforms.
+- **Dashboard** (`/dashboard`) — unified analytics across all platforms.
+
+### 📊 What the dashboard shows
+
+A single, unified analytics view combining every connected platform:
+
+- **Totals** — problems solved across all platforms, plus per‑platform counts.
+- **Difficulty breakdown** — Easy / Medium / Hard split (chart).
+- **Topic strengths & weaknesses** — solved count per topic/tag.
+- **Language usage** — which languages you solve in.
+- **Activity heatmap** — calendar of solve activity / streaks.
+- **Rankings & ratings** — current rank/rating per platform (e.g. Codeforces).
+- **Sync status** — how many problems are pushed to GitHub, and any platform needing reconnect.
 
 ---
 
