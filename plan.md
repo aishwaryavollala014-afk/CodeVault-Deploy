@@ -2,194 +2,215 @@
 
 This document is the **implementation spec** for CodeVault. For every file in the skeleton it explains, in plain English, what code should be written there. No code is included here — this is the blueprint to build from, in order.
 
-> Read this together with [README.md](README.md), [backend/README.md](backend/README.md), and [frontend/README.md](frontend/README.md).
+> CodeVault is a **3‑service monorepo**: `web-frontend/` (UI), `web-backend/` (website API), `git-service/` (GitHub sync). The frontend calls **both** backends over REST.
+> Read this together with [README.md](README.md), [web-frontend/README.md](web-frontend/README.md), [web-backend/README.md](web-backend/README.md), and [git-service/README.md](git-service/README.md).
 
 ---
 
 ## 📋 Build order (recommended)
 
-Build bottom‑up so each layer can rely on the one below it.
-
-| Phase | Goal | Files involved |
-|-------|------|----------------|
-| 1 | Backend foundation | config, lib, types, utils, prisma |
-| 2 | Platform integrations | `services/platforms/*` |
-| 3 | GitHub publishing | `services/github/*` |
-| 4 | Core services | `services/*.service.ts` |
-| 5 | API layer | routes + controllers + middlewares + validators |
-| 6 | Automation | jobs (scheduler + sync job) |
-| 7 | Frontend foundation | lib, types, constants, styles, features |
-| 8 | Frontend UI | components + pages + hooks |
+| Phase | Service | Goal |
+|-------|---------|------|
+| 1 | web-backend | Foundation: config, lib, types, utils, prisma |
+| 2 | web-backend | Platform **stats** integrations + stats service |
+| 3 | web-backend | Auth + API layer (routes, controllers, middlewares, validators) + public profile |
+| 4 | git-service | Foundation: config, lib, types, utils, prisma |
+| 5 | git-service | Submission/code + question fetchers, GitHub publishing, sync service |
+| 6 | git-service | Automation (scheduler + sync job) + sync API |
+| 7 | web-frontend | Foundation: lib (2 API bases), types, constants, styles, features |
+| 8 | web-frontend | UI: components + pages (dashboard, connect, public profile) + hooks |
 
 ---
 
-# ⚙️ BACKEND
+# 🌐 WEB BACKEND  (`web-backend/`)
+
+Owns the website: auth, connections, multi‑platform **stats** (Path A), and public profiles. Does **not** push code to GitHub.
 
 ## Root config
-
 | File | What to write |
 |------|---------------|
-| `backend/package.json` | Declare dependencies (express, prisma, @prisma/client, zod, axios, node-cron, pino, dotenv) and dev deps (typescript, ts-node, nodemon, @types/*). Add scripts: `dev`, `build`, `start`, `prisma:push`, `prisma:studio`, `lint`. |
-| `backend/tsconfig.json` | Strict TypeScript config targeting Node, `outDir: dist`, `rootDir: src`, module resolution for Node, and a `@/*` path alias to `src/`. |
-| `backend/.env.example` | List every env var with placeholder values: `PORT`, `DATABASE_URL`, `GITHUB_TOKEN`, `GITHUB_SYNC_REPO`, `JWT_SECRET`, per‑platform session keys, `SYNC_INTERVAL_MINUTES`, `LOG_LEVEL`. |
-| `backend/.gitignore` | Ignore `node_modules`, `dist`, `.env`, local DB files, logs. |
-| `backend/nodemon.json` | Watch `src/`, run `ts-node src/index.ts`, watch `.ts` extensions, ignore `tests`. |
+| `web-backend/package.json` | Deps (express, prisma, @prisma/client, zod, axios, pino, dotenv) + dev deps. Scripts: `dev`, `build`, `start`, `prisma:push`, `lint`. |
+| `web-backend/tsconfig.json` | Strict TS for Node, `outDir: dist`, `@/*` alias to `src/`. |
+| `web-backend/.env.example` | `PORT`, `DATABASE_URL`, GitHub OAuth client id/secret, `JWT_SECRET`, `LOG_LEVEL`. |
+| `web-backend/.gitignore` | Ignore `node_modules`, `dist`, `.env`, local DB, logs. |
+| `web-backend/nodemon.json` | Watch `src/`, run via ts-node. |
 
 ## Database
-
 | File | What to write |
 |------|---------------|
-| `backend/prisma/schema.prisma` | Datasource + generator. Models: **User** (id, githubLogin, email, createdAt, relations). **Connection** (id, userId, platform, username, sessionToken?, isActive, lastSyncedAt, unique on userId+platform). **Problem** (id, userId, platform, number, title, slug, difficulty?, topics?, language?, solvedAt?, syncedToGit, unique on userId+platform+slug). |
+| `web-backend/prisma/schema.prisma` | Models: **User**, **Connection** (platform + username), **Problem** (mirror of synced status for dashboards). |
 
-## Entry
-
+## Entry / Config
 | File | What to write |
 |------|---------------|
-| `backend/src/index.ts` | Load env via config, create the app, start the server, register the cron scheduler. Catch and log fatal startup errors. |
-| `backend/src/app.ts` | Build and return the Express app: apply global middlewares (json parser, CORS, rate limit, request logging), mount the API router under `/api`, then mount the error middleware last. |
-| `backend/src/server.ts` | Create the HTTP server from the app, listen on the configured port, log the URL, and handle graceful shutdown on SIGINT/SIGTERM (close server + DB). |
+| `web-backend/src/index.ts` | Load env, create app, start server. |
+| `web-backend/src/app.ts` | Build Express app: json, CORS, rate limit, logging; mount `/api` router; error middleware last. |
+| `web-backend/src/server.ts` | Listen on port; graceful shutdown. |
+| `web-backend/src/config/env.ts` | Read & validate env with Zod; export typed `env`. |
+| `web-backend/src/config/database.ts` | DB connection settings from `env`. |
+| `web-backend/src/config/index.ts` | Barrel re‑exporting config. |
 
-## Config
+## Routes → Controllers
+| Route | Controller | What to write |
+|-------|-----------|---------------|
+| `routes/auth.routes.ts` | `auth.controller.ts` | GitHub OAuth start/callback, logout. |
+| `routes/user.routes.ts` | `user.controller.ts` | `GET /me`. |
+| `routes/platform.routes.ts` | `platform.controller.ts` | Add/list/remove platform usernames. |
+| `routes/stats.routes.ts` | `stats.controller.ts` | `GET /` aggregated dashboard stats (auth). |
+| `routes/public.routes.ts` | `public.controller.ts` | `GET /:username` public total analysis (no auth, cached). |
+| `routes/index.ts` | — | Mount all routers under `/api`. |
 
+## Services
 | File | What to write |
 |------|---------------|
-| `backend/src/config/env.ts` | Read `process.env`, validate it with a Zod schema, throw if anything required is missing, and export a typed, frozen `env` object. |
-| `backend/src/config/database.ts` | Database connection settings derived from `env` (URL, pool options if Postgres). |
-| `backend/src/config/index.ts` | Barrel file re‑exporting `env` and database config. |
+| `services/auth.service.ts` | OAuth exchange, fetch GitHub profile, upsert User, issue session/JWT. |
+| `services/user.service.ts` | User + connection CRUD via Prisma. |
+| `services/stats.service.ts` | For each connection call its platform stats fn; merge into unified totals (difficulty, topic, language, per‑platform, streaks). |
+| `services/platforms/index.ts` | Registry + `PlatformStatsService` interface (`getStats`). |
+| `services/platforms/leetcode.service.ts` | `getStats(username)` via public GraphQL. |
+| `services/platforms/codeforces.service.ts` | `getStats(handle)` via official `user.info` + `user.status`. |
+| `services/platforms/codechef.service.ts` | `getStats(username)` from public profile. |
+| `services/platforms/hackerrank.service.ts` | `getStats(username)` from public profile/badges. |
 
-## Routes (URL → controller)
-
+## Middlewares / Lib / Utils / Types / Validators
 | File | What to write |
 |------|---------------|
-| `backend/src/routes/index.ts` | Create the main router, mount each feature router (`/auth`, `/users`, `/platforms`, `/sync`, `/stats`), export it. |
-| `backend/src/routes/auth.routes.ts` | `POST /github`, `GET /github/callback`, `POST /logout` → auth controller methods. |
-| `backend/src/routes/user.routes.ts` | `GET /me` (auth‑protected) → user controller. |
-| `backend/src/routes/platform.routes.ts` | `POST /connect` (with validator), `GET /` (list), `DELETE /:id` → platform controller. |
-| `backend/src/routes/sync.routes.ts` | `POST /` to trigger a sync run (auth‑protected) → sync controller. |
-| `backend/src/routes/stats.routes.ts` | `GET /` returns aggregated dashboard stats → stats controller. |
-| `backend/src/routes/public.routes.ts` | `GET /:username` returns public total analysis (no auth) → public controller. Powers the shareable profile website. |
-
-## Controllers (HTTP only)
-
-| File | What to write |
-|------|---------------|
-| `backend/src/controllers/auth.controller.ts` | Handle GitHub OAuth start/callback, issue a session/JWT, and logout. Read input, call `auth.service`, send JSON; no logic here. |
-| `backend/src/controllers/user.controller.ts` | Return the authenticated user's profile via `user.service`. |
-| `backend/src/controllers/platform.controller.ts` | Connect a platform, list connections, remove one — delegating to `platform`/`user` services. |
-| `backend/src/controllers/sync.controller.ts` | Call `sync.service.runSync` for the current user, return a summary (counts of synced problems). |
-| `backend/src/controllers/stats.controller.ts` | Call `stats.service.getAggregatedStats` and return it. |
-| `backend/src/controllers/public.controller.ts` | Take a `:username`, call `stats.service` using only public data (no auth), and return the total analysis for the public profile page. Cache results to limit upstream calls. |
-
-## Services (business logic)
-
-| File | What to write |
-|------|---------------|
-| `backend/src/services/auth.service.ts` | Exchange the GitHub OAuth code for a token, fetch the GitHub profile, upsert the User, create a session/JWT. |
-| `backend/src/services/user.service.ts` | Fetch/update a user and their connections from the DB via Prisma. |
-| `backend/src/services/sync.service.ts` | The orchestrator: for a user's active connections, fetch recent accepted submissions (platform service), fetch each problem's statement, diff against already‑synced `Problem` rows, and for each new one push a folder named by the **problem number** containing `question.md` + `solution.<ext>` via `github.service`, regenerate the index README, and update `lastSyncedAt`. |
-| `backend/src/services/stats.service.ts` | For each connection, call the platform service's stats function, then merge into a unified totals object (by difficulty, by topic, per platform, streaks). |
-| `backend/src/services/platforms/index.ts` | A registry/factory that maps a platform name string to its service, plus a shared `PlatformService` interface (`getStats`, `getRecentSubmissions`). |
-| `backend/src/services/platforms/leetcode.service.ts` | `getStats(username)` via public GraphQL. `getRecentSubmissions(session)` via authorized GraphQL, then fetch each submission's source code. `getQuestion(slug)` via public GraphQL to fetch the problem statement (title, difficulty, tags, content) for `question.md`. Handle expired sessions explicitly. |
-| `backend/src/services/platforms/codeforces.service.ts` | `getStats(handle)` via official `user.info` + `user.status` API; count distinct solved problems. (No source code available.) |
-| `backend/src/services/platforms/codechef.service.ts` | `getStats(username)` by parsing the public profile page; return solved count, rating. |
-| `backend/src/services/platforms/hackerrank.service.ts` | `getStats(username)` from the public profile/badges; return solved/badge counts. |
-| `backend/src/services/github/github.service.ts` | Using the GitHub REST API + token: ensure the target repo exists, then for a problem create/update the folder named by its **problem number** with `question.md` (statement) and `solution.<ext>` (the user's code), and commit them. |
-| `backend/src/services/github/readme.generator.ts` | Take all synced problems and render a sorted Markdown index table (number → folder link, title, type, difficulty, language, date, problem link); return the README string to commit at the repo root. |
-
-## Middlewares
-
-| File | What to write |
-|------|---------------|
-| `backend/src/middlewares/auth.middleware.ts` | Verify the session/JWT, attach `req.user`, reject with 401 if missing/invalid. |
-| `backend/src/middlewares/error.middleware.ts` | Central error handler: map known `AppError` types to status codes, log unexpected errors, return a consistent JSON error shape. |
-| `backend/src/middlewares/rateLimit.middleware.ts` | Limit requests per IP/user over a time window to prevent abuse. |
-| `backend/src/middlewares/validate.middleware.ts` | Accept a Zod schema, validate `req.body`/`params`/`query`, return 400 with details on failure. |
-
-## Jobs
-
-| File | What to write |
-|------|---------------|
-| `backend/src/jobs/scheduler.ts` | On boot, register cron jobs using the configured interval; start them; export a function to register all jobs. |
-| `backend/src/jobs/sync.job.ts` | The scheduled task: load all active connections and run `sync.service` for each; log results; skip/flag connections with expired sessions. |
-
-## Lib / Utils / Types / Validators
-
-| File | What to write |
-|------|---------------|
-| `backend/src/lib/prisma.ts` | Instantiate and export a single shared `PrismaClient` (reused across reloads). |
-| `backend/src/lib/logger.ts` | Configure and export a pino logger using `env.LOG_LEVEL`. |
-| `backend/src/lib/httpClient.ts` | Export a pre‑configured axios instance (base timeouts, retry, default headers) used by platform/github services. |
-| `backend/src/types/index.ts` | Shared backend types barrel (e.g. `AuthedRequest`, common response shapes). |
-| `backend/src/types/platform.types.ts` | Interfaces: `PlatformStats`, `Submission`, `Question` (statement for `question.md`), `SolutionToSync` (number, slug, language, code, question), `PlatformName` union. |
-| `backend/src/utils/errors.ts` | Typed error classes: `AppError` (base, with statusCode), `NotFoundError`, `UnauthorizedError`, `ValidationError`, `ExpiredSessionError`. |
-| `backend/src/utils/helpers.ts` | Small pure helpers: pad problem numbers, slugify titles, map language → file extension, date formatting. |
-| `backend/src/validators/auth.validator.ts` | Zod schemas for auth request bodies (OAuth callback params). |
-| `backend/src/validators/platform.validator.ts` | Zod schema for connecting a platform (platform name enum, username, optional session). |
+| `middlewares/auth.middleware.ts` | Verify session/JWT; attach `req.user`; 401 otherwise. |
+| `middlewares/error.middleware.ts` | Map `AppError` types to status codes; consistent JSON. |
+| `middlewares/rateLimit.middleware.ts` | Throttle per IP/user. |
+| `middlewares/validate.middleware.ts` | Validate request with a Zod schema. |
+| `lib/prisma.ts` | Single shared Prisma client. |
+| `lib/logger.ts` | Configured pino logger. |
+| `lib/httpClient.ts` | Pre‑configured axios instance. |
+| `types/index.ts` | Shared types (`AuthedRequest`, response shapes). |
+| `types/platform.types.ts` | `PlatformStats`, `PlatformName` union. |
+| `utils/errors.ts` | `AppError`, `NotFoundError`, `UnauthorizedError`, `ValidationError`. |
+| `utils/helpers.ts` | Small pure helpers (formatting). |
+| `validators/auth.validator.ts` | Zod schemas for auth bodies. |
+| `validators/platform.validator.ts` | Zod schema for connecting a platform. |
 
 ---
 
-# 🎨 FRONTEND
+# 📦 GIT SERVICE  (`git-service/`)
+
+Owns Path B: fetch the authorized user's **code + question**, push the per‑problem folder to GitHub, regenerate the index, and run scheduled syncs. The frontend calls it directly; protected by an internal API key.
 
 ## Root config
-
 | File | What to write |
 |------|---------------|
-| `frontend/package.json` | Dependencies (next, react, react-dom) and dev deps (typescript, tailwindcss, postcss, autoprefixer, @types/*). Scripts: `dev`, `build`, `start`, `lint`. |
-| `frontend/tsconfig.json` | Next.js TypeScript config with the `@/*` alias to `src/`. |
-| `frontend/next.config.mjs` | Next config; enable strict mode; set any allowed image domains. |
-| `frontend/tailwind.config.ts` | Theme tokens (brand colors), `content` globs for `src/`, any plugin registration. |
-| `frontend/postcss.config.mjs` | Register Tailwind + autoprefixer. |
-| `frontend/.env.example` | Public env vars only: `NEXT_PUBLIC_API_URL`. |
-| `frontend/.gitignore` | Ignore `node_modules`, `.next`, `.env*.local`, build output. |
+| `git-service/package.json` | Deps (express, prisma, @prisma/client, axios, node-cron, pino, dotenv) + dev deps. Scripts: `dev`, `build`, `start`, `prisma:push`. |
+| `git-service/tsconfig.json` | Strict TS for Node, `@/*` alias. |
+| `git-service/.env.example` | `PORT`, `DATABASE_URL`, `GITHUB_TOKEN`, `GITHUB_SYNC_REPO`, platform session keys, `INTERNAL_API_KEY`, `SYNC_INTERVAL_MINUTES`, `LOG_LEVEL`. |
+| `git-service/.gitignore` | Ignore `node_modules`, `dist`, `.env`, local DB, logs. |
+| `git-service/nodemon.json` | Watch `src/`, run via ts-node. |
+
+## Database / Entry / Config
+| File | What to write |
+|------|---------------|
+| `git-service/prisma/schema.prisma` | Track synced problems (connection ref, platform, number, slug, language, syncedToGit, syncedAt). |
+| `git-service/src/index.ts` | Load env, start server, register the cron scheduler. |
+| `git-service/src/app.ts` | Build Express app; internal‑key auth, rate limit, logging; mount `/api`; error middleware last. |
+| `git-service/src/server.ts` | Listen on port; graceful shutdown. |
+| `git-service/src/config/env.ts` | Read & validate env (token, sessions, internal key). |
+| `git-service/src/config/index.ts` | Barrel re‑exporting config. |
+
+## Routes / Controller
+| File | What to write |
+|------|---------------|
+| `git-service/src/routes/sync.routes.ts` | `POST /sync` (run), `GET /sync/status`. |
+| `git-service/src/routes/index.ts` | Mount sync routes under `/api`. |
+| `git-service/src/controllers/sync.controller.ts` | Parse request, call `sync.service`, return a summary. |
+
+## Services
+| File | What to write |
+|------|---------------|
+| `services/sync.service.ts` | Orchestrate: fetch recent accepted submissions + each question, diff against DB, push `<number>/question.md` + `<number>/solution.<ext>` via `github.service`, regenerate index README, update DB. Handle expired sessions. |
+| `services/submissions/index.ts` | Registry + `SubmissionService` interface (`getRecentSubmissions`, `getQuestion`). |
+| `services/submissions/leetcode.service.ts` | Authorized fetch of accepted submissions + source code; `getQuestion(slug)` for statement. |
+| `services/submissions/codeforces.service.ts` | Fetch accepted submissions/code where available. |
+| `services/github/github.service.ts` | Ensure repo exists; create/update the per‑number folder with `question.md` + `solution.<ext>`; commit. |
+| `services/github/readme.generator.ts` | Render the repo index README table (number → folder link, title, type, difficulty, language, date, link). |
+
+## Middlewares / Jobs / Lib / Utils / Types
+| File | What to write |
+|------|---------------|
+| `middlewares/auth.middleware.ts` | Verify the `INTERNAL_API_KEY` header; reject otherwise. |
+| `middlewares/error.middleware.ts` | Consistent JSON error formatting. |
+| `middlewares/rateLimit.middleware.ts` | Throttle requests. |
+| `jobs/scheduler.ts` | Register cron jobs at boot using the configured interval. |
+| `jobs/sync.job.ts` | Periodically run `sync.service` for every active connection; flag expired sessions. |
+| `lib/prisma.ts` | Single shared Prisma client. |
+| `lib/logger.ts` | Configured pino logger. |
+| `lib/httpClient.ts` | Pre‑configured axios instance. |
+| `types/index.ts` | Shared types barrel. |
+| `types/sync.types.ts` | `Submission`, `Question`, `SolutionToSync` interfaces. |
+| `utils/errors.ts` | Typed errors incl. `ExpiredSessionError`. |
+| `utils/helpers.ts` | Pad problem numbers, slugify titles, language → file extension. |
+
+---
+
+# 🎨 WEB FRONTEND  (`web-frontend/`)
+
+The website UI. Calls **two** backends: `NEXT_PUBLIC_API_URL` (web-backend) and `NEXT_PUBLIC_GIT_SERVICE_URL` (git-service).
+
+## Root config
+| File | What to write |
+|------|---------------|
+| `web-frontend/package.json` | Deps (next, react, react-dom) + dev (typescript, tailwindcss, postcss, autoprefixer). Scripts: `dev`, `build`, `start`, `lint`. |
+| `web-frontend/tsconfig.json` | Next TS config + `@/*` alias. |
+| `web-frontend/next.config.mjs` | Strict mode; allowed image domains. |
+| `web-frontend/tailwind.config.ts` | Theme tokens + content globs. |
+| `web-frontend/postcss.config.mjs` | Tailwind + autoprefixer. |
+| `web-frontend/.env.example` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_GIT_SERVICE_URL`. |
+| `web-frontend/.gitignore` | Ignore `node_modules`, `.next`, `.env*.local`. |
 
 ## Routes (`src/app`)
-
-| File | What to write |
-|------|---------------|
-| `frontend/src/app/layout.tsx` | Root layout: html/body shell, metadata, import global CSS, render `Navbar` + children + `Footer`. |
-| `frontend/src/app/page.tsx` | Landing page: hero, short pitch, CTA buttons to login/connect. |
-| `frontend/src/app/globals.css` | Tailwind directives + base global styles (dark theme background/text). |
-| `frontend/src/app/(auth)/login/page.tsx` | Login screen with a "Sign in with GitHub" button that hits the backend auth route. |
-| `frontend/src/app/connect/page.tsx` | Form to add a platform username and (optionally) authorize a session; submits via `usePlatforms`. |
-| `frontend/src/app/dashboard/page.tsx` | Dashboard: use `useStats` + `usePlatforms`, render the full analytics — `StatsGrid` (totals, difficulty, language), topic strengths, `PlatformList` (rankings + reconnect), `ActivityHeatmap`, and GitHub sync status. |
-| `frontend/src/app/u/[username]/page.tsx` | Public profile website: read the `username` route param, fetch public total analysis via `features/profile/api`, render `ProfileHeader` + `AnalysisSection`. No auth; server‑render for shareable links and SEO. |
+| File | Route | What to write |
+|------|-------|---------------|
+| `app/layout.tsx` | — | Root shell, metadata, global CSS, `Navbar` + `Footer`. |
+| `app/page.tsx` | `/` | Landing: hero + CTAs. |
+| `app/globals.css` | — | Tailwind directives + base styles. |
+| `app/(auth)/login/page.tsx` | `/login` | "Sign in with GitHub" → web-backend auth. |
+| `app/connect/page.tsx` | `/connect` | Add platform username (web-backend) and authorize sync (git-service). |
+| `app/dashboard/page.tsx` | `/dashboard` | Private analytics via `useStats`/`usePlatforms`: StatsGrid, topics, PlatformList, ActivityHeatmap, sync status. |
+| `app/u/[username]/page.tsx` | `/u/:username` | Public profile via `features/profile/api` (web-backend, no auth); server‑render; renders `ProfileHeader` + `AnalysisSection`. |
 
 ## Components
-
 | File | What to write |
 |------|---------------|
-| `frontend/src/components/ui/Button.tsx` | Reusable button with variants (primary/secondary) and sizes; purely presentational. |
-| `frontend/src/components/ui/Card.tsx` | Generic card container with padding/border. |
-| `frontend/src/components/ui/Badge.tsx` | Small pill for difficulty/status with color by type. |
-| `frontend/src/components/dashboard/StatCard.tsx` | Show one metric: label + value (+ optional icon/trend). |
-| `frontend/src/components/dashboard/StatsGrid.tsx` | Lay out multiple `StatCard`s from a stats object. |
-| `frontend/src/components/dashboard/PlatformList.tsx` | List connected platforms with status and a reconnect button if a session expired. |
-| `frontend/src/components/dashboard/ActivityHeatmap.tsx` | Render a calendar heatmap of solve activity. |
-| `frontend/src/components/layout/Navbar.tsx` | Top nav: logo, links, auth state. |
-| `frontend/src/components/layout/Footer.tsx` | Footer with author/links. |
-| `frontend/src/components/profile/ProfileHeader.tsx` | Public profile header: avatar, name, platform handles, headline totals. |
-| `frontend/src/components/profile/AnalysisSection.tsx` | Public profile body: full analysis (difficulty, topics, languages, heatmap, rankings). |
+| `components/ui/Button.tsx` | Button primitive (variants/sizes). |
+| `components/ui/Card.tsx` | Card container. |
+| `components/ui/Badge.tsx` | Difficulty/status pill. |
+| `components/dashboard/StatCard.tsx` | One metric tile. |
+| `components/dashboard/StatsGrid.tsx` | Grid of stat cards. |
+| `components/dashboard/PlatformList.tsx` | Connections list + reconnect on expiry. |
+| `components/dashboard/ActivityHeatmap.tsx` | Solve‑activity heatmap. |
+| `components/layout/Navbar.tsx` | Top nav + auth state. |
+| `components/layout/Footer.tsx` | Footer. |
+| `components/profile/ProfileHeader.tsx` | Public profile header: avatar, name, handles, headline totals. |
+| `components/profile/AnalysisSection.tsx` | Public profile body: full analysis. |
 
 ## Features / Hooks / Lib / Types / Constants / Styles
-
 | File | What to write |
 |------|---------------|
-| `frontend/src/features/stats/api.ts` | Function calling backend `GET /api/stats` via `api-client`; returns typed stats. |
-| `frontend/src/features/stats/types.ts` | DTOs for stats (totals, by‑difficulty, by‑topic, per‑platform). |
-| `frontend/src/features/platforms/api.ts` | Functions: connect platform, list connections, remove — via `api-client`. |
-| `frontend/src/features/platforms/types.ts` | DTOs for platform/connection objects. |
-| `frontend/src/features/profile/api.ts` | Fetch a user's public total analysis by username via `GET /api/public/:username` (no auth). |
-| `frontend/src/features/profile/types.ts` | DTOs for the public profile analysis. |
-| `frontend/src/hooks/useStats.ts` | Hook that loads stats (loading/error/data state) from `features/stats/api`. |
-| `frontend/src/hooks/usePlatforms.ts` | Hook to list/connect/remove platforms with state. |
-| `frontend/src/lib/api-client.ts` | Single fetch/axios wrapper: base URL from env, attach auth header, parse JSON, throw typed errors. |
-| `frontend/src/lib/utils.ts` | Small helpers: classnames merge, number/date formatting. |
-| `frontend/src/types/index.ts` | Shared frontend types barrel. |
-| `frontend/src/constants/platforms.ts` | Static metadata for each platform: display name, icon, brand color, profile URL pattern. |
-| `frontend/src/styles/theme.ts` | Design tokens (colors/spacing) usable from TypeScript components. |
+| `features/stats/api.ts` | `GET /api/stats` on **web-backend** via `api-client`. |
+| `features/stats/types.ts` | Stats DTOs. |
+| `features/platforms/api.ts` | Connect/list/remove on **web-backend**. |
+| `features/platforms/types.ts` | Platform/connection DTOs. |
+| `features/profile/api.ts` | `GET /api/public/:username` on **web-backend** (no auth). |
+| `features/profile/types.ts` | Public profile DTOs. |
+| `features/sync/api.ts` | Connect/trigger/status on **git-service**. |
+| `features/sync/types.ts` | Sync request/status DTOs. |
+| `hooks/useStats.ts` | Load/cache dashboard stats. |
+| `hooks/usePlatforms.ts` | List/connect/remove platforms. |
+| `lib/api-client.ts` | HTTP wrapper supporting **two base URLs** (web-backend + git-service); attach auth, parse JSON, throw typed errors. |
+| `lib/utils.ts` | classnames + formatting helpers. |
+| `types/index.ts` | Shared frontend types barrel. |
+| `constants/platforms.ts` | Per‑platform metadata (name, icon, color, profile URL). |
+| `styles/theme.ts` | Design tokens usable from TS. |
 
 ---
 
 ## ✅ Definition of done (per file)
 
-A file is "done" when it: implements the responsibility above, exports a clean typed interface, contains no logic that belongs in another layer, has secrets read only from env, and is covered by at least a basic test where it holds logic (services, utils, generators).
+A file is "done" when it: implements the responsibility above, exports a clean typed interface, contains no logic that belongs in another layer or service, reads secrets only from env, and is covered by at least a basic test where it holds logic (services, generators, utils).
