@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="CodeVault analytics — deep stats across LeetCode, Codeforces, CodeChef and HackerRank." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f1543f'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='15' fill='white' text-anchor='middle' font-weight='bold'%3ECV%3C/text%3E%3C/svg%3E" />
+<title>Analytics · CodeVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--paper:#f8f6f1;--card:#fff;--ink:#1a160f;--ink-2:#3a352c;--muted:#6f6a5f;--faint:#7a7568;--border:#ece7dc;--border-2:#e2dccd;
+    --brand:#f1543f;--brand-d:#d8431f;--brand-soft:#fdeae4;--amber:#e8a200;--amber-d:#b07c00;--amber-soft:#fbeec8;--rose:#e0457b;--rose-d:#c43368;--rose-soft:#fce3ee;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--r:14px;--shadow:0 1px 2px rgba(30,20,10,.04),0 10px 28px -16px rgba(30,20,10,.18);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}.mono{font-family:var(--mono)}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+  svg.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  svg.ico.sm{width:14px;height:14px}
+  .app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+  .side{background:#fff;border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;width:236px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;padding:6px 8px 18px}
+  .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:800;font-size:14px}
+  .nav{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+  .nav a{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:9px;font-size:14px;color:var(--muted);font-weight:500;transition:.12s}
+  .nav a:hover{background:var(--paper);color:var(--ink)}
+  .nav a.active{background:var(--brand-soft);color:var(--brand-d);font-weight:600}
+  .side-foot{margin-top:auto;border-top:1px solid var(--border);padding-top:14px;display:flex;align-items:center;gap:10px}
+  .side-foot .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--brand));color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+  .side-foot .who{font-size:13px;line-height:1.3}.side-foot .who b{display:block}.side-foot .who span{color:var(--faint);font-size:11.5px}
+  .side-foot .out{margin-left:auto;color:var(--faint);cursor:pointer;background:none;border:0;padding:6px;border-radius:8px;display:grid;place-items:center}
+  .side-foot .out:hover{color:var(--rose-d);background:var(--rose-soft)}
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(248,246,241,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+  .menu-btn{display:none;width:38px;height:38px;border-radius:9px;border:1px solid var(--border-2);background:#fff;place-items:center;cursor:pointer;color:var(--ink)}
+  .topbar h1{font-size:18px;letter-spacing:-.01em}
+  .ic-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--border-2);background:#fff;display:grid;place-items:center;cursor:pointer;color:var(--ink-2)}
+  .ic-btn:hover{background:var(--paper);color:var(--ink)}
+  .spacer{margin-left:auto}
+  .content{padding:24px 28px 60px;display:flex;flex-direction:column;gap:16px}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px}
+  .panel .h{font-size:13.5px;font-weight:700;margin:0 0 16px;display:flex;justify-content:space-between;align-items:center}
+  .panel .h .tag{font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:500}
+  .grid{display:grid;gap:16px}.g-2{grid-template-columns:1fr 1fr}.g-3{grid-template-columns:repeat(3,1fr)}
+  /* filter bar */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .seg{display:inline-flex;background:#fff;border:1px solid var(--border-2);border-radius:10px;padding:3px}
+  .seg button{border:0;background:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+  .seg button.on{background:var(--brand);color:#fff}
+  select{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink);background:#fff;border:1px solid var(--border-2);border-radius:9px;padding:8px 12px;cursor:pointer}
+  /* stat row */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px}
+  .stat .l{font-size:12.5px;color:var(--muted);font-weight:600}
+  .stat .n{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:6px}
+  .stat .d{font-size:12px;color:var(--brand-d);font-weight:600;margin-top:2px}
+  /* month bars */
+  .mbars{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px}
+  .mbars .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;height:100%}
+  .mbars .bar{width:70%;max-width:26px;background:linear-gradient(180deg,var(--brand),var(--brand-d));border-radius:6px 6px 0 0;position:relative}
+  .mbars .bar span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono)}
+  .mbars .lbl{font-size:10px;color:var(--faint);font-weight:600}
+  /* horizontal bars */
+  .hb{display:flex;flex-direction:column;gap:12px}
+  .hb-row{display:grid;grid-template-columns:130px 1fr 46px;align-items:center;gap:10px;font-size:13px}
+  .hb-row .lab{font-weight:600;display:flex;align-items:center;gap:7px}
+  .hb-bar{height:9px;border-radius:5px;background:var(--paper);overflow:hidden}
+  .hb-bar i{display:block;height:100%;border-radius:5px}
+  .hb-row .v{text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:3px;flex:none}
+  /* ring */
+  .ringwrap{display:flex;align-items:center;gap:18px}
+  .ring{width:118px;height:118px;border-radius:50%;flex:none;background:conic-gradient(var(--amber) 0 43.3%,var(--brand) 43.3% 88.2%,var(--rose) 88.2% 100%);display:grid;place-items:center;position:relative}
+  .ring::before{content:"";position:absolute;width:84px;height:84px;border-radius:50%;background:#fff}
+  .ring .rc{position:relative;text-align:center}.ring .rc b{font-size:22px;font-weight:800;display:block}.ring .rc span{font-size:11px;color:var(--muted)}
+  .rleg{display:flex;flex-direction:column;gap:10px;flex:1}.rleg .r{display:flex;align-items:center;gap:9px;font-size:13px}.rleg .r .v{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .sw{width:10px;height:10px;border-radius:3px}.sw.e{background:var(--amber)}.sw.m{background:var(--brand)}.sw.h{background:var(--rose)}
+  /* rating sparkline */
+  .spark{width:100%;height:120px}
+  .scrim{display:none}
+  @media (max-width:1040px){.g-3{grid-template-columns:1fr}.g-2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:820px){.app{grid-template-columns:1fr}.side{position:fixed;left:0;top:0;z-index:60;transform:translateX(-100%);transition:transform .22s}.body-open .side{transform:none}
+    body.nav-open .side{transform:none}.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55}body.nav-open .scrim{display:block}.menu-btn{display:grid}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-overview" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="ic-analytics" viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="11"/><line x1="10" y1="20" x2="10" y2="4"/><line x1="16" y1="20" x2="16" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></symbol>
+  <symbol id="ic-repos" viewBox="0 0 24 24"><polyline points="9 8 5 12 9 16"/><polyline points="15 8 19 12 15 16"/></symbol>
+  <symbol id="ic-profile" viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.2"/><path d="M5.5 20c.7-3 3.3-5 6.5-5s5.8 2 6.5 5"/></symbol>
+  <symbol id="ic-sync" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><polyline points="21 3 21 9 15 9"/></symbol>
+  <symbol id="ic-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2.1 2.1M16.9 16.9 19 19M19 5l-2.1 2.1M7.1 16.9 5 19"/></symbol>
+  <symbol id="ic-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="ic-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+</svg>
+<div class="scrim" id="scrim"></div>
+<div class="app">
+  <aside class="side" id="side">
+    <a class="brand" href="landing.html"><span class="mark">CV</span> CodeVault</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="overview.html"><svg class="ico" aria-hidden="true"><use href="#ic-overview"/></svg> Overview</a>
+      <a class="active" href="analytics.html" aria-current="page"><svg class="ico" aria-hidden="true"><use href="#ic-analytics"/></svg> Analytics</a>
+      <a href="repositories.html"><svg class="ico" aria-hidden="true"><use href="#ic-repos"/></svg> Repositories</a>
+      <a href="public-profile.html"><svg class="ico" aria-hidden="true"><use href="#ic-profile"/></svg> Public profile</a>
+      <a href="sync-status.html"><svg class="ico" aria-hidden="true"><use href="#ic-sync"/></svg> Sync status</a>
+      <a href="settings.html"><svg class="ico" aria-hidden="true"><use href="#ic-settings"/></svg> Settings</a>
+    </nav>
+    <div class="side-foot"><div class="av">G</div><div class="who"><b>Gaurav</b><span>Free plan</span></div>
+      <button class="out" type="button" aria-label="Log out" onclick="location.href='login.html'"><svg class="ico" aria-hidden="true"><use href="#ic-logout"/></svg></button></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#ic-menu"/></svg></button>
+      <h1>Analytics</h1>
+      <span class="spacer"></span>
+      <button class="ic-btn" type="button" aria-label="Notifications"><svg class="ico" aria-hidden="true"><use href="#ic-bell"/></svg></button>
+    </div>
+    <main class="content">
+
+      <div class="filters">
+        <div class="seg" role="tablist" aria-label="Platform filter">
+          <button class="on" type="button">All</button><button type="button">LeetCode</button><button type="button">Codeforces</button><button type="button">CodeChef</button><button type="button">HackerRank</button>
+        </div>
+        <span class="spacer"></span>
+        <select aria-label="Time range"><option>Last 12 months</option><option>Last 6 months</option><option>All time</option></select>
+      </div>
+
+      <section class="stats" aria-label="Headline analytics">
+        <div class="stat"><div class="l">Acceptance rate</div><div class="n">71.4%</div><div class="d">1,248 AC / 1,748 tries</div></div>
+        <div class="stat"><div class="l">Avg. problems / day</div><div class="n">3.4</div><div class="d">last 90 days</div></div>
+        <div class="stat"><div class="l">Active days</div><div class="n">284</div><div class="d">of last 365</div></div>
+        <div class="stat"><div class="l">Best CF rating</div><div class="n">1,711</div><div class="d">current 1,623</div></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="h">Problems solved per month <span class="tag">2025–2026</span></h2>
+        <div class="mbars">
+          <div class="col"><div class="bar" style="height:30%"><span>42</span></div><div class="lbl">Jul</div></div>
+          <div class="col"><div class="bar" style="height:38%"><span>55</span></div><div class="lbl">Aug</div></div>
+          <div class="col"><div class="bar" style="height:46%"><span>67</span></div><div class="lbl">Sep</div></div>
+          <div class="col"><div class="bar" style="height:40%"><span>58</span></div><div class="lbl">Oct</div></div>
+          <div class="col"><div class="bar" style="height:55%"><span>80</span></div><div class="lbl">Nov</div></div>
+          <div class="col"><div class="bar" style="height:62%"><span>91</span></div><div class="lbl">Dec</div></div>
+          <div class="col"><div class="bar" style="height:72%"><span>104</span></div><div class="lbl">Jan</div></div>
+          <div class="col"><div class="bar" style="height:66%"><span>96</span></div><div class="lbl">Feb</div></div>
+          <div class="col"><div class="bar" style="height:78%"><span>112</span></div><div class="lbl">Mar</div></div>
+          <div class="col"><div class="bar" style="height:84%"><span>121</span></div><div class="lbl">Apr</div></div>
+          <div class="col"><div class="bar" style="height:92%"><span>133</span></div><div class="lbl">May</div></div>
+          <div class="col"><div class="bar" style="height:100%"><span>147</span></div><div class="lbl">Jun</div></div>
+        </div>
+      </section>
+
+      <div class="grid g-2">
+        <section class="panel">
+          <h2 class="h">Difficulty mix</h2>
+          <div class="ringwrap">
+            <div class="ring" role="img" aria-label="540 Easy, 560 Medium, 148 Hard"><div class="rc"><b>1,248</b><span>solved</span></div></div>
+            <div class="rleg">
+              <div class="r"><span class="sw e"></span> Easy <span class="v">540 · 43%</span></div>
+              <div class="r"><span class="sw m"></span> Medium <span class="v">560 · 45%</span></div>
+              <div class="r"><span class="sw h"></span> Hard <span class="v">148 · 12%</span></div>
+            </div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2 class="h">Languages used</h2>
+          <div class="hb">
+            <div class="hb-row"><span class="lab"><span class="dot" style="background:var(--brand)"></span>Python</span><span class="hb-bar"><i style="width:100%;background:var(--brand)"></i></span><span class="v">540</span></div>
+            <div class="hb-row"><span class="lab"><span class="dot" style="background:var(--amber)"></span>C++</span><span class="hb-bar"><i style="width:76%;background:var(--amber)"></i></span><span class="v">410</span></div>
+            <div class="hb-row"><span class="lab"><span class="dot" style="background:var(--rose)"></span>Java</span><span class="hb-bar"><i style="width:37%;background:var(--rose)"></i></span><span class="v">198</span></div>
+            <div class="hb-row"><span class="lab"><span class="dot" style="background:#8a8378"></span>JavaScript</span><span class="hb-bar"><i style="width:18%;background:#8a8378"></i></span><span class="v">100</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid g-2">
+        <section class="panel">
+          <h2 class="h">Topic distribution</h2>
+          <div class="hb">
+            <div class="hb-row"><span class="lab">Arrays</span><span class="hb-bar"><i style="width:100%;background:var(--brand)"></i></span><span class="v">210</span></div>
+            <div class="hb-row"><span class="lab">Dynamic Prog.</span><span class="hb-bar"><i style="width:68%;background:var(--brand)"></i></span><span class="v">142</span></div>
+            <div class="hb-row"><span class="lab">Graphs</span><span class="hb-bar"><i style="width:56%;background:var(--amber)"></i></span><span class="v">118</span></div>
+            <div class="hb-row"><span class="lab">Trees</span><span class="hb-bar"><i style="width:46%;background:var(--amber)"></i></span><span class="v">96</span></div>
+            <div class="hb-row"><span class="lab">Greedy</span><span class="hb-bar"><i style="width:40%;background:var(--rose)"></i></span><span class="v">84</span></div>
+            <div class="hb-row"><span class="lab">Binary Search</span><span class="hb-bar"><i style="width:34%;background:var(--rose)"></i></span><span class="v">71</span></div>
+          </div>
+        </section>
+        <section class="panel">
+          <h2 class="h">Codeforces rating <span class="tag">peak 1,711</span></h2>
+          <svg class="spark" viewBox="0 0 320 120" preserveAspectRatio="none" role="img" aria-label="Codeforces rating trend rising to 1623">
+            <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1543f" stop-opacity="0.25"/><stop offset="1" stop-color="#f1543f" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,95 L40,88 L80,92 L120,70 L160,74 L200,52 L240,40 L280,46 L320,28 L320,120 L0,120 Z" fill="url(#g)"/>
+            <path d="M0,95 L40,88 L80,92 L120,70 L160,74 L200,52 L240,40 L280,46 L320,28" fill="none" stroke="#f1543f" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="320" cy="28" r="3.5" fill="#f1543f"/>
+          </svg>
+        </section>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script>
+  const body=document.body,mb=document.getElementById('menuBtn'),sc=document.getElementById('scrim');
+  function setNav(o){body.classList.toggle('nav-open',o);mb.setAttribute('aria-expanded',o);}
+  mb.addEventListener('click',()=>setNav(!body.classList.contains('nav-open')));sc.addEventListener('click',()=>setNav(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setNav(false);});
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+</script>
+</body>
+</html>
