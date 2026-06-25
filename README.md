@@ -48,12 +48,15 @@ CodeVault is split into **three independent applications** — one UI and two se
 CodeVault/
 ├── README.md          # ← you are here (project overview)
 ├── plan.md            # build spec for every file
+├── context.md         # AI handoff / full project context
 ├── .gitignore
 │
 ├── docs/
 │   └── ARCHITECTURE.md   # shared architecture deep-dive
 │
-├── web-frontend/      # 🎨 Next.js website UI        →  see web-frontend/README.md
+├── frontendHtml/      # 🎨 Clickable HTML/CSS/JS prototype (15 pages)  →  see frontendHtml/README.md
+│
+├── web-frontend/      # 🖥️ Next.js website UI (production build)       →  see web-frontend/README.md
 │   └── src/ ...
 │
 ├── web-backend/       # 🌐 website API: auth, stats, profiles  →  see web-backend/README.md
@@ -63,11 +66,14 @@ CodeVault/
     └── src/ ...
 ```
 
-| App | Stack | What it does | Docs |
+| Part | Stack | What it does | Docs |
 |-----|-------|--------------|------|
-| **web-frontend/** | Next.js 15 · React 18 · Tailwind | Website UI; connect platforms, view analysis, public profiles | [web-frontend/README.md](web-frontend/README.md) |
+| **frontendHtml/** | static HTML · CSS · JS | Clickable prototype of every screen; the visual spec for the real UI | [frontendHtml/README.md](frontendHtml/README.md) |
+| **web-frontend/** | Next.js 15 · React 18 · Tailwind | Production website UI; connect platforms, view analysis, public profiles | [web-frontend/README.md](web-frontend/README.md) |
 | **web-backend/** | Node.js · Express · Prisma | Auth, platform connections, multi‑platform stats, public profiles | [web-backend/README.md](web-backend/README.md) |
 | **git-service/** | Node.js · Express · Prisma · node‑cron | Fetches the user's code + question, pushes the per‑problem folder to GitHub, runs scheduled syncs | [git-service/README.md](git-service/README.md) |
+
+> 🎨 **Design language:** warm "paper" background with a **coral `#f1543f` + gold `#e8a200` + rose `#e0457b`** mix (no purple/blue/green theme). Inter + JetBrains Mono. See the live look in [frontendHtml/](frontendHtml/README.md).
 
 ### How they connect
 
@@ -194,10 +200,12 @@ npm run dev          # http://localhost:3000
 ## 🗺 Roadmap
 
 - [x] Monorepo skeleton (web-frontend + web-backend + git-service) & architecture
+- [x] HTML prototype of every screen (`frontendHtml/`) + design system
 - [ ] web-backend: LeetCode stats (Path A)
 - [ ] web-backend: Codeforces stats (official API)
 - [ ] git-service: LeetCode code sync (Path B) → GitHub push + README index
-- [ ] web-frontend: dashboard + connect flow
+- [ ] web-frontend: build real pages from the prototype
+- [ ] Pricing / plans page (deferred)
 - [ ] Unified multi‑platform dashboard
 - [ ] AI explanation & next‑problem recommendation
 - [ ] Gamification (streaks, goals, shareable cards)
