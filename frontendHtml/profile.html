@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Gaurav Teegulla's coding profile — 1,248 problems solved across LeetCode, Codeforces, CodeChef and HackerRank." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f1543f'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='15' fill='white' text-anchor='middle' font-weight='bold'%3ECV%3C/text%3E%3C/svg%3E" />
+<title>Gaurav Teegulla — coding profile · CodeVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{--paper:#f8f6f1;--card:#fff;--ink:#1a160f;--ink-2:#3a352c;--muted:#6f6a5f;--faint:#7a7568;--border:#ece7dc;--border-2:#e2dccd;
+    --brand:#f1543f;--brand-d:#d8431f;--brand-soft:#fdeae4;--amber:#e8a200;--amber-d:#b07c00;--amber-soft:#fbeec8;--rose:#e0457b;--rose-d:#c43368;--rose-soft:#fce3ee;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--r:14px;--shadow:0 1px 2px rgba(30,20,10,.04),0 10px 28px -16px rgba(30,20,10,.18);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}.mono{font-family:var(--mono)}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+  .nav{position:sticky;top:0;z-index:20;background:rgba(248,246,241,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .nav-in{max-width:920px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 24px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  .mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:800;font-size:13px}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-family:inherit;font-weight:600;font-size:13.5px;border-radius:9px;border:1px solid var(--border-2);background:#fff;padding:9px 14px;cursor:pointer;color:var(--ink)}
+  .btn:hover{background:#fff} .btn.brand{background:var(--brand);color:#fff;border-color:var(--brand)} .btn.brand:hover{background:var(--brand-d)}
+  .wrap{max-width:920px;margin:28px auto 60px;padding:0 24px;display:flex;flex-direction:column;gap:16px}
+  /* hero header */
+  .phead{background:#fff;border:1px solid var(--border);border-radius:18px;padding:26px;display:flex;gap:20px;align-items:center;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .phead::after{content:"";position:absolute;right:-50px;top:-50px;width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,var(--brand-soft),var(--rose-soft));opacity:.7}
+  .pav{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--brand),var(--rose));color:#fff;display:grid;place-items:center;font-weight:800;font-size:34px;position:relative;z-index:2;flex:none}
+  .pid{position:relative;z-index:2;flex:1}
+  .pid h1{font-size:24px;letter-spacing:-.02em}.pid .ln{font-family:var(--mono);font-size:12.5px;color:var(--brand-d);margin-top:4px}
+  .pid .chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+  .pchip{display:flex;align-items:center;gap:6px;border:1px solid var(--border-2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:600;background:#fff}
+  .pchip .b{width:15px;height:15px;border-radius:4px;display:grid;place-items:center;font-size:8px;font-weight:800;font-family:var(--mono);color:#fff}
+  .lc{background:#ffa116}.cf{background:#1f8acb}.cc{background:#7a5230}.hr{background:#1aa260}
+  .phead .pa{position:relative;z-index:2;display:flex;flex-direction:column;gap:8px}
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+  .stat .n{font-size:26px;font-weight:800;letter-spacing:-.03em}.stat .l{font-size:12px;color:var(--muted);margin-top:3px}
+  .grid{display:grid;gap:14px}.g-2{grid-template-columns:1fr 1fr}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:18px}
+  .panel h2{font-size:13.5px;font-weight:700;margin:0 0 16px}
+  .ringwrap{display:flex;align-items:center;gap:18px}
+  .ring{width:118px;height:118px;border-radius:50%;flex:none;background:conic-gradient(var(--amber) 0 43.3%,var(--brand) 43.3% 88.2%,var(--rose) 88.2% 100%);display:grid;place-items:center;position:relative}
+  .ring::before{content:"";position:absolute;width:84px;height:84px;border-radius:50%;background:#fff}
+  .ring .rc{position:relative;text-align:center}.ring .rc b{font-size:22px;font-weight:800;display:block}.ring .rc span{font-size:11px;color:var(--muted)}
+  .rleg{display:flex;flex-direction:column;gap:10px;flex:1}.rleg .r{display:flex;align-items:center;gap:9px;font-size:13px}.rleg .r .v{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .sw{width:10px;height:10px;border-radius:3px}.sw.e{background:var(--amber)}.sw.m{background:var(--brand)}.sw.h{background:var(--rose)}
+  .heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px}
+  .heat i{width:11px;height:11px;border-radius:3px;background:#efe7df}
+  .heat i.l1{background:#fbd6c6}.heat i.l2{background:#f5a888}.heat i.l3{background:#f0764f}.heat i.l4{background:#d8431f}
+  .chips2{display:flex;flex-wrap:wrap;gap:8px}.tchip{font-size:12.5px;border:1px solid var(--border-2);border-radius:8px;padding:6px 10px;display:flex;gap:7px;align-items:center}.tchip b{font-family:var(--mono);font-size:11px;color:var(--brand-d);font-weight:600}
+  .pf{display:flex;flex-direction:column;gap:11px}.pf-row{display:grid;grid-template-columns:100px 1fr 40px;align-items:center;gap:10px;font-size:13px}
+  .pf-row .lab{display:flex;align-items:center;gap:7px;font-weight:600}.pf-bar{height:8px;border-radius:5px;background:var(--paper);overflow:hidden}.pf-bar i{display:block;height:100%;border-radius:5px}.pf-row .val{text-align:right;color:var(--muted);font-family:var(--mono);font-size:12px}
+  .badge-ic{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;color:#fff;font-size:9px;font-weight:800;font-family:var(--mono)}
+  .cta-foot{text-align:center;padding:30px;border:1px dashed var(--border-2);border-radius:16px;background:#fff}
+  .cta-foot p{color:var(--muted);font-size:14px;margin:6px 0 16px}
+  @media (max-width:760px){.g-2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.phead{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+  <div class="nav"><div class="nav-in">
+    <a class="brand" href="landing.html"><span class="mark">CV</span> CodeVault</a>
+    <a class="btn brand" href="login.html">Build your own profile</a>
+  </div></div>
+
+  <div class="wrap">
+    <section class="phead">
+      <div class="pav">G</div>
+      <div class="pid">
+        <h1>Gaurav Teegulla</h1>
+        <div class="ln">codevault.dev/u/gaurav</div>
+        <div class="chips">
+          <span class="pchip"><span class="b lc">LC</span> @gaurav</span>
+          <span class="pchip"><span class="b cf">CF</span> @gaurav_t</span>
+          <span class="pchip"><span class="b cc">CC</span> @gaurav06</span>
+          <span class="pchip"><span class="b hr">HR</span> @gauravg</span>
+        </div>
+      </div>
+      <div class="pa">
+        <button class="btn" type="button" id="copyBtn">Copy link</button>
+        <a class="btn" href="https://github.com/Gaurav06120714/LeetCodeQuestions" target="_blank" rel="noopener">View solutions ↗</a>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><div class="n">1,248</div><div class="l">Total solved</div></div>
+      <div class="stat"><div class="n">4</div><div class="l">Platforms</div></div>
+      <div class="stat"><div class="n">148</div><div class="l">Hard solved</div></div>
+      <div class="stat"><div class="n">89</div><div class="l">Best streak</div></div>
+    </section>
+
+    <div class="grid g-2">
+      <section class="panel">
+        <h2>Difficulty</h2>
+        <div class="ringwrap">
+          <div class="ring" role="img" aria-label="540 Easy, 560 Medium, 148 Hard"><div class="rc"><b>1,248</b><span>solved</span></div></div>
+          <div class="rleg">
+            <div class="r"><span class="sw e"></span> Easy <span class="v">540</span></div>
+            <div class="r"><span class="sw m"></span> Medium <span class="v">560</span></div>
+            <div class="r"><span class="sw h"></span> Hard <span class="v">148</span></div>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>By platform</h2>
+        <div class="pf">
+          <div class="pf-row"><span class="lab"><span class="badge-ic lc">LC</span>LeetCode</span><span class="pf-bar"><i style="width:100%;background:#ffa116"></i></span><span class="val">612</span></div>
+          <div class="pf-row"><span class="lab"><span class="badge-ic cf">CF</span>Codeforces</span><span class="pf-bar"><i style="width:56%;background:#1f8acb"></i></span><span class="val">341</span></div>
+          <div class="pf-row"><span class="lab"><span class="badge-ic cc">CC</span>CodeChef</span><span class="pf-bar"><i style="width:30%;background:#7a5230"></i></span><span class="val">184</span></div>
+          <div class="pf-row"><span class="lab"><span class="badge-ic hr">HR</span>HackerRank</span><span class="pf-bar"><i style="width:18%;background:#1aa260"></i></span><span class="val">111</span></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Submission activity · last 12 months</h2>
+      <div class="heat" id="heat" role="img" aria-label="Submission activity heatmap" aria-hidden="true"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Topic strengths</h2>
+      <div class="chips2">
+        <span class="tchip">Arrays <b>210</b></span><span class="tchip">Dynamic Programming <b>142</b></span><span class="tchip">Graphs <b>118</b></span>
+        <span class="tchip">Trees <b>96</b></span><span class="tchip">Greedy <b>84</b></span><span class="tchip">Binary Search <b>71</b></span>
+        <span class="tchip">Strings <b>63</b></span><span class="tchip">Math <b>58</b></span>
+      </div>
+    </section>
+
+    <div class="cta-foot">
+      <strong>Turn your practice into a profile like this</strong>
+      <p>Connect your accounts and CodeVault builds it automatically.</p>
+      <a class="btn brand" href="login.html">Get started free</a>
+    </div>
+  </div>
+<script>
+  (function(){const heat=document.getElementById('heat');const lv=['','l1','l2','l3','l4'];let s=1337;const r=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
+    for(let i=0;i<53*7;i++){const c=document.createElement('i');const v=r(),rec=i>53*7*0.62;let l=0;if(v>0.5)l=1;if(v>0.7)l=2;if(v>0.85)l=3;if(v>0.93||(rec&&v>0.72))l=4;if(l)c.classList.add(lv[l]);heat.appendChild(c);} })();
+  const b=document.getElementById('copyBtn');b.addEventListener('click',()=>{navigator.clipboard?.writeText('https://codevault.dev/u/gaurav');const t=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=t,1300);});
+</script>
+</body>
+</html>
