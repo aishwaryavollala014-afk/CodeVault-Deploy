@@ -107,7 +107,7 @@
     <div class="topbar">
       <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#ic-menu"/></svg></button>
       <h1>Repositories</h1><span class="spacer"></span>
-      <button class="ic-btn" type="button" aria-label="Notifications"><svg class="ico" aria-hidden="true"><use href="#ic-bell"/></svg></button>
+      <a class="ic-btn" href="notifications.html" aria-label="Notifications"><svg class="ico" aria-hidden="true"><use href="#ic-bell"/></svg></a>
     </div>
     <main class="content">
 
@@ -118,7 +118,7 @@
             <div class="nm">Gaurav06120714 / <a href="#">LeetCodeQuestions</a> <span class="pubpill">Public</span></div>
             <div class="meta"><span>default branch <b>main</b></span><span>612 files</span><span>last sync 2h ago</span><span>auto-sync on</span></div>
           </div>
-          <div class="acts"><button class="btn" type="button">Open on GitHub</button><button class="btn brand" type="button"><svg class="ico sm" aria-hidden="true"><use href="#ic-sync"/></svg> Re-sync now</button></div>
+          <div class="acts"><a class="btn" href="https://github.com/Gaurav06120714/LeetCodeQuestions" target="_blank" rel="noopener">Open on GitHub ↗</a><button class="btn brand" type="button" onclick="location.href='sync-status.html'"><svg class="ico sm" aria-hidden="true"><use href="#ic-sync"/></svg> Re-sync now</button></div>
         </div>
       </section>
 
@@ -127,12 +127,12 @@
           <h2 class="h">Files <span style="font-family:var(--mono);font-size:11px;color:var(--faint)">LeetCodeQuestions/</span></h2>
           <div class="fl">
             <div class="fl-bar"><svg class="ico sm" aria-hidden="true"><use href="#ic-repos"/></svg> main · 612 problems</div>
-            <div class="fl-row"><span class="nm"><span class="fold">▸</span> 0001 · Two Sum</span><span class="lang">solution.py</span><span class="when">3 mo ago</span></div>
-            <div class="fl-row"><span class="nm"><span class="fold">▸</span> 0011 · Container With Most Water</span><span class="lang">solution.cpp</span><span class="when">3 mo ago</span></div>
-            <div class="fl-row"><span class="nm"><span class="fold">▸</span> 0369 · Plus One Linked List</span><span class="lang">solution.py</span><span class="when">2h ago</span></div>
-            <div class="fl-row"><span class="nm"><span class="fold">▸</span> 0704 · Binary Search</span><span class="lang">solution.java</span><span class="when">2d ago</span></div>
-            <div class="fl-row"><span class="nm"><span class="fold">▸</span> 1143 · Longest Common Subsequence</span><span class="lang">solution.cpp</span><span class="when">1w ago</span></div>
-            <div class="fl-row"><span class="nm">README.md</span><span class="lang" style="background:var(--brand-soft);color:var(--brand-d)">index</span><span class="when">2h ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm"><span class="fold">▸</span> 0001 · Two Sum</span><span class="lang">solution.py</span><span class="when">3 mo ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm"><span class="fold">▸</span> 0011 · Container With Most Water</span><span class="lang">solution.cpp</span><span class="when">3 mo ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm"><span class="fold">▸</span> 0369 · Plus One Linked List</span><span class="lang">solution.py</span><span class="when">2h ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm"><span class="fold">▸</span> 0704 · Binary Search</span><span class="lang">solution.java</span><span class="when">2d ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm"><span class="fold">▸</span> 1143 · Longest Common Subsequence</span><span class="lang">solution.cpp</span><span class="when">1w ago</span></div>
+            <div class="fl-row" onclick="location.href='problem.html'" style="cursor:pointer"><span class="nm">README.md</span><span class="lang" style="background:var(--brand-soft);color:var(--brand-d)">index</span><span class="when">2h ago</span></div>
           </div>
         </section>
 
@@ -151,10 +151,10 @@
       <section class="panel">
         <h2 class="h">Repository mapping <span style="font-weight:500;color:var(--faint);font-size:12px">one repo per platform</span></h2>
         <div class="map">
-          <div class="map-row"><span class="badge-ic lc">LC</span> LeetCode <span class="arrow">→</span> <span class="repo">LeetCodeQuestions</span> <button class="btn" type="button">Configure</button></div>
-          <div class="map-row"><span class="badge-ic cf">CF</span> Codeforces <span class="arrow">→</span> <span class="repo">CodeforcesSolutions</span> <button class="btn" type="button">Configure</button></div>
-          <div class="map-row"><span class="badge-ic cc">CC</span> CodeChef <span class="arrow">→</span> <span class="repo">CodeChef-Solutions</span> <button class="btn" type="button">Configure</button></div>
-          <div class="map-row"><span class="badge-ic hr">HR</span> HackerRank <span class="arrow">→</span> <span class="repo">HackerRank</span> <button class="btn" type="button">Configure</button></div>
+          <div class="map-row"><span class="badge-ic lc">LC</span> LeetCode <span class="arrow">→</span> <span class="repo">LeetCodeQuestions</span> <button class="btn" type="button" onclick="location.href='settings.html#github'">Configure</button></div>
+          <div class="map-row"><span class="badge-ic cf">CF</span> Codeforces <span class="arrow">→</span> <span class="repo">CodeforcesSolutions</span> <button class="btn" type="button" onclick="location.href='settings.html#github'">Configure</button></div>
+          <div class="map-row"><span class="badge-ic cc">CC</span> CodeChef <span class="arrow">→</span> <span class="repo">CodeChef-Solutions</span> <button class="btn" type="button" onclick="location.href='settings.html#github'">Configure</button></div>
+          <div class="map-row"><span class="badge-ic hr">HR</span> HackerRank <span class="arrow">→</span> <span class="repo">HackerRank</span> <button class="btn" type="button" onclick="location.href='settings.html#github'">Configure</button></div>
         </div>
       </section>
 
