@@ -132,7 +132,7 @@ CodeVault is built on one key insight: **public stats and private source code ar
 ### Path A — Statistics *(username only)*
 - **Input:** a public username / profile link.
 - **Source:** public endpoints (LeetCode GraphQL, Codeforces official API…).
-- **Auth:** none. Always available, fully legal.
+- **Auth:** none. Always available, fully legal .
 
 ### Path B — Code sync *(one‑time authorized connect)*
 - **Input:** an authorized session you grant **once** per platform.
