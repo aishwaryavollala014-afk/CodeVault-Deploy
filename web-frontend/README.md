@@ -10,6 +10,11 @@ A **Next.js (App Router) + TypeScript + Tailwind CSS** application that lets use
 
 ---
 
+> 🎨 **Visual spec lives in [`../frontendHtml`](../frontendHtml/README.md)** — a clickable HTML prototype of every screen. Build these pages 1:1 in Next.js.
+> **Design tokens:** warm paper `#f8f6f1`; **coral `#f1543f`** primary, **gold `#e8a200`** + **rose `#e0457b`** accents (no purple/blue/green theme); **Inter** + **JetBrains Mono**; consistent inline-SVG icons. Platform badges keep their real brand colors.
+
+---
+
 ## 📑 Table of Contents
 
 1. [Overview](#-overview)
