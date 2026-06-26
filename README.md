@@ -10,9 +10,9 @@ CodeVault brings every competitive‑programming platform you use into **one das
 
 ---
 
-## 👥 Team Git Workflow
+## 👥 Team Git Workflow (single `main` branch)
 
-> Two developers build CodeVault in parallel — one owns the **frontend**, the other owns the **backend**. To avoid conflicts, each developer only edits their own folders and merges through Pull Requests.
+> Two developers build CodeVault in parallel — one owns the **frontend**, the other owns the **backend**. Everyone works directly on the **`main` branch**. To avoid conflicts, each developer only edits their own folders.
 
 **Who owns what**
 
@@ -21,7 +21,7 @@ CodeVault brings every competitive‑programming platform you use into **one das
 | **Frontend dev** | `web-frontend/`, `frontendHtml/` |
 | **Backend dev** | `web-backend/`, `git-service/` |
 
-**How to use these commands:** run them in your terminal from inside the `CodeVault/` folder. Replace `feature-name` with a short description of your task. Frontend dev names branches `frontend/...`, backend dev names branches `backend/...`. Never edit `main` directly — always work on a branch and open a Pull Request.
+**How to use these commands:** run them in your terminal from inside the `CodeVault/` folder. Always **pull before you start** and **pull again before you push** so you never overwrite the other dev's work.
 
 **1. One-time setup — clone the repo**
 ```bash
@@ -31,58 +31,35 @@ cd CodeVault
 
 **2. Before you start working — get the latest code**
 ```bash
-git checkout main
 git pull origin main
 ```
 
-**3. Start a task on your own branch**
-```bash
-git checkout -b backend/feature-name     # backend dev
-git checkout -b frontend/feature-name    # frontend dev
-```
-
-**4. Save your work (commit)**
+**3. Save your work (commit)**
 ```bash
 git status                 # see what changed
 git add .
-git commit -m "feat(backend): add auth routes"
+git commit -m "add auth routes"
 ```
 
-**5. Push your branch to GitHub**
+**4. Pull the other dev's changes, then push yours**
 ```bash
-git push -u origin backend/feature-name   # first push of this branch
-git push                                    # every push after that
-```
-
-**6. Pull the other dev's merged changes into your branch**
-```bash
-git checkout main
-git pull origin main
-git checkout backend/feature-name
-git merge main
-```
-
-**7. Open a Pull Request** on GitHub → review → merge into `main`.
-
-**8. After it's merged — clean up**
-```bash
-git checkout main
-git pull origin main
-git branch -d backend/feature-name
+git pull --rebase origin main   # get their latest work on top of yours
+git push origin main            # send your work to GitHub
 ```
 
 **If you get a merge conflict** (rare — each dev owns different folders)
 ```bash
 # open the file, fix the <<<<<<< ======= >>>>>>> markers, then:
 git add <file>
-git commit
+git rebase --continue
+git push origin main
 ```
 
 **✅ Golden rules**
-- Always `git pull origin main` before starting work.
-- Never commit directly to `main` — branch + Pull Request only.
+- Always `git pull origin main` before you start work.
+- Always `git pull --rebase origin main` right before you `git push`.
 - Commit small and often with clear messages.
-- Stay in your own folders (frontend vs backend).
+- Stay in your own folders (frontend vs backend) to avoid conflicts.
 
 ---
 
