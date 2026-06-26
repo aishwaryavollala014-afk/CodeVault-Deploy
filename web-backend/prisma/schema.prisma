@@ -1,0 +1,311 @@
+// CodeVault — web-backend database schema (PostgreSQL).
+// Source of truth: docs/DATABASE_PLAN.md. web-backend OWNS writes to most tables;
+// git-service writes only `problems` + `sync_runs` (enforced by DB roles in prod).
+// IDs are cuid (opaque, non-enumerable) per docs/API_CONTRACT.md. Timestamps are UTC.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------- enums -----------------------------
+
+enum UserRole {
+  user
+  admin
+}
+
+enum PlanType {
+  free
+  pro
+}
+
+enum OAuthProvider {
+  github
+}
+
+enum PlatformType {
+  leetcode
+  codeforces
+  codechef
+  hackerrank
+}
+
+enum TokenStatus {
+  none
+  active
+  expired
+}
+
+enum RepoVisibility {
+  public
+  private
+}
+
+enum FolderConvention {
+  number
+  difficulty
+  topic
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum SyncStatus {
+  queued
+  running
+  success
+  partial
+  failed
+  expired
+}
+
+enum SyncTrigger {
+  schedule
+  manual
+}
+
+enum NotificationType {
+  sync
+  expiry
+  badge
+  repo
+  system
+}
+
+enum AuditAction {
+  login
+  logout
+  connect
+  disconnect
+  authorize
+  token_refresh
+  delete
+  admin
+}
+
+// ----------------------------- models -----------------------------
+
+model User {
+  id                   String    @id @default(cuid())
+  githubLogin          String    @unique
+  handle               String    @unique
+  displayName          String?
+  email                String?
+  avatarUrl            String?
+  role                 UserRole  @default(user)
+  plan                 PlanType  @default(free)
+  publicProfileEnabled Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+
+  oauthIdentities OAuthIdentity[]
+  connections     Connection[]
+  githubRepos     GithubRepo[]
+  problems        Problem[]
+  syncRuns        SyncRun[]
+  statsSnapshots  StatsSnapshot[]
+  notifications   Notification[]
+  authSessions    AuthSession[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model OAuthIdentity {
+  id                String        @id @default(cuid())
+  userId            String
+  provider          OAuthProvider @default(github)
+  providerUserId    String
+  accessTokenCipher Bytes
+  tokenIv           Bytes
+  keyVersion        Int           @default(1)
+  scopes            String[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_identities")
+}
+
+model Connection {
+  id             String       @id @default(cuid())
+  userId         String
+  platform       PlatformType
+  username       String
+  syncEnabled    Boolean      @default(false)
+  tokenStatus    TokenStatus  @default(none)
+  tokenExpiresAt DateTime?
+  solvedCount    Int          @default(0)
+  lastSyncedAt   DateTime?
+  metadata       Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret   ConnectionSecret?
+  problems Problem[]
+  syncRuns SyncRun[]
+
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("connections")
+}
+
+model ConnectionSecret {
+  connectionId String    @id
+  tokenCipher  Bytes
+  tokenIv      Bytes
+  keyVersion   Int       @default(1)
+  rotatedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@map("connection_secrets")
+}
+
+model GithubRepo {
+  id               String           @id @default(cuid())
+  userId           String
+  platform         PlatformType
+  repoFullName     String
+  visibility       RepoVisibility   @default(public)
+  folderConvention FolderConvention @default(number)
+  defaultBranch    String           @default("main")
+  fileCount        Int              @default(0)
+  lastSyncAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("github_repos")
+}
+
+model Problem {
+  id           String       @id @default(cuid())
+  userId       String
+  connectionId String
+  platform     PlatformType
+  number       String
+  slug         String
+  title        String
+  difficulty   Difficulty?
+  topics       String[]
+  language     String?
+  solutionPath String?
+  solvedAt     DateTime?
+  syncedToGit  Boolean      @default(false)
+  syncedAt     DateTime?
+  metadata     Json         @default("{}")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, slug])
+  @@index([userId])
+  @@index([connectionId])
+  @@map("problems")
+}
+
+model SyncRun {
+  id           String      @id @default(cuid())
+  userId       String
+  connectionId String
+  status       SyncStatus  @default(queued)
+  trigger      SyncTrigger @default(schedule)
+  itemsFetched Int         @default(0)
+  itemsPushed  Int         @default(0)
+  errorCode    String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime    @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, startedAt])
+  @@index([userId])
+  @@map("sync_runs")
+}
+
+model StatsSnapshot {
+  id        String       @id @default(cuid())
+  userId    String
+  platform  PlatformType
+  payload   Json
+  fetchedAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("stats_snapshots")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuthSession {
+  id               String    @id @default(cuid())
+  userId           String
+  refreshTokenHash String    @unique
+  familyId         String
+  userAgent        String?
+  ip               String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  userId     String?
+  action     AuditAction
+  targetType String?
+  targetId   String?
+  ip         String?
+  metadata   Json        @default("{}")
+  createdAt  DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
