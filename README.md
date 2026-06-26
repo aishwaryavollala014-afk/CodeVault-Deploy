@@ -10,6 +10,82 @@ CodeVault brings every competitive‑programming platform you use into **one das
 
 ---
 
+## 👥 Team Git Workflow
+
+> Two developers build CodeVault in parallel — one owns the **frontend**, the other owns the **backend**. To avoid conflicts, each developer only edits their own folders and merges through Pull Requests.
+
+**Who owns what**
+
+| Role | Folders they edit |
+|------|-------------------|
+| **Frontend dev** | `web-frontend/`, `frontendHtml/` |
+| **Backend dev** | `web-backend/`, `git-service/` |
+
+**How to use these commands:** run them in your terminal from inside the `CodeVault/` folder. Replace `feature-name` with a short description of your task. Frontend dev names branches `frontend/...`, backend dev names branches `backend/...`. Never edit `main` directly — always work on a branch and open a Pull Request.
+
+**1. One-time setup — clone the repo**
+```bash
+git clone https://github.com/Gaurav06120714/CodeVault.git
+cd CodeVault
+```
+
+**2. Before you start working — get the latest code**
+```bash
+git checkout main
+git pull origin main
+```
+
+**3. Start a task on your own branch**
+```bash
+git checkout -b backend/feature-name     # backend dev
+git checkout -b frontend/feature-name    # frontend dev
+```
+
+**4. Save your work (commit)**
+```bash
+git status                 # see what changed
+git add .
+git commit -m "feat(backend): add auth routes"
+```
+
+**5. Push your branch to GitHub**
+```bash
+git push -u origin backend/feature-name   # first push of this branch
+git push                                    # every push after that
+```
+
+**6. Pull the other dev's merged changes into your branch**
+```bash
+git checkout main
+git pull origin main
+git checkout backend/feature-name
+git merge main
+```
+
+**7. Open a Pull Request** on GitHub → review → merge into `main`.
+
+**8. After it's merged — clean up**
+```bash
+git checkout main
+git pull origin main
+git branch -d backend/feature-name
+```
+
+**If you get a merge conflict** (rare — each dev owns different folders)
+```bash
+# open the file, fix the <<<<<<< ======= >>>>>>> markers, then:
+git add <file>
+git commit
+```
+
+**✅ Golden rules**
+- Always `git pull origin main` before starting work.
+- Never commit directly to `main` — branch + Pull Request only.
+- Commit small and often with clear messages.
+- Stay in your own folders (frontend vs backend).
+
+---
+
 ## 📑 Table of Contents
 
 1. [What is CodeVault?](#-what-is-codevault)
