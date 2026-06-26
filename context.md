@@ -135,4 +135,6 @@ Each service has its own README documenting structure, versions, file‑by‑fil
 - Repo: https://github.com/Gaurav06120714/CodeVault
 - Build spec: [plan.md](plan.md)
 - Service docs: [web-frontend/README.md](web-frontend/README.md) · [web-backend/README.md](web-backend/README.md) · [git-service/README.md](git-service/README.md)
+- Architecture & plans: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/API_CONTRACT.md](docs/API_CONTRACT.md) · [docs/DATABASE_PLAN.md](docs/DATABASE_PLAN.md) · [docs/ROADMAP.md](docs/ROADMAP.md)
+- **Security documentation (18 enterprise guides):** [docs/SECURITY_PLAN.md](docs/SECURITY_PLAN.md) plus per-domain guides — DATABASE, BACKEND, AUTH, API, REDIS, QUEUE, GITHUB, INFRASTRUCTURE, CLOUD, MONITORING, DEVSECOPS, FILE_UPLOAD, SECRETS, SCALABILITY, DISASTER_RECOVERY, SECURITY_TESTING, COMPLIANCE, and [docs/ATTACK_PREVENTION.md](docs/ATTACK_PREVENTION.md). Full index in [README.md](README.md#-documentation).
 - Sample UI: `web-frontend/landing-example.html` (uncommitted)
