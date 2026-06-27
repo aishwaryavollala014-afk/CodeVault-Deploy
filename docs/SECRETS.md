@@ -165,5 +165,5 @@ CORS_ORIGIN=http://localhost:3000
 ```
 Scripts: `dev`=nodemon · `build`=`prisma generate && tsc` · `start` · `typecheck` · `lint` · `prisma:generate`.
 
-> Local host ports (per [[project_codevault]] env): Postgres 5433, Redis 6380, web-backend 4000, git-service 5050. `JWT_SECRET` + `ENCRYPTION_KEY` **must be identical** across both services.
+> Local host ports: Postgres 5433, Redis 6380, web-backend 4000, git-service 5050. `JWT_SECRET` + `ENCRYPTION_KEY` **must be identical** across both services.
 - OWASP Secrets Management Cheat Sheet · 12-Factor App: Config
