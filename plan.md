@@ -19,6 +19,10 @@ This document is the **implementation spec** for CodeVault. For every file in th
 | 6 | git-service | Automation (scheduler + sync job) + sync API |
 | 7 | web-frontend | Foundation: lib (2 API bases), types, constants, styles, features |
 | 8 | web-frontend | UI: components + pages (dashboard, connect, public profile) + hooks |
+| 9 | web-backend + git-service | Extension support: `client=extension` auth endpoints + `POST /api/ingest` |
+| 10 | browser-extension | Capture-at-source (Path B v2): auth, content scripts, background, popup/options |
+
+> Phases 9–10 add the **cross-browser extension** (Path B v2). See [docs/EXTENSION_PLAN.md](docs/EXTENSION_PLAN.md). They reverse the original "no extension" stance and **replace** the fragile server-side session replay as the preferred Path B.
 
 ---
 
@@ -208,6 +212,48 @@ The website UI. Calls **two** backends: `NEXT_PUBLIC_API_URL` (web-backend) and 
 | `types/index.ts` | Shared frontend types barrel. |
 | `constants/platforms.ts` | Per‑platform metadata (name, icon, color, profile URL). |
 | `styles/theme.ts` | Design tokens usable from TS. |
+
+---
+
+# 🧩 BROWSER EXTENSION  (`browser-extension/`)
+
+Path B v2 — capture the user's **own accepted** code in-browser and feed git-service. Signs in as the **same CodeVault user**. Cross-browser (Manifest V3 + `webextension-polyfill`). Full blueprint: [docs/EXTENSION_PLAN.md](docs/EXTENSION_PLAN.md); security: [docs/EXTENSION_SECURITY.md](docs/EXTENSION_SECURITY.md).
+
+## Backend support first (Phase 9)
+| File | What to write |
+|------|---------------|
+| `web-backend/src/routes/auth.routes.ts` (extend) | `POST /auth/extension/start` (PKCE + `client=extension`), `POST /auth/extension/token`, `POST /auth/extension/refresh`, `GET /auth/extension/sessions`, `DELETE /auth/extension/sessions/:id`. |
+| `web-backend/src/services/auth.service.ts` (extend) | Issue/rotate a `client=extension` session (reuse rotation + reuse-detection); list/revoke sessions. |
+| `web-backend/prisma/schema.prisma` (extend) | Add `client` discriminator (`web` \| `extension`) to `auth_sessions`; optional `ingest_log` (idempotency). |
+| `git-service/src/routes/ingest.routes.ts` | `POST /api/ingest` — accept captured submission(s). |
+| `git-service/src/controllers/ingest.controller.ts` | Validate (Zod), verify JWT (reuse S1), ownership-check, dedupe vs `problems`, call existing GitHub push. |
+
+## Extension root config (Phase 10)
+| File | What to write |
+|------|---------------|
+| `browser-extension/package.json` | Deps (`webextension-polyfill`, `zod`) + build (WXT or CRXJS+Vite). Scripts: `dev`, `build:chrome`, `build:firefox`, `build:safari`. |
+| `browser-extension/tsconfig.json` | Strict TS, `@/*` alias to `src/`. |
+| `browser-extension/manifest.config.ts` | MV3; `host_permissions` = 4 platforms + API domain; `permissions` = storage/scripting/identity; strict CSP. |
+| `browser-extension/.env.example` | Public API base URLs only (no secrets). |
+
+## Background / Content / UI
+| File | What to write |
+|------|---------------|
+| `src/background/index.ts` | Sole token holder; receives validated capture messages; dispatches `POST /api/ingest`. |
+| `src/content/leetcode.ts` | Detect Accepted (intercept submission-check response; DOM fallback); extract number/slug/title/difficulty/tags/language/code. |
+| `src/content/codeforces.ts` · `codechef.ts` · `hackerrank.ts` | Same per platform. |
+| `src/popup/` | Sign-in status, per-platform auto-capture toggles, recent captures, "Sync now," dashboard link. |
+| `src/options/` | Account, capture prefs, target repo, revoke sessions. |
+
+## Lib / Types / Constants
+| File | What to write |
+|------|---------------|
+| `src/lib/auth.ts` | PKCE OAuth handoff (`launchWebAuthFlow`), token storage + rotation in `chrome.storage.local`. |
+| `src/lib/api-client.ts` | Two base URLs (web-backend auth + git-service ingest); attach Bearer JWT. |
+| `src/lib/capture.ts` | Shared normalize → `SolutionToSync` (mirror git-service types). |
+| `src/lib/storage.ts` | `chrome.storage.local` wrappers. |
+| `src/types/index.ts` | `Submission`, `Capture`, `SolutionToSync`. |
+| `src/constants/index.ts` | Platform host patterns + capture selectors/endpoints. |
 
 ---
 
