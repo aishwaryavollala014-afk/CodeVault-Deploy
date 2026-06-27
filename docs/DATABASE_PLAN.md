@@ -445,3 +445,242 @@ D6 Partition plan armed (triggers when row thresholds hit) + archiving job
 - [x] Partition/replica/archive plan documented and threshold-triggered
 
 > This is the definitive database specification. When you ask, I can produce the **Prisma schema (still as a planning artifact)** or a per-table migration order — no application code.
+
+---
+
+## 17. Implemented schema (captured before skeleton reset — 2026-06-27)
+
+> The source files (`web-backend/prisma/schema.prisma`, `git-service/prisma/schema.prisma`, `prisma/sql/roles.sql`, `prisma/migrations/**`) were reset to empty skeletons. Their exact content is preserved here so the database can be rebuilt 1:1. Full source also remains in git history. **web-backend owns all migrations;** git-service uses an **identical mirror** schema (same models/enums) and only `prisma generate`s — it writes `problems` + `sync_runs`, reads the rest.
+
+### 17.1 Prisma schema (web-backend, canonical — 11 models, 12 enums)
+```prisma
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+// enums
+enum UserRole { user admin }
+enum PlanType { free pro }
+enum OAuthProvider { github }
+enum PlatformType { leetcode codeforces codechef hackerrank }
+enum TokenStatus { none active expired }
+enum RepoVisibility { public private }
+enum FolderConvention { number difficulty topic }
+enum Difficulty { easy medium hard }
+enum SyncStatus { queued running success partial failed expired }
+enum SyncTrigger { schedule manual }
+enum NotificationType { sync expiry badge repo system }
+enum AuditAction { login logout connect disconnect authorize token_refresh delete admin }
+
+model User {
+  id String @id @default(cuid())
+  githubLogin String @unique
+  handle String @unique
+  displayName String?
+  email String?
+  avatarUrl String?
+  role UserRole @default(user)
+  plan PlanType @default(free)
+  publicProfileEnabled Boolean @default(true)
+  settings Json @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  oauthIdentities OAuthIdentity[]
+  connections Connection[]
+  githubRepos GithubRepo[]
+  problems Problem[]
+  syncRuns SyncRun[]
+  statsSnapshots StatsSnapshot[]
+  notifications Notification[]
+  authSessions AuthSession[]
+  auditLogs AuditLog[]
+  @@map("users")
+}
+
+model OAuthIdentity {
+  id String @id @default(cuid())
+  userId String
+  provider OAuthProvider @default(github)
+  providerUserId String
+  accessTokenCipher Bytes   // AES-256-GCM ciphertext
+  tokenIv Bytes
+  keyVersion Int @default(1)
+  scopes String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_identities")
+}
+
+model Connection {
+  id String @id @default(cuid())
+  userId String
+  platform PlatformType
+  username String
+  syncEnabled Boolean @default(false)
+  tokenStatus TokenStatus @default(none)
+  tokenExpiresAt DateTime?
+  solvedCount Int @default(0)
+  lastSyncedAt DateTime?
+  metadata Json @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret ConnectionSecret?
+  problems Problem[]
+  syncRuns SyncRun[]
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("connections")
+}
+
+model ConnectionSecret {  // 1:1 isolated for least-privilege
+  connectionId String @id
+  tokenCipher Bytes
+  tokenIv Bytes
+  keyVersion Int @default(1)
+  rotatedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  @@map("connection_secrets")
+}
+
+model GithubRepo {
+  id String @id @default(cuid())
+  userId String
+  platform PlatformType
+  repoFullName String
+  visibility RepoVisibility @default(public)
+  folderConvention FolderConvention @default(number)
+  defaultBranch String @default("main")
+  fileCount Int @default(0)
+  lastSyncAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("github_repos")
+}
+
+model Problem {  // git-service-owned; high-volume
+  id String @id @default(cuid())
+  userId String
+  connectionId String
+  platform PlatformType
+  number String
+  slug String
+  title String
+  difficulty Difficulty?
+  topics String[]
+  language String?
+  solutionPath String?
+  solvedAt DateTime?
+  syncedToGit Boolean @default(false)
+  syncedAt DateTime?
+  metadata Json @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  @@unique([userId, platform, slug])
+  @@index([userId])
+  @@index([connectionId])
+  @@map("problems")
+}
+
+model SyncRun {  // history; high-volume
+  id String @id @default(cuid())
+  userId String
+  connectionId String
+  status SyncStatus @default(queued)
+  trigger SyncTrigger @default(schedule)
+  itemsFetched Int @default(0)
+  itemsPushed Int @default(0)
+  errorCode String?
+  startedAt DateTime?
+  finishedAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  @@index([connectionId, startedAt])
+  @@index([userId])
+  @@map("sync_runs")
+}
+
+model StatsSnapshot {  // cached Path A aggregate (read resilience)
+  id String @id @default(cuid())
+  userId String
+  platform PlatformType
+  payload Json
+  fetchedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, platform])
+  @@index([userId])
+  @@map("stats_snapshots")
+}
+
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  type NotificationType
+  title String
+  body String?
+  readAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model AuthSession {  // refresh tokens; rotation + reuse detection
+  id String @id @default(cuid())
+  userId String
+  refreshTokenHash String @unique  // SHA-256
+  familyId String
+  userAgent String?
+  ip String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model AuditLog {  // append-only
+  id String @id @default(cuid())
+  userId String?
+  action AuditAction
+  targetType String?
+  targetId String?
+  ip String?
+  metadata Json @default("{}")
+  createdAt DateTime @default(now())
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+```
+
+### 17.2 Non-Prisma migration `security_constraints` (CHECK + special indexes)
+```sql
+ALTER TABLE "connections"  ADD CONSTRAINT "chk_solved_count_nonneg" CHECK ("solvedCount" >= 0);
+ALTER TABLE "github_repos" ADD CONSTRAINT "chk_file_count_nonneg"   CHECK ("fileCount" >= 0);
+ALTER TABLE "sync_runs"    ADD CONSTRAINT "chk_items_pushed_le_fetched" CHECK ("itemsPushed" <= "itemsFetched");
+CREATE INDEX "idx_notifications_unread" ON "notifications" ("userId") WHERE "readAt" IS NULL;  -- partial
+CREATE INDEX "idx_problems_topics_gin"  ON "problems" USING GIN ("topics");                    -- topic filtering
+```
+Migrations applied (in order): `20260626135657_init` (full generated DDL), `20260626142654_add_user_settings` (`users.settings JSONB default '{}'`), `20260627045522_security_constraints` (above).
+
+### 17.3 Per-service least-privilege roles (`prisma/sql/roles.sql`, applied after migrations)
+- **cv_web** (web-backend): `SELECT/INSERT/UPDATE/DELETE` on all tables, **except** `problems`/`sync_runs` → `SELECT` only.
+- **cv_git** (git-service): `SELECT` on all; `INSERT/UPDATE` on `problems`/`sync_runs`; `INSERT` on `notifications`/`audit_logs`.
+- **audit_logs**: `UPDATE/DELETE` revoked from both app roles (append-only).
+- **cv_read** (analytics): `SELECT` on all **except** `connection_secrets`, `oauth_identities`, `auth_sessions` (no secret access).
+- Neither app role is superuser; passwords come from a secret manager in prod.
