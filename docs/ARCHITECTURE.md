@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-CodeVault is a **3-service monorepo** that aggregates competitive programming stats and auto-syncs accepted solutions to GitHub.
+CodeVault is a **3-service monorepo** (web-frontend, web-backend, git-service) plus a **cross-browser extension** that aggregates competitive programming stats and auto-syncs accepted solutions to GitHub. The extension is an additional client of the same two backends (Path B v2 — see §3).
 
 ```
                      ┌──────────────────────────────────────────────┐
@@ -36,6 +36,9 @@ CodeVault is a **3-service monorepo** that aggregates competitive programming st
                    │  BullMQ job queue                 │
                    └──────────────────────────────────┘
 
+Clients (present the same user JWT):
+  web-frontend (above) · browser-extension → web-backend (auth) + git-service (POST /api/ingest)
+
 External integrations (git-service workers, no public ingress):
   LeetCode GraphQL · Codeforces API · CodeChef · HackerRank · GitHub REST API
 ```
@@ -61,9 +64,10 @@ Three options were evaluated:
 | Path | What it does | Who serves it | Auth needed |
 |------|-------------|---------------|------------|
 | **A — Public stats** | Fetch solved counts, difficulty, topics, streak, ratings by username from each platform's public API | web-backend (stats module) | Username only — no platform session token |
-| **B — Code sync** | Fetch accepted submissions + source code + question; push `<number>/question.md` + `solution.<ext>` to GitHub | git-service (sync workers) | Platform session token (encrypted in DB, one-time connect) |
+| **B — Code sync (server-side)** | Fetch accepted submissions + source code + question; push `<number>/question.md` + `solution.<ext>` to GitHub | git-service (sync workers) | Platform session token (encrypted in DB, one-time connect) |
+| **B v2 — Code sync (extension)** | Capture the user's *own* accepted code in-browser at solve-time; `POST /api/ingest` → same GitHub push | browser-extension → git-service | The **same CodeVault user JWT** (no platform session stored server-side) |
 
-Path A and Path B are **independent failure domains**: if a session expires, the stats dashboard keeps working.
+Path A and Path B are **independent failure domains**: if a session expires, the stats dashboard keeps working. **Path B v2 (extension)** is the preferred ingestion source for code — it removes the fragile server-side session replay by capturing in the user's own authenticated browser. The git-service GitHub push pipeline is **identical** for B and B v2; only the ingestion source differs. See [EXTENSION_PLAN.md](EXTENSION_PLAN.md).
 
 ---
 
