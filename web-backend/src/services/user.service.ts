@@ -62,7 +62,12 @@ export async function updateMe(userId: string, input: UpdateUserInput): Promise<
   return toDto(user);
 }
 
-/** Soft-delete the account and immediately revoke all sessions (GDPR-aligned). */
+/**
+ * Soft-delete the account, revoke sessions, and HARD-PURGE crown-jewel secrets
+ * immediately (GDPR + DATABASE_PLAN): platform sync tokens (connection_secrets)
+ * and the encrypted GitHub token (oauth_identities) are deleted on the spot, so
+ * no credential lingers after a delete request.
+ */
 export async function deleteMe(userId: string): Promise<void> {
   await prisma.$transaction([
     prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } }),
@@ -70,5 +75,9 @@ export async function deleteMe(userId: string): Promise<void> {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     }),
+    // Purge encrypted platform sync tokens for all of the user's connections.
+    prisma.connectionSecret.deleteMany({ where: { connection: { userId } } }),
+    // Purge the encrypted GitHub OAuth token.
+    prisma.oAuthIdentity.deleteMany({ where: { userId } }),
   ]);
 }
