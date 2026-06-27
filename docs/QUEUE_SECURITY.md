@@ -122,11 +122,11 @@ SYNC_CONCURRENCY=3
 
 - [x] Job payloads carry IDs only; secrets decrypted in-memory
 - [x] Per-connection lock (NX EX); idempotent upsert
-- [ ] Bounded concurrency + per-platform caps *(global concurrency cap done; per-platform caps pending)*
+- [x] Bounded concurrency + per-platform caps *(global cap + best-effort per-platform Redis semaphore)*
 - [x] Retry attempts capped with exponential backoff *(jitter not explicit)*
 - [x] Expired session → mark + notify, no blind retry
-- [ ] Stalled-job detection; DLQ/failed-set alerts *(failed-set retained; no alerting/DLQ tooling)*
-- [ ] Kill switch to pause sync *(`SYNC_ENABLED` flag not yet added)*
+- [ ] Stalled-job detection; DLQ/failed-set alerts *(failed-set retained; alerting deploy-time)*
+- [x] Kill switch to pause sync *(`SYNC_ENABLED` env flag)*
 - [ ] Queue depth + failure monitoring *(deploy-time)*
 
 ---
