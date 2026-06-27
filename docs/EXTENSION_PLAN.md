@@ -26,6 +26,9 @@ That server-side replay is the weakest part of the design — tokens expire sile
 - Path A stats (still username-only, no extension).
 - Any change to git-service's GitHub push / README-index logic (reused as-is).
 - Storing platform passwords or replaying platform sessions server-side.
+- **A dedicated extension backend.** There is **none** — see the constraint below.
+
+> 🚫 **No separate backend (hard constraint).** The extension is a **thin client** with **no backend of its own**. It uses the two existing services only: **web-backend** for auth and **git-service** for code ingest. The endpoints in §5 are *added to* those services — not a new `extension-backend`/`extension-server`. This keeps one identity, one JWT, and one GitHub-push pipeline.
 
 ---
 
