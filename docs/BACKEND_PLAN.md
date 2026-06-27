@@ -484,40 +484,42 @@ GitHub publish ─┴─▶ Sync orchestrator ─▶ Scheduler/jobs ─▶ Sync 
 
 ## 13. Deployment Readiness Checklist
 
+*(Implementation status — ticked = built/verified in code. Unticked = deploy/CI-time or pending.)*
+
 **Code & tests**
-- [ ] Unit + integration tests on services, repos, generators; CI green
-- [ ] Lint + typecheck enforced in CI
-- [ ] No `TODO`/secrets/`console.log` in shipped code
+- [ ] Unit + integration tests on services, repos, generators; CI green *(verified manually; automated suites + CI pending)*
+- [ ] Lint + typecheck enforced in CI *(typecheck passes locally; CI not set up)*
+- [x] No `TODO`/secrets/`console.log` in shipped code *(only intentional console.error in env fail-fast)*
 
 **Config & secrets**
-- [ ] All env vars validated at boot; app fails fast if missing
-- [ ] Secrets in a manager (not `.env`); master encryption key provisioned
-- [ ] Separate config for dev / staging / prod
+- [x] All env vars validated at boot; app fails fast if missing
+- [ ] Secrets in a manager (not `.env`); master encryption key provisioned *(deploy-time)*
+- [ ] Separate config for dev / staging / prod *(dev only so far)*
 
 **Data**
-- [ ] Migrations reproducible & reversible; run on deploy
-- [ ] Indexes in place; seed/admin bootstrap documented
-- [ ] Backups + restore tested; retention defined
+- [x] Migrations reproducible & reversible *(committed; deploy automation pending)*
+- [ ] Indexes in place; seed/admin bootstrap documented *(indexes done; seed/bootstrap not documented)*
+- [ ] Backups + restore tested; retention defined *(deploy-time)*
 
 **Security**
-- [ ] HTTPS/HSTS, secure cookies, CORS allowlist, security headers
-- [ ] Rate limits on auth/public/sync; OAuth state+redirect allowlist
-- [ ] Token encryption verified; nothing sensitive in logs
-- [ ] `npm audit` clean / triaged
+- [ ] HTTPS/HSTS, secure cookies, CORS allowlist, security headers *(secure cookies + CORS + helmet done; HTTPS/HSTS deploy-time)*
+- [ ] Rate limits on auth/public/sync; OAuth state+redirect allowlist *(public/sync + state done; auth endpoints not rate-limited)*
+- [x] Token encryption verified; nothing sensitive in logs
+- [ ] `npm audit` clean / triaged *(not run in CI yet)*
 
 **Reliability**
-- [ ] Health + readiness probes; graceful shutdown (drain jobs)
-- [ ] Retries/backoff + idempotency on sync; per-connection locks
-- [ ] Error middleware returns safe envelopes everywhere
+- [x] Health + readiness probes; graceful shutdown (drain jobs)
+- [x] Retries/backoff + idempotency on sync; per-connection locks
+- [x] Error middleware returns safe envelopes everywhere
 
 **Observability**
-- [ ] Structured logs shipped; dashboards + alerts wired
-- [ ] `requestId`/`jobId` correlation end-to-end
+- [ ] Structured logs shipped; dashboards + alerts wired *(structured+redacted logs done; shipping/dashboards/alerts deploy-time)*
+- [x] `requestId`/`jobId` correlation end-to-end
 
 **Ops**
-- [ ] Runbooks (token expiry storm, GitHub outage, queue backlog)
-- [ ] Rollback plan; staging mirrors prod
-- [ ] Load test of stats + a sync batch passed
+- [ ] Runbooks (token expiry storm, GitHub outage, queue backlog) *(documented in OBSERVABILITY_PLAN; not operationalized)*
+- [ ] Rollback plan; staging mirrors prod *(deploy-time)*
+- [ ] Load test of stats + a sync batch passed *(pending)*
 
 ---
 
