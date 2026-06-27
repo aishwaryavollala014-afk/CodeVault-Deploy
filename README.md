@@ -160,6 +160,7 @@ All design, planning, and security documentation lives in [`docs/`](docs/).
 | [CLOUD_SECURITY.md](docs/CLOUD_SECURITY.md) | Cloudflare WAF, DDoS, TLS, bots |
 | [MONITORING.md](docs/MONITORING.md) | Metrics, logging, security alerts |
 | [DEVSECOPS.md](docs/DEVSECOPS.md) | CI/CD security, scanning, supply chain |
+| [SECURE_DEVELOPMENT.md](docs/SECURE_DEVELOPMENT.md) | Dev & AI security practices, local setup, deployment security |
 | [FILE_UPLOAD_SECURITY.md](docs/FILE_UPLOAD_SECURITY.md) | No-upload default + hardened blueprint |
 | [SECRETS.md](docs/SECRETS.md) | Env, KMS, rotation, validation |
 | [SCALABILITY.md](docs/SCALABILITY.md) | Stateless scaling, caching, replicas |
