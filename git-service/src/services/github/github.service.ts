@@ -1,10 +1,29 @@
 import { githubApi } from '../../lib/github';
-import { UpstreamError } from '../../utils/errors';
+import { UpstreamError, ForbiddenError, NotFoundError } from '../../utils/errors';
 import type { CommitInfo, GithubFile } from '../../types/github.types';
 
 function splitRepo(repoFullName: string): { owner: string; repo: string } {
   const [owner, repo] = repoFullName.split('/');
   return { owner, repo };
+}
+
+/**
+ * Verify the authenticated GitHub token actually has PUSH access to the target
+ * repo BEFORE writing anything — prevents pushing to a repo the user doesn't own
+ * (mis-config or tampered repo mapping). See GITHUB_SECURITY.
+ */
+export async function verifyRepoAccess(token: string, repoFullName: string): Promise<void> {
+  const api = githubApi(token);
+  const { owner, repo } = splitRepo(repoFullName);
+  let data: { permissions?: { push?: boolean } };
+  try {
+    data = (await api.get(`/repos/${owner}/${repo}`)).data;
+  } catch {
+    throw new NotFoundError(`Repo "${repoFullName}" not found or not accessible`);
+  }
+  if (!data.permissions?.push) {
+    throw new ForbiddenError(`No push access to "${repoFullName}"`);
+  }
 }
 
 /**
