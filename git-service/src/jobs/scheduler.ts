@@ -11,6 +11,10 @@ import { enqueueSync } from './queue';
  */
 export function startScheduler(): void {
   cron.schedule(env.SYNC_CRON, async () => {
+    if (!env.SYNC_ENABLED) {
+      logger.warn('SYNC_ENABLED=false — skipping scheduled sync (kill switch)');
+      return;
+    }
     const connections = await prisma.connection.findMany({
       where: { syncEnabled: true, tokenStatus: 'active', deletedAt: null },
       select: { id: true, userId: true },
