@@ -1,0 +1,23 @@
+# CodeVault gitleaks config — extends the default ruleset and ignores
+# documentation placeholders (e.g. "change-me", ".env.example") that are not
+# real secrets. Real secrets live only in gitignored .env / a secret manager.
+title = "CodeVault gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Non-secret placeholders and examples"
+paths = [
+  '''.*\.env\.example$''',
+  '''.*\.env\.docker\.example$''',
+  '''CERTIFICATES_BEFORE_LAUNCH/.*''',
+  '''docs/.*''',
+  '''web-backend/prisma/sql/roles\.sql$''',
+]
+regexes = [
+  '''change-me.*''',
+  '''base64:replace-with.*''',
+  '''dev-placeholder''',
+  '''must-match-web-backend''',
+]
