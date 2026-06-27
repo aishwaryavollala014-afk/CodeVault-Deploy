@@ -20,6 +20,14 @@ const envSchema = z.object({
 
   SYNC_CRON: z.string().default('0 */6 * * *'),
   SYNC_CONCURRENCY: z.coerce.number().int().positive().default(3),
+  // Max concurrent sync jobs PER platform (best-effort Redis semaphore).
+  SYNC_PLATFORM_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  // Kill switch — set SYNC_ENABLED=false to pause all sync (scheduler + trigger).
+  // (z.coerce.boolean treats any non-empty string as true, so parse explicitly.)
+  SYNC_ENABLED: z
+    .string()
+    .default('true')
+    .transform((v) => v.toLowerCase() !== 'false'),
 
   CORS_ORIGIN: z.string().url().default('http://localhost:3000'),
 });
