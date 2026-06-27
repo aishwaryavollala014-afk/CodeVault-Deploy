@@ -109,7 +109,7 @@ DATABASE_URL=postgresql://cv_web:***@db:5432/codevault?sslmode=verify-full
 ## 12. Checklist
 
 - [x] `.env`/`.env.*` gitignored; `.env.example` committed
-- [ ] gitleaks in CI + pre-commit *(CI not set up yet)*
+- [x] gitleaks in CI *(.github/workflows/ci.yml + .gitleaks.toml; pre-commit hook optional)*
 - [x] Boot-time validation (fail-fast) for all secrets
 - [x] `JWT_SECRET` + `ENCRYPTION_KEY` identical across services
 - [x] No real secret in `NEXT_PUBLIC_*` / client bundle
