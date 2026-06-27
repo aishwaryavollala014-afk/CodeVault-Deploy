@@ -136,16 +136,16 @@ REVOKE UPDATE, DELETE ON audit_logs FROM cv_git, cv_web;  -- append-only
 
 ## 12. Checklist
 
-- [ ] All tokens envelope-encrypted (AES-256-GCM); plaintext never stored
-- [ ] Refresh tokens stored hashed (SHA-256)
-- [ ] TLS `verify-full` to Postgres + Redis
-- [ ] Per-service least-privilege roles; `audit_logs` append-only
-- [ ] Every query owner-scoped (`userId`); no `queryRawUnsafe`
-- [ ] cuid PKs; unique + check constraints in place
-- [ ] Cursor pagination on high-volume tables
-- [ ] Encrypted backups + PITR + tested restore drill
-- [ ] Slow-query + replication-lag + decrypt-failure monitoring
-- [ ] Migrations: expand→migrate→contract; reversible
+- [x] All tokens envelope-encrypted (AES-256-GCM); plaintext never stored
+- [x] Refresh tokens stored hashed (SHA-256)
+- [ ] TLS `verify-full` to Postgres + Redis *(deploy-time; dev has no TLS)*
+- [ ] Per-service least-privilege roles; `audit_logs` append-only *(dev uses single role; roles pending at deploy)*
+- [x] Every query owner-scoped (`userId`); no `queryRawUnsafe`
+- [x] cuid PKs; unique constraints in place *(DB CHECK constraints not added via Prisma)*
+- [x] Cursor pagination on high-volume tables
+- [ ] Encrypted backups + PITR + tested restore drill *(deploy-time; needs managed DB)*
+- [ ] Slow-query + replication-lag + decrypt-failure monitoring *(deploy-time)*
+- [ ] Migrations: expand→migrate→contract; reversible *(migrations applied; expand→contract pattern not yet exercised)*
 
 ---
 
