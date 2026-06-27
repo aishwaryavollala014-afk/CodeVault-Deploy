@@ -418,19 +418,20 @@ FE marketing/UI-kit run alongside M0–M1 (no BE dep).
 - After **each** milestone: swap that module's mocks → real, run contract-conformance + E2E, sign off before next.
 
 ### 9.5 Final deployment readiness checklist
-- [ ] All endpoints conform to this contract (conformance tests pass)
-- [ ] AuthN/Z: JWT verified both services; ownership/BOLA; CSRF; refresh rotation
-- [ ] Tokens envelope-encrypted; no secrets in logs/bundle; git-service not browser-keyed
-- [ ] Rate limits + queue caps + SSRF egress allowlist
-- [ ] Every page: loading + empty + error + success verified
-- [ ] Public profile: no PII, enumeration-hardened, SSR/ISR + OG
-- [ ] TLS + security headers + strict CORS
-- [ ] Migrations reproducible; backups encrypted + restore-tested
-- [ ] Observability: redacted logs, audit trail, alerts
-- [ ] Responsive (mobile→ultra-wide) + a11y (keyboard/SR/contrast) pass
-- [ ] CI: lint/typecheck/tests/SCA/secret-scan green; branch protection on
-- [ ] Staging E2E + load + sync-batch passed; runbooks + on-call ready
-- [ ] UAT: every page matches approved `frontendHtml/` prototype
+*(Whole-product gate — includes frontend + deploy items still pending. Ticked = done.)*
+- [ ] All endpoints conform to this contract (conformance tests pass) *(endpoints built; automated conformance tests pending)*
+- [ ] AuthN/Z: JWT verified both services; ownership/BOLA; CSRF; refresh rotation *(JWT+ownership+refresh done; anti-CSRF token middleware pending)*
+- [x] Tokens envelope-encrypted; no secrets in logs/bundle; git-service not browser-keyed
+- [ ] Rate limits + queue caps + SSRF egress allowlist *(rate limits + queue caps done; egress allowlist pending)*
+- [ ] Every page: loading + empty + error + success verified *(frontend not built yet)*
+- [ ] Public profile: no PII, enumeration-hardened, SSR/ISR + OG *(API: no-PII + uniform 404 done; SSR/ISR+OG = frontend)*
+- [ ] TLS + security headers + strict CORS *(headers + CORS done; TLS deploy-time)*
+- [ ] Migrations reproducible; backups encrypted + restore-tested *(migrations done; backups deploy-time)*
+- [ ] Observability: redacted logs, audit trail, alerts *(redacted logs done; alerts/audit-shipping pending)*
+- [ ] Responsive (mobile→ultra-wide) + a11y *(frontend)*
+- [ ] CI: lint/typecheck/tests/SCA/secret-scan green; branch protection on *(CI not set up)*
+- [ ] Staging E2E + load + sync-batch passed; runbooks + on-call ready *(deploy-time)*
+- [ ] UAT: every page matches approved `frontendHtml/` prototype *(frontend)*
 
 ---
 
