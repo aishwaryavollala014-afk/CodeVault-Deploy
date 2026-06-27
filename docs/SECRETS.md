@@ -108,14 +108,14 @@ DATABASE_URL=postgresql://cv_web:***@db:5432/codevault?sslmode=verify-full
 
 ## 12. Checklist
 
-- [ ] `.env`/`.env.*` gitignored; `.env.example` committed
-- [ ] gitleaks in CI + pre-commit
-- [ ] Boot-time validation (fail-fast) for all secrets
-- [ ] `JWT_SECRET` + `ENCRYPTION_KEY` identical across services
-- [ ] No real secret in `NEXT_PUBLIC_*` / client bundle
-- [ ] `.dockerignore` excludes `.env`; runtime injection in prod
-- [ ] Prod secrets in manager; master key in KMS
-- [ ] Rotation plan via `keyVersion`; dual-key JWT window
+- [x] `.env`/`.env.*` gitignored; `.env.example` committed
+- [ ] gitleaks in CI + pre-commit *(CI not set up yet)*
+- [x] Boot-time validation (fail-fast) for all secrets
+- [x] `JWT_SECRET` + `ENCRYPTION_KEY` identical across services
+- [x] No real secret in `NEXT_PUBLIC_*` / client bundle
+- [x] `.dockerignore` excludes `.env`; runtime injection via compose
+- [ ] Prod secrets in manager; master key in KMS *(deploy-time)*
+- [ ] Rotation plan via `keyVersion`; dual-key JWT window *(`keyVersion` columns ready; rotation process not built)*
 
 ---
 
