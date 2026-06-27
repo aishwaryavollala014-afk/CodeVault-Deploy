@@ -433,14 +433,15 @@ D6 Partition plan armed (triggers when row thresholds hit) + archiving job
 ```
 
 ### 16.4 Final checklist
-- [ ] 3NF with documented denormalization (solved_count, file_count, stats_snapshots)
-- [ ] Tokens isolated + envelope-encrypted; refresh hashed; code not stored
-- [ ] All unique/FK/check constraints in place; CASCADE except audit (SET NULL)
-- [ ] Indexes match real query patterns; partial unread index; GIN topics
-- [ ] Per-service least-privilege DB roles; RLS option ready; audit append-only
-- [ ] Cursor pagination on all large lists
-- [ ] Backups + PITR + restore drill; expand→migrate→contract for changes
-- [ ] Soft-delete users; hard-purge secrets on delete (GDPR)
-- [ ] Partition/replica/archive plan documented and threshold-triggered
+*(Implementation status — ticked = built in the Prisma schema/migrations + code.)*
+- [x] 3NF with documented denormalization (solved_count, file_count, stats_snapshots)
+- [x] Tokens isolated + envelope-encrypted; refresh hashed; code not stored
+- [x] All unique/FK constraints in place; CASCADE except audit (SET NULL) *(DB CHECK constraints not added via Prisma)*
+- [ ] Indexes match real query patterns; partial unread index; GIN topics *(base indexes done; partial-unread + GIN not as specified)*
+- [ ] Per-service least-privilege DB roles; RLS option ready; audit append-only *(deploy-time; dev single role)*
+- [x] Cursor pagination on all large lists
+- [ ] Backups + PITR + restore drill; expand→migrate→contract for changes *(deploy-time)*
+- [ ] Soft-delete users; hard-purge secrets on delete (GDPR) *(soft-delete + session revoke done; secret hard-purge job pending)*
+- [x] Partition/replica/archive plan documented and threshold-triggered
 
 > This is the definitive database specification. When you ask, I can produce the **Prisma schema (still as a planning artifact)** or a per-table migration order — no application code.
