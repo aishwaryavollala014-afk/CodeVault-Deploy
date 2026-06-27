@@ -139,9 +139,9 @@ REVOKE UPDATE, DELETE ON audit_logs FROM cv_git, cv_web;  -- append-only
 - [x] All tokens envelope-encrypted (AES-256-GCM); plaintext never stored
 - [x] Refresh tokens stored hashed (SHA-256)
 - [ ] TLS `verify-full` to Postgres + Redis *(deploy-time; dev has no TLS)*
-- [ ] Per-service least-privilege roles; `audit_logs` append-only *(dev uses single role; roles pending at deploy)*
+- [x] Per-service least-privilege roles; `audit_logs` append-only *(roles created via prisma/sql/roles.sql; app wires per-service DSNs at deploy)*
 - [x] Every query owner-scoped (`userId`); no `queryRawUnsafe`
-- [x] cuid PKs; unique constraints in place *(DB CHECK constraints not added via Prisma)*
+- [x] cuid PKs; unique + CHECK constraints in place
 - [x] Cursor pagination on high-volume tables
 - [ ] Encrypted backups + PITR + tested restore drill *(deploy-time; needs managed DB)*
 - [ ] Slow-query + replication-lag + decrypt-failure monitoring *(deploy-time)*
