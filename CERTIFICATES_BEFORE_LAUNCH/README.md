@@ -68,6 +68,7 @@ Each document follows the same structure (Overview · Purpose · Category · Why
 | [Trademark](TRADEMARK.md) | uspto.gov · euipo.europa.eu | $250–750 | mark + specimen | clearance search → file (class 9/42) → maintain/renew |
 | [EULA](END_USER_LICENSE_AGREEMENT.md) | — | $0 | none | SaaS → ToS covers it; standalone only for distributed clients |
 | [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md) | developercertificate.org · cla-assistant.io | $0+ | DCO/CLA | choose DCO vs CLA → enforce via check before external PRs |
+| [Browser Extension Store Listings](BROWSER_EXTENSION_STORES.md) *(only if the extension ships)* | Chrome/Edge/AMO/Apple | $5 + $99/yr (Apple) | privacy policy + permission justifications | one MV3 build → per-store accounts → submit + review (gated on extension milestone E5) |
 
 ### 🔵 Required During Scaling
 | Item | Apply at | Cost | Key documents | Process steps |
@@ -154,6 +155,7 @@ Each document follows the same structure (Overview · Purpose · Category · Why
 - [Trademark](TRADEMARK.md)
 - [End User License Agreement (EULA)](END_USER_LICENSE_AGREEMENT.md)
 - [Contributor License Agreement (CLA)](CONTRIBUTOR_LICENSE_AGREEMENT.md)
+- [Browser Extension Store Listings](BROWSER_EXTENSION_STORES.md) — *only if the cross-browser extension ships (Path B v2)*
 
 ## 🔵 Required During Scaling
 *Become important as CodeVault grows (high traffic, partners, global users).*
