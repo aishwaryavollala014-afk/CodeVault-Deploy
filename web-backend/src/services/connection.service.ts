@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { encrypt } from '../lib/crypto';
 import { ConflictError, NotFoundError } from '../utils/errors';
+import { invalidateUserStats } from './stats.service';
 import type { CreateConnectionInput } from '../validators/platform.validator';
 import type { PlatformName } from '../types';
 
@@ -52,6 +53,7 @@ export async function createConnection(
     const row = await prisma.connection.create({
       data: { userId, platform: input.platform, username: input.username },
     });
+    await invalidateUserStats(userId);
     return toDto(row);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
@@ -95,4 +97,5 @@ export async function removeConnection(userId: string, connectionId: string): Pr
   if (!connection) throw new NotFoundError('Connection not found');
   // Hard delete cascades the secret (connection_secrets) — token is purged.
   await prisma.connection.delete({ where: { id: connectionId } });
+  await invalidateUserStats(userId);
 }
