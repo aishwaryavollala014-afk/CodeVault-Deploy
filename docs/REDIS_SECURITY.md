@@ -120,7 +120,7 @@ maxmemory-policy allkeys-lru   # cache instance only
 - [x] No tokens/PII/secrets in Redis; queue payloads carry IDs only
 - [ ] Cache vs queue/lock isolated; queue durable, no eviction *(single dev instance)*
 - [x] Locks use `NX EX`; released in `finally`
-- [ ] Invalidation wired to connect/disconnect/settings changes *(TTL only; explicit invalidation not yet wired)*
+- [x] Invalidation wired to connect/disconnect changes *(stats + public cache dropped on connection change)*
 - [ ] Memory + hit-rate + eviction monitoring *(deploy-time)*
 
 ---
