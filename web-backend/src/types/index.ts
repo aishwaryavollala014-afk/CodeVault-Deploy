@@ -70,6 +70,17 @@ export interface AggregatedStats {
   degraded: PlatformName[];
 }
 
+/** Recent solved problem row for GET /stats/recent. */
+export interface SubmissionSummary {
+  title: string;
+  platform: PlatformName;
+  number: string | null;
+  difficulty: string | null;
+  language: string | null;
+  solvedAt: string | null;
+  syncedPath: string | null;
+}
+
 // ----------------------------- public profile -----------------------------
 
 /** Public, no-auth profile for /u/[username]. NEVER includes email or tokens. */
