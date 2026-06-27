@@ -608,3 +608,55 @@ Scopes: `be-*`, `git-service`, `fe-*`, `docs`, `chore`. **Author = you only, no 
 6. Keep `User.plan` reserved now so deferred **Pricing** needs no migration later.
 
 > Next step when you're ready: I can turn any single phase/milestone into a detailed task checklist (still no code), or draft the **API contract** doc the two of you will build against.
+
+---
+
+# 15. Implemented backend reference (captured before skeleton reset — 2026-06-27)
+
+> Both backends were built/tested, then reset to empty skeletons. This section preserves the **interface of every source file** (exports, signatures, routes, key constants/logic) so each service can be rebuilt 1:1. Full source remains in git history. Schema is in [DATABASE_PLAN.md](DATABASE_PLAN.md) §17; endpoints in [API_CONTRACT.md](API_CONTRACT.md); auth detail in [AUTH_SECURITY.md](AUTH_SECURITY.md); platform fetchers in [PLATFORM_INTEGRATION.md](PLATFORM_INTEGRATION.md). Stack (both): Express 4.19 + Prisma 5.18 + Zod + pino + ioredis, `@/`→`src/`, layered Route→Controller→Service→lib.
+
+## 15.1 web-backend (`web-backend/src/`)
+
+**Entry/config:** `index.ts` boots; `app.ts` → `createApp(): Application` (helmet, cors, json, requestId, pino-http, `/api` router, health routes, notFound + errorHandler last); `server.ts` → `startServer(): Server` (graceful shutdown). `config/env.ts` Zod `envSchema` → typed `env`, `isProd`, `isDev` (fail-fast). `config/index.ts` barrel. `config/database.ts`, `config/redis.ts` thin.
+
+**lib:** `crypto.ts` — AES-256-GCM (`ALGORITHM`, IV 12B, TAG 16B, `loadKey()` from `ENCRYPTION_KEY`); `encrypt(plaintext): EncryptedBlob{cipher,iv}`, `decrypt(cipher,iv): string`, `sha256(v)`, `randomToken(bytes=40)`. `jwt.ts` — `signAccessToken(user): string` (HS256, ~30min), `verifyAccessToken(token): JwtClaims`. `prisma.ts`/`redis.ts` global singletons. `httpClient.ts` axios instance. `logger.ts` pino (redaction).
+
+**middlewares:** `auth.middleware.ts` — `ACCESS_COOKIE='cv_access'`, `REFRESH_COOKIE='cv_refresh'`, `requireAuth` (cookie/Bearer→verify→`req.user`), `requireAdmin`. `error.middleware.ts` — `notFoundHandler`, `errorHandler` (maps AppError→status, consistent JSON). `rateLimit.middleware.ts` — `rateLimit({windowSec,max,keyPrefix})` (Redis). `requestId.middleware.ts`, `validate.middleware.ts` — `validateBody/Query/Params(schema)`.
+
+**routes** (all mounted under `/api` in `routes/index.ts`): `/auth` (`/github/start`,`/github/callback`,`/session`,`/refresh`,`/logout`; authLimit 20/300s), `/users` (`/me` GET/PATCH/DELETE, requireAuth), `/platforms` (`/`,`/connect`,`/:id/authorize`,`DELETE /:id`), `/stats` (`/`,`/recent`), `/public` (`/:username` no-auth), `/settings` (`/` GET/PATCH), `/github` (`/repos`,`PATCH /repos/:platform`), `/notifications` (`/`,`/read`). `health.routes.ts` → `/health`,`/ready`.
+
+**controllers** (thin HTTP I/O): `auth` (startGithub, githubCallback, session, refresh, logout + `setAuthCookies`/`clearAuthCookies`), `user` (getMe, updateMe, deleteMe), `platform` (list, connect, authorize, remove), `stats` (getStats, getRecent), `public` (getProfile), `settings` (getSettings, updateSettings), `githubRepo` (list, update), `notification` (list, markRead), `health`.
+
+**services:**
+- `auth.service.ts` — GitHub OAuth: `createGithubAuthUrl(next?)` (state in Redis `oauth:state:` TTL 600s), `handleGithubCallback(...)` (validate state→exchange code→fetch profile/emails→upsert user→encrypt GH token→issue session), `refreshSession(rawRefresh)` (rotation + reuse→family revoke), `logout(rawRefresh)`, internal `issueSession`, `uniqueHandle`.
+- `connection.service.ts` — `listConnections`, `createConnection` (unique userId+platform→Conflict), `authorizeSync` (encrypt+store session token, set tokenStatus), `removeConnection`. `ConnectionDto`.
+- `stats.service.ts` — `getAggregatedStats(userId)` (per-platform cache `stats:{userId}:{platform}` TTL 600s, merge difficulty/topics/languages/totals), `getRecentSubmissions`, `invalidateUserStats`, `fetchPlatform`.
+- `public.service.ts` — `getPublicProfile(handle)` cache `public:{handle}` TTL 900s (enumeration/scraping defense).
+- `settings.service.ts` — `getSettings`, `updateSettings`, `withDefaults`. `user.service.ts` — `getMe`, `updateMe` (allowlist fields), `deleteMe` (soft-delete + purge tokens). `notification.service.ts` — `listNotifications`, `markRead`, `createNotification`. `githubRepo.service.ts` — `listRepoMappings`, `upsertRepoMapping`.
+- `services/platforms/` (Path A stats, one file/platform): `index.ts` registry `getStatsProvider(platform)`; `leetcode` (GraphQL `leetcode.com/graphql`), `codeforces` (`api/user.info`+`user.status`), `codechef`, `hackerrank` (public profile). Interface `PlatformStatsProvider`.
+
+**types:** `index.ts` — `JwtClaims`, `AuthUser`, `PlatformName`, `PLATFORMS`, `AggregatedStats`, `SubmissionSummary`, `PublicProfile`, `AppSettings`+`DEFAULT_SETTINGS`, `RepoMappingDto`, `NotificationDto`, `ApiErrorBody`, `Paginated<T>`, health/readiness. `platform.types.ts` — `PlatformStats`, `PlatformStatsProvider`. `express.d.ts` augments `req.user`.
+
+**utils:** `errors.ts` — `AppError` + `ValidationError`/`Unauthenticated`/`Forbidden`/`NotFound`/`Conflict`/`SessionExpired`/`RateLimit`/`Upstream`/`Internal`. `helpers.ts` — `asyncHandler`, `toHandle(login)`. **validators (Zod):** `auth` (githubStart/Callback), `platform` (createConnection/authorizeSync/params; username `/^[A-Za-z0-9_.-]{1,39}$/`), `settings` (updateSettings/repoMapping), `user` (updateUser).
+
+## 15.2 git-service (`git-service/src/`)
+
+**Entry/config:** `index.ts` boots + starts scheduler + sync worker; `app.ts` → `createApp()`; `server.ts` → `startServer()`. `config/env.ts` Zod env. Shares the same middleware/lib shapes as web-backend, plus:
+
+**lib (extra):** `crypto.ts` — **decrypt-only** (`decrypt(cipher,iv)`; reads same `ENCRYPTION_KEY`). `egress.ts` — SSRF allowlist `ALLOWED_HOSTS`, `assertAllowedUrl(url)`, `egressInterceptor` (axios). `github.ts` — `githubApi(token): AxiosInstance` (GitHub REST). `redis.ts` adds `bullConnection` for BullMQ. `auth.middleware.ts` — `requireAuth` verifies the **same JWT** (S1), cookie `cv_access`.
+
+**routes** (`/api`): `/sync` (`POST /` trigger, `GET /status`, `GET /activity`; requireAuth), `/repos` (`/`, `/:platform/files`, `/:platform/commits`), `/problems` (`/:platform/:number`). `health` → `/health`,`/ready`.
+
+**controllers:** `sync` (trigger→enqueue, status, activity), `repo` (list, files, commits), `problem` (getProblem), `health`.
+
+**jobs (BullMQ):** `queue.ts` — `SyncJobData`, `SYNC_QUEUE='sync'`, `syncQueue`, `enqueueSync(data)`. `scheduler.ts` — `startScheduler()` (node-cron periodic enqueue). `sync.job.ts` — `startSyncWorker(): Worker` (concurrency-capped).
+
+**services:**
+- `sync.service.ts` — orchestrator: `runSync(...)` under Redis lock `lock:sync:{connectionId}` (TTL 1800s) + per-platform semaphore `sema:platform:{platform}` (`acquire/releasePlatformSlot`); `publish` (push via github.service), `persist` (upsert problems/sync_runs), `finishRun`, `onExpired` (flag expired session). `SyncResult`.
+- `services/github/github.service.ts` — `verifyRepoAccess(token,repo)` (ownership), `pushFiles(...)` (Git Data API batch), `readFile(...)`, `listCommits(...)`, `splitRepo`. `readme.generator.ts` — `generateReadme(repoName, entries): string` (index table).
+- `services/submissions/` (Path B fetchers, one/platform): `index.ts` `getSubmissionAdapter(platform)`; `leetcode` (authed GraphQL, `authHeaders`, `mapDifficulty`), `codeforces`, `codechef`, `hackerrank`. Interface `SubmissionAdapter`.
+- `repo.service.ts` — `listRepos`, `listFiles`, `listCommits` (`RepoInfoDto`, `RepoFileDto`). `problem.service.ts` — `getProblem` (`ProblemDetailDto`).
+
+**types:** `sync.types.ts` — `Difficulty`, `Submission`, `Question`, `SolutionToSync`, `SubmissionAdapter`, `SyncResult`. `github.types.ts` — `GithubFile`, `RepoRef`, `CommitInfo`, `RepoFileEntry`. `index.ts` — `JwtClaims`, `AuthUser`, `PlatformName`, etc. **utils:** `errors.ts` (+`ExpiredSessionError`, `ServiceUnavailableError`); `helpers.ts` — `asyncHandler`, `padNumber(num,4)`, `slugify`, `langToExt` (`LANG_EXT` map). **validators:** `sync` (triggerSync, platformParams, problemParams, listQuery).
+
+> Rebuild order: schema (DATABASE_PLAN §17) → config/lib → types/utils/validators → middlewares → services → controllers → routes → entry. Same for both services; git-service adds jobs + github + submissions + egress.
