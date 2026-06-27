@@ -443,6 +443,32 @@ Low      │
 
 ---
 
+## 21. Security Documentation Index
+
+This blueprint is the master security reference; detailed controls live in companion documents. Every security document:
+
+**Domain controls**
+- [BACKEND_SECURITY.md](BACKEND_SECURITY.md) — Express hardening, validation, error handling
+- [AUTH_SECURITY.md](AUTH_SECURITY.md) — GitHub OAuth, JWT, sessions, secure cookies, authorization
+- [API_SECURITY.md](API_SECURITY.md) — API protection, CORS, rate limiting
+- [DATABASE_SECURITY.md](DATABASE_SECURITY.md) — Prisma/SQL-injection prevention, roles, encryption
+- [REDIS_SECURITY.md](REDIS_SECURITY.md) · [QUEUE_SECURITY.md](QUEUE_SECURITY.md) — cache/queue
+- [GITHUB_SECURITY.md](GITHUB_SECURITY.md) — OAuth + sync token handling
+- [SECRETS.md](SECRETS.md) — API keys, env vars, secret storage
+- [FILE_UPLOAD_SECURITY.md](FILE_UPLOAD_SECURITY.md) — upload validation/limits
+- [CLOUD_SECURITY.md](CLOUD_SECURITY.md) — DDoS, WAF, TLS at the edge
+
+**Process & workflow**
+- [SECURE_DEVELOPMENT.md](SECURE_DEVELOPMENT.md) — **Development & AI security practices, local development, deployment security** (developer-facing secure workflow)
+- [DEVSECOPS.md](DEVSECOPS.md) — CI/CD security, dependency management, scanning
+- [SECURITY_TESTING.md](SECURITY_TESTING.md) — security test suites
+- [MONITORING.md](MONITORING.md) · [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) · [COMPLIANCE.md](COMPLIANCE.md)
+- [ATTACK_PREVENTION.md](ATTACK_PREVENTION.md) — per-attack defenses
+
+> Headers (§11), HTTPS (§6/§10), CSRF (§6), input validation/XSS (§6–§7), sensitive-data-in-browser (§6) remain authoritative **in this document**; [SECURE_DEVELOPMENT.md](SECURE_DEVELOPMENT.md) cross-references them for the developer workflow.
+
+---
+
 ## ✅ Mandatory vs optional (at a glance)
 - **Mandatory before launch:** token encryption (KMS), git-service auth boundary fix, GitHub scope minimization, BOLA/ownership + mass-assignment controls, OAuth PKCE/state/redirect, CSRF, TLS+headers+CORS, redacted logs + secret scanning, SSRF egress allowlist, rate limiting.
 - **Strongly recommended:** refresh rotation+reuse detection, audit logging+alerts, SCA/branch protection, upstream-content sanitization, deletion/export completeness, **no avatar upload** (use GitHub avatar).
