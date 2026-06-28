@@ -16,6 +16,28 @@
 
 ---
 
+## 📚 Documentation Ownership (docs/)
+
+### 🟦 Gaurav's docs (git-service · Path B · GitHub push · jobs · extension)
+EXTENSION_PLAN · EXTENSION_SECURITY · QUEUE_SECURITY · GITHUB_SECURITY (push side)
+· PLATFORM_INTEGRATION (Path B sections) · BACKEND_PLAN §15.2
+
+### 🟪 Aishwarya's docs (web-backend · Path A · auth · profiles · DB)
+AUTH_SECURITY · DATABASE_PLAN · DATABASE_SECURITY · DBMS_CONCEPTS · COMPLIANCE
+· PLATFORM_INTEGRATION (Path A sections) · BACKEND_PLAN §15.1
+
+### 🟩 Both (web-frontend + shared contracts + cross-cutting)
+API_CONTRACT ⭐ · ARCHITECTURE ⭐ · FRONTEND_PLAN · TEAM_PLAN · TECH_STACK · ROADMAP
+· SECURITY_PLAN · BACKEND_SECURITY · API_SECURITY · REDIS_SECURITY · SECRETS
+· INFRASTRUCTURE_SECURITY · CLOUD_SECURITY · DEVOPS_PLAN · DEVSECOPS
+· MONITORING · OBSERVABILITY_PLAN · TESTING_PLAN · SECURITY_TESTING
+· SCALABILITY · DISASTER_RECOVERY · ATTACK_PREVENTION · SECURE_DEVELOPMENT · FILE_UPLOAD_SECURITY
+
+Split internally: PLATFORM_INTEGRATION (A=Aishwarya / B=Gaurav),
+GITHUB_SECURITY (login=Aishwarya / push=Gaurav), BACKEND_PLAN (§15.1 / §15.2).
+
+---
+
 ## 📋 The Build Plan
 
 ```
