@@ -8,8 +8,8 @@
 
 | Developer | Service | Folder | What it does |
 |-----------|---------|--------|--------------|
-| **Me (your friend)** | Web Backend | `web-backend/` | GitHub OAuth login, platform connections, stats aggregation from LeetCode/CF/CC/HR, public profiles |
-| **You (Gaurav)** | Git Service | `git-service/` | Fetches accepted code from platforms, pushes it to GitHub as organized folders, BullMQ jobs, auto-sync scheduler |
+| **Aishwarya** | Web Backend | `web-backend/` | GitHub OAuth login, platform connections, stats aggregation from LeetCode/CF/CC/HR, public profiles |
+| **Gaurav** | Git Service | `git-service/` | Fetches accepted code from platforms, pushes it to GitHub as organized folders, BullMQ jobs, auto-sync scheduler |
 | **Both of us** | Web Frontend | `web-frontend/` | Next.js UI — after both backends are done, we build this together |
 
 **Golden rule: stay in your own folder. Never touch each other's service.**
@@ -20,8 +20,8 @@
 
 ```
 Phase 1 (Now — Parallel):
-  Me    → web-backend/   (foundation → stats → auth → routes)
-  You   → git-service/   (foundation → fetchers → GitHub push → jobs)
+  Aishwarya → web-backend/   (foundation → stats → auth → routes)
+  Gaurav    → git-service/   (foundation → fetchers → GitHub push → jobs)
 
 Phase 2 (After both backends are done):
   Both  → web-frontend/  (convert frontendHtml/ prototype into real Next.js pages)
@@ -68,20 +68,20 @@ router.post('/sync', async (req, res) => {
 
 ## ⚠️ 4 Things We Must Agree On Before Starting
 
-**Reply to me confirming these before either of us writes code:**
+**Reply to Aishwarya confirming these before either of us writes code:**
 
-1. ☐ **Work split confirmed** — You: `git-service/`. Me: `web-backend/`. Both: `web-frontend/` later.
+1. ☐ **Work split confirmed** — Gaurav: `git-service/`. Aishwarya: `web-backend/`. Both: `web-frontend/` later.
 2. ☐ **Tech stack aligned** — Both use Express 5, Node 20, same dependency versions.
 3. ☐ **API Contract read** — Both of us have read `docs/API_CONTRACT.md`. Any changes to endpoints must be discussed first.
 4. ☐ **Git workflow** — Always `git pull origin main` before starting work. Always `git pull --rebase origin main` before pushing. Commit small with prefixes (`feat:`, `fix:`, `chore:`, `docs:`).
 
 ---
 
-## 🗂️ What You're Building — git-service/ Explained
+## 🗂️ What Gaurav is Building — git-service/ Explained
 
-Your service owns **Path B** — taking a user's authorized coding session, fetching their accepted code, and pushing it to GitHub as organized folders.
+Gaurav's service owns **Path B** — taking a user's authorized coding session, fetching their accepted code, and pushing it to GitHub as organized folders.
 
-### Your build order (recommended):
+### Gaurav's build order (recommended):
 
 **Phase 1 — Foundation**
 | # | File | What to write |
@@ -138,8 +138,8 @@ Your service owns **Path B** — taking a user's authorized coding session, fetc
 ## 🔗 How Our Services Connect
 
 ```
-My web-backend  ──provides user auth + stats──▶  web-frontend (both build later)
-Your git-service ──sync status + trigger────────▶  web-frontend (both build later)
+Aishwarya's web-backend  ──provides user auth + stats──▶  web-frontend (both build later)
+Gaurav's git-service ──sync status + trigger────────▶  web-frontend (both build later)
 ```
 
 The frontend calls both our services. Our services don't call each other directly.
@@ -177,7 +177,7 @@ git push origin main
 
 ## ✅ Confirm and Let's Go
 
-Reply to me with:
+Reply to Aishwarya with:
 - ✅ Work split agreed
 - ✅ Tech stack aligned
 - ✅ API contract read
