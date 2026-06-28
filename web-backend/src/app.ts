@@ -4,6 +4,7 @@ import cors from 'cors';
 import pinoHttp from 'pino-http';
 import logger from './lib/logger';
 import { env } from './config/env';
+import authRoutes from './routes/auth.routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -25,6 +26,9 @@ export const createApp = (): Application => {
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  // Routes
+  app.use('/api/auth', authRoutes);
 
   // Basic Error Handler (will be expanded later)
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
