@@ -66,6 +66,8 @@ The **frontend talks to BOTH backends directly** (decision made by the user).
 
 Env wiring: frontend uses `NEXT_PUBLIC_API_URL` (web-backend) and `NEXT_PUBLIC_GIT_SERVICE_URL` (git-service). Dev ports: web-backend `4000`, git-service `5000`, frontend `3000`.
 
+> 📌 **Canonical tech stack: [docs/TECH_STACK.md](docs/TECH_STACK.md)** (upgraded 2026-06-28 → Node 20, Express 5, Tailwind 4, +TanStack Query). Version numbers elsewhere in older docs defer to it.
+
 ---
 
 ## 6. Repo / folder structure (top level)
