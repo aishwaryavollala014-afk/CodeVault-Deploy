@@ -9,22 +9,26 @@ import { env } from '../config/env';
 const ALGORITHM = 'aes-256-gcm';
 const TAG_BYTES = 16;
 
-function loadKey(): Buffer {
+let cachedKey: Buffer | null = null;
+
+// Loaded lazily (on first decrypt) so an invalid/placeholder key never blocks boot —
+// only an actual sync that needs to decrypt will fail, with a clear error.
+function getKey(): Buffer {
+  if (cachedKey) return cachedKey;
   const key = Buffer.from(env.ENCRYPTION_KEY, 'hex');
   if (key.length !== 32) {
     throw new Error('ENCRYPTION_KEY must be 64 hex characters (32 bytes) — must match web-backend');
   }
-  return key;
+  cachedKey = key;
+  return cachedKey;
 }
-
-const KEY = loadKey();
 
 // Decrypt a stored token. `cipher` = accessTokenCipher/tokenCipher, `iv` = tokenIv (both Bytes).
 export function decrypt(cipher: Buffer, iv: Buffer): string {
   const tag = cipher.subarray(cipher.length - TAG_BYTES);
   const data = cipher.subarray(0, cipher.length - TAG_BYTES);
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
+  const decipher = crypto.createDecipheriv(ALGORITHM, getKey(), iv);
   decipher.setAuthTag(tag);
 
   const out = Buffer.concat([decipher.update(data), decipher.final()]);
