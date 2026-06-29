@@ -61,6 +61,10 @@ export function startSyncWorker(): Worker<SyncJobData> {
     { connection: bullConnection, concurrency: env.SYNC_CONCURRENCY },
   );
 
+  // Without an 'error' listener, a Redis/connection error would throw and crash the process.
+  worker.on('error', (err) => {
+    logger.error({ err: err.message }, 'sync worker error (e.g. Redis unavailable)');
+  });
   worker.on('failed', (job, err) => {
     logger.error({ jobId: job?.id, err: err.message }, 'sync job failed');
   });
