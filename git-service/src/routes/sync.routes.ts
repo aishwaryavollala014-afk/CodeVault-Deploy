@@ -16,5 +16,6 @@ const triggerLimit = rateLimit({ windowSec: 60, max: 10, keyPrefix: 'sync-trigge
 
 router.post('/', triggerLimit, validateBody(triggerSyncSchema), asyncHandler(syncController.trigger));
 router.get('/status', asyncHandler(syncController.status));
+router.get('/activity', asyncHandler(syncController.activity));
 
 export default router;
