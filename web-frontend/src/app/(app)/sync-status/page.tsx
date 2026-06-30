@@ -1,32 +1,122 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5000/api";
+
+type ConnStatus = {
+  connectionId: string;
+  platform: "leetcode" | "codeforces" | "codechef" | "hackerrank";
+  username: string;
+  status: "active" | "expired";
+  syncEnabled: boolean;
+  lastSyncedAt: string | null;
+  itemsSynced: number;
+};
+
+type ActivityItem = {
+  id: string;
+  type: "push" | "fetch" | "refresh" | "expire" | "error";
+  message: string;
+  platform: string;
+  createdAt: string;
+};
+
+const PLAT: Record<string, { short: string; cls: string; name: string }> = {
+  leetcode: { short: "LC", cls: "lc", name: "LeetCode" },
+  codeforces: { short: "CF", cls: "cf", name: "Codeforces" },
+  codechef: { short: "CC", cls: "cc", name: "CodeChef" },
+  hackerrank: { short: "HR", cls: "hr", name: "HackerRank" },
+};
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "never";
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function dotClass(type: ActivityItem["type"]): string {
+  switch (type) {
+    case "push":
+      return "b";
+    case "fetch":
+      return "g";
+    case "refresh":
+      return "o";
+    default:
+      return "r"; // expire / error
+  }
+}
+
 export default function SyncStatusPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null } | null>(null);
+  const [conns, setConns] = useState<ConnStatus[] | null>(null);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [error, setError] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (!token || !storedUser) {
+    if (!token) {
       router.push("/login");
       return;
     }
-
     try {
-      setUser(JSON.parse(storedUser));
-    } catch (e) {
-      console.error("Failed to parse user data", e);
+      setError("");
+      const headers = { Authorization: `Bearer ${token}` };
+      const [sRes, aRes] = await Promise.all([
+        fetch(`${GIT_URL}/sync/status`, { headers }),
+        fetch(`${GIT_URL}/sync/activity?limit=20`, { headers }),
+      ]);
+      if (!sRes.ok) throw new Error("Failed to load sync status");
+      const sData = await sRes.json();
+      setConns(sData.items ?? []);
+      if (aRes.ok) {
+        const aData = await aRes.json();
+        setActivity(aData.items ?? []);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not reach the sync service");
+      setConns([]);
     }
   }, [router]);
 
-  if (!user) {
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const runSync = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      setSyncing(true);
+      setError("");
+      await fetch(`${GIT_URL}/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}),
+      });
+      await load();
+    } catch {
+      setError("Failed to trigger sync");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (conns === null) {
     return <div style={{ padding: "40px", textAlign: "center" }}>Loading sync status...</div>;
   }
+
+  const activeCount = conns.filter((c) => c.status === "active" && c.syncEnabled).length;
+  const total = conns.length;
 
   return (
     <>
@@ -34,101 +124,109 @@ export default function SyncStatusPage() {
         <div className="health">
           <div className="hi">●</div>
           <div className="t">
-            <div className="n">3 of 4 platforms syncing</div>
-            <div className="m">Last run 2 hours ago · 37 new solutions pushed this week</div>
+            <div className="n">
+              {activeCount} of {total} platform{total === 1 ? "" : "s"} syncing
+            </div>
+            <div className="m">
+              {activity[0] ? `Last activity ${timeAgo(activity[0].createdAt)}` : "No sync activity yet"}
+            </div>
           </div>
           <div className="acts">
-            <span className="next">next run in 1h 12m</span>
-            <button className="btn brand" type="button">
-              <svg className="ico sm" aria-hidden="true"><use href="#ic-sync"/></svg> Run sync now
+            <button className="btn brand" type="button" onClick={runSync} disabled={syncing}>
+              <svg className="ico sm" aria-hidden="true">
+                <use href="#ic-sync" />
+              </svg>{" "}
+              {syncing ? "Syncing…" : "Run sync now"}
             </button>
           </div>
         </div>
+        {error && (
+          <p style={{ color: "var(--brand-d)", fontSize: 13, marginTop: 10, fontWeight: 600 }}>{error}</p>
+        )}
       </section>
 
       <section className="panel">
         <h2 className="h">Connections</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Platform</th>
-              <th scope="col">Status</th>
-              <th scope="col">Last synced</th>
-              <th scope="col">Items</th>
-              <th scope="col"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span className="who2"><span className="badge-ic lc">LC</span> LeetCode <span className="h">@{user.githubLogin}</span></span></td>
-              <td><span className="st-pill ok"><span className="d"></span> Active</span></td>
-              <td className="tmono">2h ago</td>
-              <td className="tmono">612</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td><span className="who2"><span className="badge-ic cf">CF</span> Codeforces <span className="h">@{user.githubLogin}_t</span></span></td>
-              <td><span className="st-pill ok"><span className="d"></span> Active</span></td>
-              <td className="tmono">2h ago</td>
-              <td className="tmono">341</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td><span className="who2"><span className="badge-ic cc">CC</span> CodeChef <span className="h">@{user.githubLogin}06</span></span></td>
-              <td><span className="st-pill ok"><span className="d"></span> Active</span></td>
-              <td className="tmono">2h ago</td>
-              <td className="tmono">184</td>
-              <td></td>
-            </tr>
-            <tr>
-              <td><span className="who2"><span className="badge-ic hr">HR</span> HackerRank <span className="h">@{user.githubLogin}g</span></span></td>
-              <td><span className="st-pill exp"><span className="d"></span> Session expired</span></td>
-              <td className="tmono">6d ago</td>
-              <td className="tmono">111</td>
-              <td>
-                <Link className="btn brand sm" href="/connect">Reconnect</Link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {total === 0 ? (
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+            No platforms connected yet. <Link href="/connect">Connect one</Link>.
+          </p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Platform</th>
+                <th scope="col">Status</th>
+                <th scope="col">Last synced</th>
+                <th scope="col">Items</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {conns.map((c) => {
+                const meta = PLAT[c.platform] ?? { short: "?", cls: "", name: c.platform };
+                return (
+                  <tr key={c.connectionId}>
+                    <td>
+                      <span className="who2">
+                        <span className={`badge-ic ${meta.cls}`}>{meta.short}</span> {meta.name}{" "}
+                        <span className="h">@{c.username}</span>
+                      </span>
+                    </td>
+                    <td>
+                      {c.status === "expired" ? (
+                        <span className="st-pill exp">
+                          <span className="d"></span> Session expired
+                        </span>
+                      ) : (
+                        <span className="st-pill ok">
+                          <span className="d"></span> Active
+                        </span>
+                      )}
+                    </td>
+                    <td className="tmono">{timeAgo(c.lastSyncedAt)}</td>
+                    <td className="tmono">{c.itemsSynced}</td>
+                    <td>
+                      {c.status === "expired" ? (
+                        <Link className="btn brand sm" href="/connect">
+                          Reconnect
+                        </Link>
+                      ) : null}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
         <p style={{ fontSize: "12.5px", color: "var(--faint)", marginTop: "12px" }}>
           Stats keep working from public data even when a session expires — only code sync pauses until you reconnect.
         </p>
       </section>
 
       <section className="panel">
-        <h2 className="h">Activity log <span style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--faint)" }}>most recent first</span></h2>
+        <h2 className="h">
+          Activity log{" "}
+          <span style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--faint)" }}>
+            most recent first
+          </span>
+        </h2>
         <div className="log">
-          <div className="log-row">
-            <span className="ts">14:32 today</span>
-            <span className="dot b"></span>
-            <span className="tx">Pushed <span className="mono">0369/solution.py</span> to LeetCodeQuestions</span>
-          </div>
-          <div className="log-row">
-            <span className="ts">14:32 today</span>
-            <span className="dot g"></span>
-            <span className="tx">Fetched 3 new accepted submissions from LeetCode</span>
-          </div>
-          <div className="log-row">
-            <span className="ts">14:31 today</span>
-            <span className="dot g"></span>
-            <span className="tx">Regenerated README index (612 problems)</span>
-          </div>
-          <div className="log-row">
-            <span className="ts">14:30 today</span>
-            <span className="dot o"></span>
-            <span className="tx">Codeforces session refreshed automatically</span>
-          </div>
-          <div className="log-row">
-            <span className="ts">6 days ago</span>
-            <span className="dot r"></span>
-            <span className="tx">HackerRank session expired — code sync paused</span>
-          </div>
-          <div className="log-row">
-            <span className="ts">1 week ago</span>
-            <span className="dot b"></span>
-            <span className="tx">Pushed <span className="mono">0704/solution.java</span> to LeetCodeQuestions</span>
-          </div>
+          {activity.length === 0 ? (
+            <div className="log-row">
+              <span className="tx" style={{ color: "var(--muted)" }}>
+                No sync activity yet.
+              </span>
+            </div>
+          ) : (
+            activity.map((a) => (
+              <div className="log-row" key={a.id}>
+                <span className="ts">{timeAgo(a.createdAt)}</span>
+                <span className={`dot ${dotClass(a.type)}`}></span>
+                <span className="tx">{a.message}</span>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </>
