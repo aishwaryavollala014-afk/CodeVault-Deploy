@@ -91,7 +91,7 @@ enum AuditAction {
 
 model User {
   id                     String          @id @default(cuid())
-  githubLogin            String          @unique
+  githubLogin            String?         @unique
   handle                 String          @unique
   displayName            String?
   email                  String?
@@ -294,4 +294,14 @@ model AuditLog {
 
   @@index([userId, createdAt])
   @@map("audit_logs")
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("verification_tokens")
 }

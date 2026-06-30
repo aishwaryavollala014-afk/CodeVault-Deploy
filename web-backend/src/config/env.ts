@@ -11,6 +11,11 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().optional(),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
   ENCRYPTION_KEY: z.string().optional(),
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info')
 });

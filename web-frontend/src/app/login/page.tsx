@@ -1,12 +1,48 @@
 "use client";
 
+import { useState } from "react";
+
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || '';
 const REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin : ''}/login/callback`;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
   const handleGitHubLogin = () => {
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo,read:user,user:email&prompt=select_account`;
     window.location.href = githubAuthUrl;
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setEmailLoading(true);
+    setEmailSuccess(false);
+    setEmailError("");
+
+    try {
+      const res = await fetch(`${API_URL}/auth/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to send magic link");
+      }
+
+      setEmailSuccess(true);
+    } catch (err: any) {
+      setEmailError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setEmailLoading(false);
+    }
   };
 
   return (
@@ -45,14 +81,32 @@ export default function Login() {
 
           <div className="divider">or use a sign-in link</div>
 
-          <form onSubmit={(e) => { e.preventDefault(); handleGitHubLogin(); }}>
-            <div className="field">
-              <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
+          {emailSuccess ? (
+            <div style={{ padding: "16px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgb(16, 185, 129)", margin: "16px 0", color: "#10b981", fontSize: "14px" }}>
+              ✅ Verification link sent! Check your email inbox to sign in.
             </div>
-            <button className="submit" type="submit">Email me a sign-in link</button>
-            <p className="nopass">Passwordless — we'll email you a secure one-time link. No password to remember.</p>
-          </form>
+          ) : (
+            <form onSubmit={handleEmailLogin}>
+              <div className="field">
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {emailError && <p style={{ color: "var(--brand, #f1543f)", fontSize: "12px", margin: "4px 0 12px 0" }}>⚠️ {emailError}</p>}
+              <button className="submit" type="submit" disabled={emailLoading}>
+                {emailLoading ? "Sending link..." : "Email me a sign-in link"}
+              </button>
+              <p className="nopass">Passwordless — we'll email you a secure one-time link. No password to remember.</p>
+            </form>
+          )}
 
           <div className="alt">New to CodeVault? <a href="#" onClick={(e) => { e.preventDefault(); handleGitHubLogin(); }}>Create an account</a> — it's the same GitHub sign-in.</div>
         </div>
