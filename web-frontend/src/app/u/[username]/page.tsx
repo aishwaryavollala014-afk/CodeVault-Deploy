@@ -1,25 +1,21 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useState, use, useMemo } from "react";
 import Link from "next/link";
 
 export default function PublicProfileView({ params }: { params: Promise<{ username: string }> }) {
   const resolvedParams = use(params);
   const username = resolvedParams.username || "gaurav";
   const [copied, setCopied] = useState(false);
-  const [heatmapCells, setHeatmapCells] = useState<string[]>([]);
 
-  useEffect(() => {
+  const heatmapCells = useMemo(() => {
     // Generate heatmap cells
     const lv = ["", "l1", "l2", "l3", "l4"];
     let s = 1337;
-    const r = () => {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      return s / 0x7fffffff;
-    };
     const cells = [];
     for (let i = 0; i < 53 * 7; i++) {
-      const v = r();
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      const v = s / 0x7fffffff;
       const rec = i > 53 * 7 * 0.62;
       let l = 0;
       if (v > 0.5) l = 1;
@@ -28,7 +24,7 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
       if (v > 0.93 || (rec && v > 0.72)) l = 4;
       cells.push(lv[l]);
     }
-    setHeatmapCells(cells);
+    return cells;
   }, []);
 
   const handleCopyLink = () => {

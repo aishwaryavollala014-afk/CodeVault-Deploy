@@ -1,7 +1,5 @@
 import React from "react";
 import { RefreshCw, ExternalLink } from "lucide-react";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 
 export interface RepoHeaderProps {
   owner: string;

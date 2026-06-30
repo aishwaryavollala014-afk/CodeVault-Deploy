@@ -1,5 +1,9 @@
 import React from "react";
 
+const MOCK_LEVELS = Array.from({ length: 50 * 7 }, () => {
+  return Math.random() > 0.8 ? Math.floor(Math.random() * 4) + 1 : 0;
+});
+
 export function ActivityHeatmap() {
   return (
     <div className="bg-white border border-[var(--border)] rounded-[var(--r)] p-[18px]">
@@ -9,8 +13,7 @@ export function ActivityHeatmap() {
       <div style={{ overflowX: "auto", paddingBottom: "8px" }}>
         <div className="grid grid-flow-col grid-rows-7 gap-[3px]">
           {/* Mock heatmap data */}
-          {Array.from({ length: 50 * 7 }).map((_, i) => {
-            const level = Math.random() > 0.8 ? Math.floor(Math.random() * 4) + 1 : 0;
+          {MOCK_LEVELS.map((level, i) => {
             const bgClass = level === 1 ? "bg-[#fbd6c6]" : level === 2 ? "bg-[#f5a888]" : level === 3 ? "bg-[#f0764f]" : level === 4 ? "bg-[#d8431f]" : "bg-[#efe7df]";
             return <i key={i} className={`w-[11px] h-[11px] rounded-[3px] ${bgClass}`} title={`${level} submissions`} />;
           })}

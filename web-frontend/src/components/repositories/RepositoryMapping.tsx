@@ -1,5 +1,4 @@
 import React from "react";
-import { clsx } from "clsx";
 
 export interface Mapping {
   id: string; // e.g. "lc", "cf", "cc", "hr"

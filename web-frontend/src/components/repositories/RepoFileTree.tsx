@@ -1,5 +1,5 @@
 import React from "react";
-import { Code, ChevronRight, FileJson } from "lucide-react";
+import { Code, FileJson } from "lucide-react";
 
 export interface Problem {
   id: string;

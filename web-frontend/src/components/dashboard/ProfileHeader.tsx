@@ -1,6 +1,13 @@
 import React from "react";
 
-export function ProfileHeader({ user }: { user: any }) {
+export interface UserProfile {
+  id: string;
+  githubLogin: string | null;
+  displayName: string | null;
+  avatarUrl?: string;
+}
+
+export function ProfileHeader({ user }: { user: UserProfile | null }) {
   return (
     <div className="bg-white border border-[var(--border)] rounded-[var(--r)] p-[22px] flex items-center gap-[18px] shadow-sm relative overflow-hidden flex-wrap max-[820px]:flex-wrap">
       <div className="absolute -right-[60px] -top-[60px] w-[180px] h-[180px] rounded-full bg-[var(--red-soft)] opacity-60"></div>
