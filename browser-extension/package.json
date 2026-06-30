@@ -1,0 +1,17 @@
+{
+  "name": "browser-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CodeVault browser extension (Path B v2) — capture accepted solutions and send to git-service /api/ingest",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.270",
+    "@types/webextension-polyfill": "^0.12.1",
+    "typescript": "^5.5.3"
+  }
+}
