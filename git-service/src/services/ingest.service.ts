@@ -183,6 +183,16 @@ export async function runIngest(
         where: { id: run.id },
         data: { status: 'success', itemsFetched: items.length, itemsPushed: fresh.length, finishedAt: new Date() },
       });
+      await prisma.notification
+        .create({
+          data: {
+            userId,
+            type: 'sync',
+            title: `Captured ${fresh.length} problem(s) from ${platform}`,
+            body: `Pushed to ${repo.repoFullName} via the browser extension.`,
+          },
+        })
+        .catch(() => undefined);
 
       pushed += fresh.length;
       skipped += items.length - fresh.length;
