@@ -12,9 +12,14 @@ export default {
     'https://codeforces.com/*',
     'https://www.codechef.com/*',
     'https://www.hackerrank.com/*',
+    'http://localhost:3000/*',
     'http://localhost:5000/*',
     'http://localhost:5050/*',
   ],
+  action: {
+    default_popup: 'src/popup/index.html',
+    default_title: 'CodeVault',
+  },
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
@@ -24,6 +29,7 @@ export default {
     { matches: ['https://codeforces.com/*'], js: ['src/content/codeforces.ts'], run_at: 'document_idle' },
     { matches: ['https://www.codechef.com/*'], js: ['src/content/codechef.ts'], run_at: 'document_idle' },
     { matches: ['https://www.hackerrank.com/challenges/*'], js: ['src/content/hackerrank.ts'], run_at: 'document_idle' },
+    { matches: ['http://localhost:3000/*'], js: ['src/content/codevault.ts'], run_at: 'document_idle' },
   ],
   content_security_policy: {
     extension_pages: "script-src 'self'; object-src 'self'",
