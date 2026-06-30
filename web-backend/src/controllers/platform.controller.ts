@@ -6,7 +6,7 @@ import logger from '../lib/logger';
 export class PlatformController {
   static async addConnection(req: Request, res: Response): Promise<void> {
     try {
-      const { platform, username } = req.body;
+      const { platform, username, sessionToken } = req.body;
       const userId = req.user!.userId;
 
       if (!platform || !username || !Object.values(PlatformType).includes(platform)) {
@@ -14,7 +14,7 @@ export class PlatformController {
         return;
       }
 
-      const connection = await ConnectionService.addConnection(userId, platform as PlatformType, username);
+      const connection = await ConnectionService.addConnection(userId, platform as PlatformType, username, sessionToken);
       res.status(201).json(connection);
     } catch (error: any) {
       logger.error(error, 'Add connection error');

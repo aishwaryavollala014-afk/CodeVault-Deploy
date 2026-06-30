@@ -1,9 +1,10 @@
 import prisma from '../lib/prisma';
 import { PlatformType } from '@prisma/client';
 import logger from '../lib/logger';
+import { encryptToken } from '../lib/crypto';
 
 export class ConnectionService {
-  static async addConnection(userId: string, platform: PlatformType, username: string) {
+  static async addConnection(userId: string, platform: PlatformType, username: string, sessionToken?: string) {
     try {
       const existing = await prisma.connection.findUnique({
         where: { userId_platform: { userId, platform } }
@@ -13,12 +14,29 @@ export class ConnectionService {
         throw new Error(`Already connected to ${platform}`);
       }
 
-      const connection = await prisma.connection.create({
-        data: {
-          userId,
-          platform,
-          username,
+      const connection = await prisma.$transaction(async (tx) => {
+        const conn = await tx.connection.create({
+          data: {
+            userId,
+            platform,
+            username,
+            syncEnabled: !!sessionToken,
+            tokenStatus: sessionToken ? 'active' : 'none',
+          }
+        });
+
+        if (sessionToken) {
+          const { cipher, iv } = encryptToken(sessionToken);
+          await tx.connectionSecret.create({
+            data: {
+              connectionId: conn.id,
+              tokenCipher: cipher,
+              tokenIv: iv,
+            }
+          });
         }
+
+        return conn;
       });
 
       return connection;

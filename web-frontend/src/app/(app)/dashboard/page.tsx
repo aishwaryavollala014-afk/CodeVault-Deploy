@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ProfileHeader } from "@/components/dashboard/ProfileHeader";
-import { StatCard } from "@/components/dashboard/StatCard";
-import { DifficultyRing } from "@/components/dashboard/DifficultyRing";
-import { PlatformList } from "@/components/dashboard/PlatformList";
-import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
-import { BadgesList } from "@/components/dashboard/BadgesList";
-import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import Link from "next/link";
 
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [heatmapCells, setHeatmapCells] = useState<string[]>([]);
 
   useEffect(() => {
     // Check if the user is logged in
@@ -31,66 +27,259 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  // Seeded deterministic heatmap generator (exactly matches overview.html script)
+  useEffect(() => {
+    const lv = ["", "l1", "l2", "l3", "l4"];
+    let seed = 1337;
+    const rand = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    const cells = [];
+    for (let i = 0; i < 53 * 7; i++) {
+      const r = rand();
+      const recent = i > 53 * 7 * 0.62;
+      let l = 0;
+      if (r > 0.5) l = 1;
+      if (r > 0.7) l = 2;
+      if (r > 0.85) l = 3;
+      if (r > 0.93 || (recent && r > 0.72)) l = 4;
+      cells.push(lv[l]);
+    }
+    setHeatmapCells(cells);
+  }, []);
+
+  const handleCopyLink = () => {
+    if (!user) return;
+    navigator.clipboard.writeText(`https://codevault.dev/u/${user.githubLogin}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1300);
+  };
+
   if (!user) {
     return <div style={{ padding: "40px", textAlign: "center" }}>Loading dashboard...</div>;
   }
 
+  const initial = (user.displayName || user.githubLogin).charAt(0).toUpperCase();
+
   return (
     <>
-      <ProfileHeader user={user} />
-      
-      <div className="stats">
-        <StatCard 
-          label="Total Solved" 
-          icon={<svg className="ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>} 
-          value="265" 
-          delta="+12 this week" 
-        />
-        <StatCard 
-          label="Current Streak" 
-          icon={<svg className="ico a" viewBox="0 0 24 24"><path d="M12 3c0 3-4 4-4 8a4 4 0 0 0 8 0c0-1.5-1-2.8-1-2.8S16 12 16 14"/><path d="M12 21a6 6 0 0 0 6-6c0-5-6-12-6-12"/></svg>} 
-          value="14 Days" 
-          delta="Keep it going!" 
-          deltaClass="warm"
-        />
-        <StatCard 
-          label="Submissions" 
-          icon={<svg className="ico" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>} 
-          value="1,402" 
-        />
-        <StatCard 
-          label="GitHub Repo" 
-          icon={<svg className="ico r" viewBox="0 0 24 24"><path d="M9 19c-4 1.5-4-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.3 2.8 5.3 3.1 5.3 3.1a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 3.9 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>} 
-          value="In Sync" 
-          delta="Last updated 2h ago" 
-          deltaClass="pink"
-        />
-      </div>
-
-      <div className="grid g-3">
-        <DifficultyRing />
-        <ActivityHeatmap />
-      </div>
-
-      <div className="grid g-3">
-        <PlatformList />
-        <RecentActivity />
-      </div>
-      
-      <div className="grid g-2">
-        <BadgesList />
-        {/* Placeholder for more components */}
-        <div className="panel">
-          <div className="h">Topics & Tags</div>
-          <div className="chips2" style={{ marginTop: "16px" }}>
-            <div className="tchip"><b>32</b> Arrays</div>
-            <div className="tchip"><b>24</b> Dynamic Programming</div>
-            <div className="tchip"><b>18</b> Graphs</div>
-            <div className="tchip"><b>12</b> Trees</div>
-            <div className="tchip"><b>8</b> Math</div>
+      {/* PROFILE HEADER */}
+      <section className="phead">
+        <div className="pav">{initial}</div>
+        <div className="pid">
+          <div className="nm">{user.displayName || user.githubLogin}</div>
+          <div className="ln">codevault.dev/u/{user.githubLogin}</div>
+          <div className="chips">
+            <span className="pchip"><span className="b lc">LC</span> LeetCode <span className="h">@{user.githubLogin}</span></span>
+            <span className="pchip"><span className="b cf">CF</span> Codeforces <span className="h">@{user.githubLogin}_t</span></span>
+            <span className="pchip"><span className="b cc">CC</span> CodeChef <span className="h">@{user.githubLogin}06</span></span>
+            <span className="pchip"><span className="b hr">HR</span> HackerRank <span className="h">@{user.githubLogin}g</span></span>
           </div>
         </div>
+        <div className="pa">
+          <button className="btn" type="button" onClick={handleCopyLink}>
+            <svg className="ico sm" aria-hidden="true"><use href="#ic-copy"/></svg>
+            {copied ? "Copied ✓" : "Copy profile link"}
+          </button>
+          <Link href="/connect" className="btn brand">
+            <svg className="ico sm" aria-hidden="true"><use href="#ic-plus"/></svg> Connect platform
+          </Link>
+        </div>
+      </section>
+
+      {/* STAT ROW */}
+      <section className="stats" aria-label="Key stats">
+        <div className="stat">
+          <div className="l"><svg className="ico sm" aria-hidden="true"><use href="#ic-analytics"/></svg> Total solved</div>
+          <div className="n">1,248</div>
+          <div className="d">+37 this week</div>
+        </div>
+        <div className="stat">
+          <div className="l"><svg className="ico sm a" aria-hidden="true"><use href="#ic-flame"/></svg> Current streak</div>
+          <div className="n">47 days</div>
+          <div className="d warm">Longest 89 days</div>
+        </div>
+        <div className="stat">
+          <div className="l"><svg className="ico sm r" aria-hidden="true"><use href="#ic-bolt"/></svg> Codeforces rating</div>
+          <div className="n">1,623</div>
+          <div className="d pink">Peak 1,711</div>
+        </div>
+        <div className="stat">
+          <div className="l"><svg className="ico sm" aria-hidden="true"><use href="#ic-github"/></svg> Synced to GitHub</div>
+          <div className="n">1,190</div>
+          <div className="d">95% of solved</div>
+        </div>
+      </section>
+
+      {/* ROW: ring + heatmap + platforms */}
+      <div className="grid g-3">
+        {/* LeetCode-style difficulty ring */}
+        <section className="panel">
+          <h2 className="h">Difficulty <span className="tag">solved</span></h2>
+          <div className="ringwrap">
+            <div className="ring" role="img" aria-label="Difficulty breakdown: 540 Easy, 560 Medium, 148 Hard, 1248 total">
+              <div className="rc"><b>1,248</b><span>solved</span></div>
+            </div>
+            <div className="rleg">
+              <div className="r"><span className="sw e"></span> Easy <span className="v">540</span></div>
+              <div className="r"><span className="sw m"></span> Medium <span className="v">560</span></div>
+              <div className="r"><span className="sw h"></span> Hard <span className="v">148</span></div>
+            </div>
+          </div>
+        </section>
+
+        {/* GitHub-style heatmap */}
+        <section className="panel">
+          <h2 className="h">Submission activity <span className="tag">last 12 months</span></h2>
+          <div className="heat" role="img" aria-label="Submission heatmap over the last 12 months" aria-hidden="true">
+            {heatmapCells.map((cls, i) => (
+              <i key={i} className={cls || undefined}></i>
+            ))}
+          </div>
+          <div className="heat-legend">
+            Less <i style={{ background: "#efe7df" }}></i>
+            <i style={{ background: "#fbd6c6" }}></i>
+            <i style={{ background: "#f5a888" }}></i>
+            <i style={{ background: "#f0764f" }}></i>
+            <i style={{ background: "#d8431f" }}></i> More
+          </div>
+        </section>
+
+        {/* platform breakdown */}
+        <section className="panel">
+          <h2 className="h">By platform</h2>
+          <div className="pf">
+            <div className="pf-row">
+              <span className="lab"><span className="badge-ic lc">LC</span>LeetCode</span>
+              <span className="pf-bar"><i style={{ width: "100%", background: "#ffa116" }}></i></span>
+              <span className="val">612</span>
+            </div>
+            <div className="pf-row">
+              <span className="lab"><span className="badge-ic cf">CF</span>Codeforces</span>
+              <span className="pf-bar"><i style={{ width: "56%", background: "#1f8acb" }}></i></span>
+              <span className="val">341</span>
+            </div>
+            <div className="pf-row">
+              <span className="lab"><span className="badge-ic cc">CC</span>CodeChef</span>
+              <span className="pf-bar"><i style={{ width: "30%", background: "#7a5230" }}></i></span>
+              <span className="val">184</span>
+            </div>
+            <div className="pf-row">
+              <span className="lab"><span className="badge-ic hr">HR</span>HackerRank</span>
+              <span className="pf-bar"><i style={{ width: "18%", background: "#1aa260" }}></i></span>
+              <span className="val">111</span>
+            </div>
+          </div>
+        </section>
       </div>
+
+      {/* ROW: topics + HackerRank badges */}
+      <div className="grid g-2">
+        <section className="panel">
+          <h2 className="h">Topic strengths</h2>
+          <div className="chips2">
+            <span className="tchip">Arrays <b>210</b></span>
+            <span className="tchip">Dynamic Programming <b>142</b></span>
+            <span className="tchip">Graphs <b>118</b></span>
+            <span className="tchip">Trees <b>96</b></span>
+            <span className="tchip">Greedy <b>84</b></span>
+            <span className="tchip">Binary Search <b>71</b></span>
+            <span className="tchip">Strings <b>63</b></span>
+            <span className="tchip">Math <b>58</b></span>
+            <span className="tchip">Sliding Window <b>44</b></span>
+          </div>
+        </section>
+
+        <section className="panel">
+          <h2 className="h">Skill badges</h2>
+          <div className="badges">
+            <div className="bdg">
+              <div className="hex">DSA</div>
+              <div className="bt">
+                <div className="n">Problem Solving</div>
+                <div className="m">Gold · 1,248 solved</div>
+              </div>
+              <div className="stars" aria-label="5 out of 5 stars">★★★★★</div>
+            </div>
+            <div className="bdg">
+              <div className="hex a">DP</div>
+              <div className="bt">
+                <div className="n">Dynamic Programming</div>
+                <div className="m">Silver · 142 solved</div>
+              </div>
+              <div className="stars" aria-label="4 out of 5 stars">★★★★☆</div>
+            </div>
+            <div className="bdg">
+              <div className="hex r">GR</div>
+              <div className="bt">
+                <div className="n">Graphs</div>
+                <div className="m">Silver · 118 solved</div>
+              </div>
+              <div className="stars" aria-label="4 out of 5 stars">★★★★☆</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Codeforces-style recent submissions table */}
+      <section className="panel">
+        <h2 className="h">Recent accepted submissions <span className="tag">auto-synced to GitHub</span></h2>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Problem</th>
+              <th scope="col">Source</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col">Verdict</th>
+              <th scope="col">Synced</th>
+              <th scope="col" className="tright">When</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="prob-name">369 · Plus One Linked List</td>
+              <td><span className="src"><span className="badge-ic lc">LC</span>LeetCode</span></td>
+              <td><span className="pill-d med">Medium</span></td>
+              <td className="verd">Accepted</td>
+              <td><Link className="gh-link" href="/repositories">0369/solution.py</Link></td>
+              <td className="tright">2h ago</td>
+            </tr>
+            <tr>
+              <td className="prob-name">Dijkstra: Shortest Reach 2</td>
+              <td><span className="src"><span className="badge-ic hr">HR</span>HackerRank</span></td>
+              <td><span className="pill-d hard">Hard</span></td>
+              <td className="verd">Accepted</td>
+              <td><Link className="gh-link" href="/repositories">dijkstra/solution.cpp</Link></td>
+              <td className="tright">5h ago</td>
+            </tr>
+            <tr>
+              <td className="prob-name">Edu Round 168 — C</td>
+              <td><span className="src"><span className="badge-ic cf">CF</span>Codeforces</span></td>
+              <td><span className="pill-d rate">1400</span></td>
+              <td className="verd">Accepted</td>
+              <td><Link className="gh-link" href="/repositories">1968C/solution.cpp</Link></td>
+              <td className="tright">yesterday</td>
+            </tr>
+            <tr>
+              <td className="prob-name">Chef and Subarrays</td>
+              <td><span className="src"><span className="badge-ic cc">CC</span>CodeChef</span></td>
+              <td><span className="pill-d easy">Easy</span></td>
+              <td className="verd">Accepted</td>
+              <td><Link className="gh-link" href="/repositories">SUBARR/solution.py</Link></td>
+              <td className="tright">yesterday</td>
+            </tr>
+            <tr>
+              <td className="prob-name">704 · Binary Search</td>
+              <td><span className="src"><span className="badge-ic lc">LC</span>LeetCode</span></td>
+              <td><span className="pill-d easy">Easy</span></td>
+              <td className="verd">Accepted</td>
+              <td><Link className="gh-link" href="/repositories">0704/solution.java</Link></td>
+              <td className="tright">2 days ago</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
     </>
   );
 }

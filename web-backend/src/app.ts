@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import platformRoutes from './routes/platform.routes';
 import statsRoutes from './routes/stats.routes';
 import publicRoutes from './routes/public.routes';
+import githubRepoRoutes from './routes/githubRepo.routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -35,6 +36,7 @@ export const createApp = (): Application => {
   app.use('/api/platforms', platformRoutes);
   app.use('/api/stats', statsRoutes);
   app.use('/api/public', publicRoutes);
+  app.use('/api/github-repos', githubRepoRoutes);
 
   // Basic Error Handler (will be expanded later)
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {

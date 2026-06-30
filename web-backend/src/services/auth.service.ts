@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import logger from '../lib/logger';
 import { env } from '../config/env';
 import { signToken } from '../utils/jwt';
-import crypto from 'crypto';
+import { encryptToken } from '../lib/crypto';
 
 interface GitHubUserResponse {
   id: number;
@@ -25,15 +25,6 @@ interface AuthResult {
 }
 
 export class AuthService {
-  private static encryptToken(token: string): { cipher: Buffer; iv: Buffer } {
-    const key = Buffer.from(env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex'), 'hex');
-    const iv = crypto.randomBytes(12); // GCM standard IV size
-    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
-    let encrypted = cipher.update(token, 'utf8');
-    encrypted = Buffer.concat([encrypted, cipher.final(), cipher.getAuthTag()]);
-    return { cipher: encrypted, iv };
-  }
-
   static async authenticateWithGitHub(code: string): Promise<AuthResult> {
     try {
       // 1. Exchange code for access token
@@ -61,7 +52,7 @@ export class AuthService {
       });
 
       const ghUser = userResponse.data;
-      const { cipher, iv } = this.encryptToken(accessToken);
+      const { cipher, iv } = encryptToken(accessToken);
 
       // 3. Upsert User & OAuthIdentity
       const user = await prisma.$transaction(async (tx) => {
@@ -90,6 +81,7 @@ export class AuthService {
           update: {
             accessTokenCipher: cipher,
             tokenIv: iv,
+            scopes: ['repo', 'read:user', 'user:email'],
           },
           create: {
             userId: u.id,
@@ -97,6 +89,7 @@ export class AuthService {
             providerUserId: String(ghUser.id),
             accessTokenCipher: cipher,
             tokenIv: iv,
+            scopes: ['repo', 'read:user', 'user:email'],
           },
         });
 
