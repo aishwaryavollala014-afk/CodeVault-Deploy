@@ -16,11 +16,26 @@ export interface CapturedSubmission {
   url?: string;
 }
 
-// Message a content script sends to the background worker.
+// Messages content scripts / popup send to the background worker.
 export interface CaptureMessage {
   type: 'capture';
   submission: CapturedSubmission;
 }
+
+export interface SetTokenMessage {
+  type: 'setToken';
+  token: string; // the user's CodeVault JWT, read from the web app
+}
+
+export interface SignOutMessage {
+  type: 'signOut';
+}
+
+export interface GetStatusMessage {
+  type: 'getStatus';
+}
+
+export type ExtMessage = CaptureMessage | SetTokenMessage | SignOutMessage | GetStatusMessage;
 
 export interface IngestResponse {
   ok: boolean;
@@ -28,4 +43,8 @@ export interface IngestResponse {
   pushed?: number;
   skipped?: number;
   error?: string;
+}
+
+export interface AuthStatus {
+  signedIn: boolean;
 }
