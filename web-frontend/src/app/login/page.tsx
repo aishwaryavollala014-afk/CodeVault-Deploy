@@ -5,7 +5,7 @@ const REDIRECT_URI = `${typeof window !== 'undefined' ? window.location.origin :
 
 export default function Login() {
   const handleGitHubLogin = () => {
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo,read:user,user:email`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo,read:user,user:email&prompt=select_account`;
     window.location.href = githubAuthUrl;
   };
 
@@ -42,17 +42,6 @@ export default function Login() {
             Continue with GitHub
           </button>
           <p className="why">GitHub is required to create and update your synced repository.</p>
-
-          <div className="divider">or use a sign-in link</div>
-
-          <form onSubmit={(e) => { e.preventDefault(); handleGitHubLogin(); }}>
-            <div className="field">
-              <label htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-            </div>
-            <button className="submit" type="submit">Email me a sign-in link</button>
-            <p className="nopass">Passwordless — we'll email you a secure one-time link. No password to remember.</p>
-          </form>
 
           <div className="alt">New to CodeVault? <a href="#" onClick={(e) => { e.preventDefault(); handleGitHubLogin(); }}>Create an account</a> — it's the same GitHub sign-in.</div>
         </div>
