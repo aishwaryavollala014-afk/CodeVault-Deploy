@@ -4,14 +4,18 @@
   "private": true,
   "description": "CodeVault browser extension (Path B v2) — capture accepted solutions and send to git-service /api/ingest",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.25",
     "@types/chrome": "^0.0.270",
     "@types/webextension-polyfill": "^0.12.1",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "vite": "^5.4.0"
   }
 }
