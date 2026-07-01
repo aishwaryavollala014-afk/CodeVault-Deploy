@@ -61,7 +61,7 @@ export default function AppLayout({
       <div className="app">
       {/* SIDEBAR */}
       <div className="side">
-        <Link href="/" className="brand">
+        <Link href="/dashboard" className="brand">
           <div className="mark">CV</div> CodeVault
         </Link>
         <div className="nav">
