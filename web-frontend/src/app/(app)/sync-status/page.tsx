@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5000/api";
+const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5050/api";
 
 type ConnStatus = {
   connectionId: string;
