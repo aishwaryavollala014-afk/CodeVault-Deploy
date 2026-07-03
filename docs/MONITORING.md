@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Detect failures, performance regressions, and **security events** early, with end-to-end correlation (`requestId`/`jobId`) and zero secret leakage in logs.
