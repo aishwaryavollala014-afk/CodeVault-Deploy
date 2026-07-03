@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Harden the request path of both Express services so every request is authenticated where required, validated at the edge, ownership-scoped, rate-limited, and failed safely — without leaking secrets or stack traces.
