@@ -615,7 +615,7 @@ Scopes: `be-*`, `git-service`, `fe-*`, `docs`, `chore`. **Author = you only, no 
 
 # 15. Implemented backend reference (captured before skeleton reset — 2026-06-27)
 
-> Both backends were built/tested, then reset to empty skeletons. This section preserves the **interface of every source file** (exports, signatures, routes, key constants/logic) so each service can be rebuilt 1:1. Full source remains in git history. Schema is in [DATABASE_PLAN.md](DATABASE_PLAN.md) §17; endpoints in [API_CONTRACT.md](API_CONTRACT.md); auth detail in [AUTH_SECURITY.md](AUTH_SECURITY.md); platform fetchers in [PLATFORM_INTEGRATION.md](PLATFORM_INTEGRATION.md). Stack (both): Express 4.19 + Prisma 5.18 + Zod + pino + ioredis, `@/`→`src/`, layered Route→Controller→Service→lib.
+> Both backends are **built and running** (this section documents the interface of every source file — exports, signatures, routes, key constants/logic — so each service can be understood or rebuilt 1:1). Note: some route files exist but are **not yet mounted** — web-backend's `user`/`notification`/`settings`/`health` and git-service's `problem`/`repo` routes; see [FEATURES.md](FEATURES.md) → *Known gaps*. Schema is in [DATABASE_PLAN.md](DATABASE_PLAN.md) §17; endpoints in [API_CONTRACT.md](API_CONTRACT.md); auth detail in [AUTH_SECURITY.md](AUTH_SECURITY.md); platform fetchers in [PLATFORM_INTEGRATION.md](PLATFORM_INTEGRATION.md). Stack (both): **Express 5** + Prisma 5.18 + Zod + pino + ioredis, `@/`→`src/`, layered Route→Controller→Service→lib.
 
 ## 15.1 web-backend (`web-backend/src/`)
 
