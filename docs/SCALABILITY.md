@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Keep CodeVault responsive under load: stateless services scaling horizontally, read-heavy stats served from cache/replicas, and the expensive sync path isolated behind a queue with strict caps.
