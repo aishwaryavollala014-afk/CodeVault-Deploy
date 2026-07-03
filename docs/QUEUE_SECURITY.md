@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Run code-sync work off the request thread, safely and idempotently: never duplicate pushes, never run the same connection twice in parallel, retry transient failures with backoff, and surface session expiry instead of failing silently.
