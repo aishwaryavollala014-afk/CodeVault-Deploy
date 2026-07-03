@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Guarantee CodeVault can recover from data loss, region failure, or a security incident with bounded data loss (**RPO**) and downtime (**RTO**), and that backups are actually restorable (verified, not assumed).
