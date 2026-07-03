@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. System Overview
 
 CodeVault is a **3-service monorepo** (web-frontend, web-backend, git-service) plus a **cross-browser extension** that aggregates competitive programming stats and auto-syncs accepted solutions to GitHub. The extension is an additional client of the same two backends (Path B v2 — see §3).
