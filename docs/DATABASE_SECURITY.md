@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Protect the **crown-jewel data** CodeVault stores: envelope-encrypted platform/GitHub tokens, user PII (email), and the high-volume `problems`/`sync_runs` tables. A single unauthorized read or a leaked backup must **not** expose third-party credentials. This document defines how the database is structured, accessed, encrypted, backed up, and monitored.
