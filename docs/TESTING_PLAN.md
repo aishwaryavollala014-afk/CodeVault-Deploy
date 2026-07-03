@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Testing Philosophy
 
 CodeVault's highest-risk behaviours are **not CRUD** — they are token encryption, cross-user data isolation (BOLA), idempotent sync to GitHub, and upstream platform integration. The testing strategy weights heavily toward **integration and contract tests** at the boundaries between services and between the app and external platforms. Unit tests cover business logic; E2E tests verify complete user flows.
