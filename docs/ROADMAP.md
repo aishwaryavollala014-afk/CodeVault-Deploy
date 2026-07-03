@@ -2,6 +2,8 @@
 
 > Technical Program Manager + Principal Architect view. **One unified roadmap** covering all disciplines: FE, BE, DB, security, DevOps, infra, testing, integrations, deployment. Companion to all docs in `docs/`. No code.
 
+> 📊 **Live status lives in [FEATURES.md](FEATURES.md)**, not here. This roadmap is the *plan*; FEATURES.md is *what's actually built* (derived from the code). Snapshot: **M0–M1 done** (auth, connections, JWT contract, GitHub OAuth working); **M2/M4 partial** (LeetCode stats + LeetCode Path B sync live; dashboard/profile still on mock data; `/repos` + notifications routes unmounted). See FEATURES.md → *Known gaps* for the exact open items.
+
 ---
 
 ## 0. Summary
