@@ -7,6 +7,8 @@ CodeVault context: Next.js frontend · two Express/TS backends (`web-backend`, `
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Injection
 
 ### SQL Injection
