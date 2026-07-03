@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 The extension runs **untrusted client code in the user's browser** and feeds captured submissions to git-service. This doc defines how it signs in as the **same CodeVault user**, how its token is scoped and revoked, how captured data is validated server-side, and how a compromised extension is contained.
