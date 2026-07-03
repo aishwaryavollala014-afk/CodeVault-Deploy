@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 Stop attacks at the edge before they reach origin: absorb DDoS, filter malicious requests (WAF), block bots/scrapers (especially on `/public/:username`), and enforce strong TLS — while caching static + public content for speed.
