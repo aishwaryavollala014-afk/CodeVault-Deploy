@@ -19,6 +19,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 # Part 1 — API Contract (per module)
 
 > For each endpoint: method, path, auth, roles, params, query, request model, response model, errors, validation. Request/response **models** are defined once in **Part 4** and referenced here.
