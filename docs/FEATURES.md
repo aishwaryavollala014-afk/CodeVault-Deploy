@@ -1,0 +1,250 @@
+<div align="center">
+
+# ✨ CodeVault — Feature Catalog
+
+### Every feature, its status, owner, and where it lives in the code.
+
+</div>
+
+> **What this is:** the single source of truth for *what CodeVault does today* vs *what is planned*.
+> Status is derived from the actual code (routes mounted, services wired, pages calling backends) — not from aspirational plans. Last synced with the codebase: see git history for this file.
+
+**Legend** — ✅ Done & wired · 🟠 Partial / mock / not wired end-to-end · ⛔ Planned (not built) · 🔒 By-design limitation
+
+**Owners** — **A** = Aishwarya (web-backend, stats/profile frontend) · **G** = Gaurav (git-service, browser-extension, sync/repos frontend)
+
+---
+
+## 📑 Table of Contents
+
+1. [Feature map at a glance](#-feature-map-at-a-glance)
+2. [Authentication & accounts](#-authentication--accounts)
+3. [Platform connections](#-platform-connections)
+4. [Path A — Public stats & analytics](#-path-a--public-stats--analytics)
+5. [Path B — Code sync to GitHub](#-path-b--code-sync-to-github)
+6. [Browser extension (Path B v2)](#-browser-extension-path-b-v2)
+7. [Public shareable profile](#-public-shareable-profile)
+8. [Notifications](#-notifications)
+9. [Repositories view](#-repositories-view)
+10. [Settings](#-settings)
+11. [Background jobs & scheduling](#-background-jobs--scheduling)
+12. [Security & data protection](#-security--data-protection)
+13. [Known gaps / broken parts](#-known-gaps--broken-parts)
+14. [Planned / roadmap features](#-planned--roadmap-features)
+
+---
+
+## 🗺 Feature map at a glance
+
+| Feature | Status | Owner | Lives in |
+|---------|:------:|:-----:|----------|
+| GitHub OAuth login | ✅ | A | `web-backend/auth.*`, `web-frontend/login/callback` |
+| Email magic-link login | ✅ | A | `web-backend/auth.*`, `web-frontend/login/callback/email` |
+| Add / list / remove platform connections | ✅ | A | `web-backend/platform.*`, `web-frontend/connect` |
+| Path A stats — LeetCode | ✅ | A | `web-backend/services/platforms/leetcode.ts` |
+| Path A stats — Codeforces / CodeChef / HackerRank | 🟠 | A | services exist, **not aggregated** in `stats.service.ts` |
+| Unified analytics dashboard | 🟠 mock | A | `web-frontend/(app)/dashboard` (hardcoded `1,248`) |
+| Public shareable profile | 🟠 mock | A | `web-frontend/u/[username]` (static) |
+| GitHub repo setup | ✅ | A/G | `web-backend/githubRepo.*` |
+| Path B code sync — LeetCode | ✅ | G | `git-service/services/submissions/leetcode.service.ts` |
+| Path B code sync — CF / CC / HR | 🔒 | G | degrade to `[]` (platform ToS / no code API) |
+| Auto-generated repo README index | ✅ | G | `git-service/services/github/readme.generator.ts` |
+| Scheduled auto-sync | ✅ | G | `git-service/jobs/scheduler.ts`, `sync.job.ts` |
+| Sync status / activity page | ✅ | G | `web-frontend/(app)/sync-status` |
+| Browser extension capture (Path B v2) | 🟠 | G | `browser-extension/` (built, not build-verified) |
+| Extension → git-service ingest | ✅ | G | `git-service/ingest.*`, `POST /api/ingest` |
+| Notifications | 🟠 | A | service built, **route unmounted** |
+| Repositories browser page | 🟠 mock | G | `web-frontend/(app)/repositories` + unmounted `/repos` |
+| Settings page | 🟠 mock | A/G | `web-frontend/(app)/settings` |
+| AI explain / recommend next problem | ⛔ | — | planned |
+
+---
+
+## 🔐 Authentication & accounts
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| GitHub OAuth sign-in | ✅ | A | End-to-end verified. `POST /api/auth/github` exchanges code → JWT; frontend `login/callback` lands on dashboard. |
+| Email magic-link login | ✅ | A | `POST /api/auth/email` requests a link, `POST /api/auth/email/verify` completes it. Uses `VerificationToken` + `mailer.service.ts` (nodemailer). |
+| Current-user endpoint | ✅ | A | `GET /api/auth/me` (requires auth). |
+| JWT sessions | ✅ | A/G | Same JWT verified by **both** services (`web-backend/lib/jwt.ts`, `git-service/lib/jwt.ts`). `AuthSession` table tracks sessions. |
+| Refresh-token rotation | ⛔ | A | `AuthSession` schema supports it; rotation endpoint not yet wired. |
+
+**Endpoints:** `POST /api/auth/github` · `POST /api/auth/email` · `POST /api/auth/email/verify` · `GET /api/auth/me`
+
+---
+
+## 🔌 Platform connections
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Add a platform username | ✅ | A | `POST /api/platforms/connect`. Optional session secret stored encrypted (`ConnectionSecret`, AES via `lib/crypto.ts`). |
+| List connections | ✅ | A | `GET /api/platforms`. |
+| Remove a connection | ✅ | A | `DELETE /api/platforms/:platform`. |
+| Session-expiry tracking | ✅ | A/G | `TokenStatus` enum on connection; expired sessions surfaced instead of failing silently. |
+
+Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformType` enum).
+
+---
+
+## 📊 Path A — Public stats & analytics
+
+*Username-only public stats. No authorization required. Always available.*
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| LeetCode public stats | ✅ | A | GraphQL fetch, Redis-cached (`stats.service.ts` → `platforms/leetcode.ts`). |
+| Codeforces stats | 🟠 | A | Service file exists; **not aggregated** — `stats.service.ts` only branches on LeetCode. |
+| CodeChef / HackerRank stats | 🟠 | A | Service files exist; not aggregated. |
+| Aggregated dashboard stats API | 🟠 | A | `GET /api/stats` returns aggregate, but only LeetCode contributes today. |
+| Dashboard UI | 🟠 mock | A | `(app)/dashboard` renders **hardcoded `1,248`** — does not yet call `GET /api/stats`. |
+| Difficulty / topic / language breakdown | ⛔ | A | UI shells exist (`DifficultyRing`, etc.); fed by mock data. |
+| Activity heatmap | 🟠 mock | A | `ActivityHeatmap.tsx` uses random `MOCK_LEVELS`. |
+
+**Endpoint:** `GET /api/stats` (auth)
+
+---
+
+## 📦 Path B — Code sync to GitHub
+
+*One-time authorized fetch of your own accepted submissions → committed to your repo.*
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Trigger a sync run | ✅ | G | `POST /api/sync` (JWT-auth, rate-limited, Zod-validated). |
+| Sync status | ✅ | G | `GET /api/sync/status` — synced count, last run, expiry. |
+| Sync activity log | ✅ | G | `GET /api/sync/activity`. |
+| LeetCode submission + code + question fetch | ✅ | G | `submissions/leetcode.service.ts` (GraphQL, session cookie). |
+| CF / CC / HR code sync | 🔒 | G | Degrade to `return []` by design — those platforms expose no authorized source-code API (ToS). Stats (Path A) still work. |
+| Per-problem folder push (`<number>/question.md` + `solution.<ext>`) | ✅ | G | `services/github/github.service.ts`. |
+| Auto-generated repo README index | ✅ | G | `services/github/readme.generator.ts`. |
+| Dedupe against already-synced problems | ✅ | G | `Problem` + `SyncRun` tables. |
+| Expired-session handling | ✅ | G | `ExpiredSessionError` → prompts reconnect. |
+| SSRF egress guard on outbound fetches | ✅ | G | `lib/egress.ts`. |
+
+**Endpoints:** `POST /api/sync` · `GET /api/sync/status` · `GET /api/sync/activity` · `POST /api/ingest`
+
+---
+
+## 🧩 Browser extension (Path B v2)
+
+*Capture-at-source: reads your own accepted code from the page you're already signed into.*
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| MV3 extension scaffold (CRXJS + Vite) | ✅ | G | `vite.config.ts`, `manifest.config.ts`. |
+| Content scripts (LeetCode/CF/CC/HR) | 🟠 | G | Built; **selectors need live testing**, not build-verified. |
+| CodeVault web-app content script (JWT capture) | ✅ | G | `content/codevault.ts` reads the JWT from the signed-in web app. |
+| Background service worker | ✅ | G | `background/index.ts` owns the token, dispatches ingest. |
+| Popup + options UI | ✅ | G | `popup/`, `options/`. |
+| Ingest to git-service | ✅ | G | `POST /api/ingest` (same JWT verify + GitHub push). |
+
+> ⚠️ **Doc drift:** `browser-extension/README.md` describes a PKCE `launchWebAuthFlow` handoff, but the implementation reads the JWT via the web-app content script (`WEB_APP_URL`). Reconcile before shipping.
+
+---
+
+## 🌐 Public shareable profile
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Public profile API by handle | ✅ | A | `GET /api/public/:handle` (no auth). |
+| Public profile page | 🟠 mock | A | `u/[username]` + `(app)/public-profile` render static `1,248`; not wired to the API. |
+
+**Endpoint:** `GET /api/public/:handle` (no auth)
+
+---
+
+## 🔔 Notifications
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Notification service + `Notification` table | ✅ | A | `notification.service.ts`; git-service emits on sync/expiry. |
+| Notifications API | 🟠 | A | `notification.controller.ts` + `notification.routes.ts` exist but **route is NOT mounted** in `web-backend/app.ts`. |
+| Notifications UI page | ⛔ | A | Not built. |
+
+---
+
+## 📁 Repositories view
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Repositories page UI | 🟠 mock | G | `(app)/repositories` + components (`RepoFileTree`, `RecentCommits`, `RepoHeader`, `RepositoryMapping`) render static data. |
+| `/api/repos` + `/api/problems` endpoints | 🟠 | G | `repo.routes.ts` / `problem.routes.ts` exist but are **NOT mounted** in `git-service/routes/index.ts`. Mount them to wire the page. |
+
+---
+
+## ⚙️ Settings
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Settings page | 🟠 mock | A/G | `(app)/settings` static; "Upgrade" is an `alert("Plans are coming soon.")`. |
+| Settings API | 🟠 | A | `settings.controller/service/routes` exist but route **not mounted**. |
+| Plans / pricing | ⛔ | — | Deferred. |
+
+---
+
+## ⏰ Background jobs & scheduling
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| BullMQ job queue | ✅ | G | `jobs/queue.ts` (Redis-backed). |
+| Cron scheduler at boot | ✅ | G | `jobs/scheduler.ts` (node-cron) registers periodic auto-sync. |
+| Periodic auto-sync of active connections | ✅ | G | `jobs/sync.job.ts` — syncs each active connection, flags expired sessions. |
+
+---
+
+## 🛡 Security & data protection
+
+| Feature | Status | Owner | Details |
+|---------|:------:|:-----:|---------|
+| Encrypted platform secrets at rest | ✅ | A/G | AES via `lib/crypto.ts`; `ConnectionSecret` table. |
+| Helmet + CORS hardening | ✅ | A/G | Both services. |
+| Per-route rate limiting | ✅ | A/G | `rateLimit.middleware.ts`. |
+| Zod request validation | ✅ | A/G | `validate.middleware.ts` + validators. |
+| Request-ID tracing | ✅ | G | `requestId.middleware.ts` (git-service). |
+| Row-Level Security (owner isolation) | 🟠 | A | `database/rls.sql` written, **not enabled** yet. |
+| Audit log | ✅ | A | `AuditLog` table + `AuditAction` enum. |
+| Secrets in `.env` only | ✅ | A/G | `.env.example` per service; gitleaks config at root. |
+
+Full security blueprint: see the `*_SECURITY.md` docs in this folder.
+
+---
+
+## 🚧 Known gaps / broken parts
+
+*(Cross-references [the analysis in chat]; keep in sync as these are fixed.)*
+
+| # | Gap | Severity | Owner |
+|:-:|-----|:--------:|:-----:|
+| 1 | `stats.service.ts` aggregates **LeetCode only** | 🔴 | A |
+| 2 | Dashboard / analytics / public-profile show **static mock**, never call `/api/stats` or `/public/:handle` | 🔴 | A |
+| 3 | `user` / `notification` / `settings` routes **not mounted** in web-backend | 🟠 | A |
+| 4 | `problem` / `repo` routes **not mounted** in git-service → `/api/repos`, `/api/problems` don't exist | 🔴 | G |
+| 5 | Repositories page can't be wired until #4 is fixed | 🔴 | G |
+| 6 | Extension README (PKCE) ≠ actual JWT-capture implementation; selectors untested live | 🟠 | G |
+| 7 | Prisma schema **duplicated** across `web-backend/prisma` + `git-service/prisma` — hand-sync required | ⚠️ | Both |
+
+---
+
+## 🔭 Planned / roadmap features
+
+| Feature | Owner | Notes |
+|---------|:-----:|-------|
+| Aggregate all 4 platforms in Path A stats | A | Extend `stats.service.ts`. |
+| Wire real dashboard/profile to APIs | A | Kill the `1,248` mocks. |
+| Notifications page + mount route | A | Service already built. |
+| JWT refresh-token rotation endpoint | A | Schema ready. |
+| Mount + wire `/repos` and `/problems` | G | Then connect Repositories page. |
+| Enable Row-Level Security before prod | A | `database/rls.sql`. |
+| Build-verify extension + live selector test | G | `npm run build`. |
+| AI layer — explain solution, tag topic, recommend next problem | — | Uses the latest Claude models. |
+| Gamification — streaks, goals, shareable cards | — | Deferred. |
+| Pricing / plans page | — | Deferred. |
+
+---
+
+<div align="center">
+
+**Keep this file honest.** When a feature moves from 🟠/⛔ to ✅, update the row *in the same commit* that wires it.
+
+</div>
