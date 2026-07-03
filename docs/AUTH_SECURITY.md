@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 1. Purpose
 
 CodeVault is **GitHub-OAuth-first and passwordless**. This doc defines the OAuth flow, token lifecycle, session management, and the resource-ownership model that prevents one user accessing another's data — across **both** services using a shared JWT.
