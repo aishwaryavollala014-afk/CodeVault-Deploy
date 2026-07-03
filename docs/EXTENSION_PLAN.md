@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 0. Why this reverses a founding constraint (on purpose)
 
 `context.md` and `README.md` originally listed **"❌ No browser extension"** as a hard constraint; the two-path architecture avoided one by replaying a one-time platform **session token** server-side (Path B).
