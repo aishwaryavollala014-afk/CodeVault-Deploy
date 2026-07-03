@@ -4,6 +4,8 @@
 
 ---
 
+> 🧭 **Where this fits:** part of the [CodeVault docs set](README.md). For *what's actually built today* — live feature status, owners, and known gaps — see **[FEATURES.md](FEATURES.md)**. The sections below describe the intended design; the shipped code may not yet fully match.
+
 ## 0. Architect's summary & critique of the current design
 
 The current decision is **3 deployables**: `web-frontend` calling **both** `web-backend` and `git-service` directly. Before the plan, three critiques you should accept or consciously reject:
