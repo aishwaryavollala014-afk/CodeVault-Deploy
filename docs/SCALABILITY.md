@@ -128,3 +128,15 @@ git-service-workers: target queue_depth < 50
 
 - [INFRASTRUCTURE_SECURITY.md](INFRASTRUCTURE_SECURITY.md) · [DATABASE_SECURITY.md](DATABASE_SECURITY.md) · [REDIS_SECURITY.md](REDIS_SECURITY.md) · [TESTING_PLAN.md](TESTING_PLAN.md)
 - DATABASE_PLAN §12 (Future Scalability) · DEVOPS_PLAN §6 (Scaling)
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
