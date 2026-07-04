@@ -131,3 +131,15 @@ it('rejects BOLA on connections', async () => {
 
 - [TESTING_PLAN.md](TESTING_PLAN.md) · [SECURITY_PLAN.md](SECURITY_PLAN.md) §18 · [ATTACK_PREVENTION.md](ATTACK_PREVENTION.md) · [DEVSECOPS.md](DEVSECOPS.md)
 - OWASP Testing Guide · OWASP ZAP · k6 docs
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
