@@ -167,3 +167,15 @@ terraform fmt/validate → plan (comment on PR) → security scan (tfsec) → ap
 ```
 ```
 > Next: pair with [TESTING_PLAN](TESTING_PLAN.md) (quality gates), [OBSERVABILITY_PLAN](OBSERVABILITY_PLAN.md) (health/alerts), and [ROADMAP](ROADMAP.md) (when each lands).
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
