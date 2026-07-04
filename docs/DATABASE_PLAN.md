@@ -686,3 +686,15 @@ Migrations applied (in order): `20260626135657_init` (full generated DDL), `2026
 - **audit_logs**: `UPDATE/DELETE` revoked from both app roles (append-only).
 - **cv_read** (analytics): `SELECT` on all **except** `connection_secrets`, `oauth_identities`, `auth_sessions` (no secret access).
 - Neither app role is superuser; passwords come from a secret manager in prod.
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
