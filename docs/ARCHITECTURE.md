@@ -220,3 +220,15 @@ All services are **stateless** (JWT auth + Redis for shared state) → scale hor
 | **Timezone** | All timestamps UTC in DB + API; convert at display layer only |
 | **Platform extensibility** | One adapter file per platform; no other files change to add a new platform (PLATFORM_INTEGRATION §10) |
 | **Content safety** | All upstream platform content (titles, question HTML) sanitized before rendering or storage |
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
