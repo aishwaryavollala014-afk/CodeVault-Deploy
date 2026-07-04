@@ -396,3 +396,15 @@ git-service/src/
 5. Link to Privacy Policy.
 
 > **Legal note (from SECURITY_PLAN):** storing session cookies may violate platform ToS. This risk should be disclosed in the CodeVault Terms of Service, and users should understand they're authorizing their own data retrieval. Keep this under review as platforms evolve their policies.
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
