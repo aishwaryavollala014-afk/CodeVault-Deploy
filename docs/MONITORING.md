@@ -127,3 +127,15 @@ SENTRY_DSN=...        # staging/prod
 
 - [OBSERVABILITY_PLAN.md](OBSERVABILITY_PLAN.md) · [SECURITY_PLAN.md](SECURITY_PLAN.md) §12 · [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)
 - Prometheus / Grafana / Sentry / OpenTelemetry docs
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
