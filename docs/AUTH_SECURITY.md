@@ -136,3 +136,15 @@ GITHUB_CALLBACK_URL=http://localhost:4000/api/v1/auth/github/callback
 
 - [SECURITY_PLAN.md](SECURITY_PLAN.md) §2–3 · [GITHUB_SECURITY.md](GITHUB_SECURITY.md) · [REDIS_SECURITY.md](REDIS_SECURITY.md) · [ATTACK_PREVENTION.md](ATTACK_PREVENTION.md) · [EXTENSION_SECURITY.md](EXTENSION_SECURITY.md)
 - OWASP Authentication / Session Management Cheat Sheets · RFC 6749 (OAuth 2.0) · RFC 7636 (PKCE)
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
