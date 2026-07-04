@@ -186,3 +186,15 @@ node-cron (trigger) → enqueues job → BullMQ (executes) → sync logic runs
 | `Express 4.19.x` | **Express 5.x** | Auto async error handling, less boilerplate |
 | `Tailwind CSS 3.4.x` | **Tailwind CSS 4.x** | Faster, native CSS variables, no JS config file |
 | React Query *(missing)* | **TanStack Query 5.x** | Was in original spec, missing from plan — now added |
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
