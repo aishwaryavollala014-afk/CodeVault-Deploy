@@ -155,3 +155,15 @@ REVOKE UPDATE, DELETE ON audit_logs FROM cv_git, cv_web;  -- append-only
 
 - [DATABASE_PLAN.md](DATABASE_PLAN.md) · [SECURITY_PLAN.md](SECURITY_PLAN.md) · [SECRETS.md](SECRETS.md) · [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)
 - PostgreSQL docs: Roles & Privileges, Row Security Policies · Prisma docs: Connection management, Accelerate · OWASP: SQL Injection Prevention Cheat Sheet
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
