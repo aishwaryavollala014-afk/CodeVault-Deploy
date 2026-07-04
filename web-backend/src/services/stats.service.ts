@@ -1,6 +1,8 @@
 import { ConnectionService } from './connection.service';
 import { LeetCodeService } from './platforms/leetcode';
 import { CodeforcesService } from './platforms/codeforces';
+import { CodeChefService } from './platforms/codechef.service';
+import { HackerRankService } from './platforms/hackerrank.service';
 import { redis } from '../lib/redis';
 import { PlatformType } from '@prisma/client';
 import logger from '../lib/logger';
@@ -38,6 +40,18 @@ export class StatsService {
           aggregated.platforms.codeforces = stats;
           aggregated.totalSolved += stats.total;
         }
+      } else if (conn.platform === PlatformType.codechef) {
+        const stats = await CodeChefService.getStats(conn.username);
+        if (stats) {
+          aggregated.platforms.codechef = stats;
+          aggregated.totalSolved += stats.total;
+        }
+      } else if (conn.platform === PlatformType.hackerrank) {
+        const stats = await HackerRankService.getStats(conn.username);
+        if (stats) {
+          aggregated.platforms.hackerrank = stats;
+          aggregated.totalSolved += stats.total;
+        }
       }
     }
 
@@ -50,3 +64,4 @@ export class StatsService {
     return aggregated;
   }
 }
+

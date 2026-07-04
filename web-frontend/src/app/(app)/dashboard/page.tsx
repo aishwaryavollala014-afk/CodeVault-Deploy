@@ -150,11 +150,32 @@ export default function DashboardPage() {
           <div className="n">{stats?.totalSolved?.toLocaleString() || "0"}</div>
           <div className="d">across all platforms</div>
         </div>
+        {stats?.platforms?.leetcode && (
+          <div className="stat">
+            <div className="l"><PlatformChip platformId="leetcode" size="sm" showName={false} variant="ghost" /> LeetCode</div>
+            <div className="n">{stats.platforms.leetcode.total?.toLocaleString() || "0"}</div>
+            <div className="d">problems solved</div>
+          </div>
+        )}
         {stats?.platforms?.codeforces && (
           <div className="stat">
-            <div className="l"><svg className="ico sm r" aria-hidden="true"><use href="#ic-bolt"/></svg> Codeforces</div>
+            <div className="l"><PlatformChip platformId="codeforces" size="sm" showName={false} variant="ghost" /> Codeforces</div>
             <div className="n">{stats.platforms.codeforces.total?.toLocaleString() || "0"}</div>
-            <div className="d pink">Total Solved</div>
+            <div className="d">problems solved</div>
+          </div>
+        )}
+        {stats?.platforms?.codechef && (
+          <div className="stat">
+            <div className="l"><PlatformChip platformId="codechef" size="sm" showName={false} variant="ghost" /> CodeChef</div>
+            <div className="n">{stats.platforms.codechef.total?.toLocaleString() || "0"}</div>
+            <div className="d">problems solved</div>
+          </div>
+        )}
+        {stats?.platforms?.hackerrank && (
+          <div className="stat">
+            <div className="l"><PlatformChip platformId="hackerrank" size="sm" showName={false} variant="ghost" /> HackerRank</div>
+            <div className="n">{stats.platforms.hackerrank.total?.toLocaleString() || "0"}</div>
+            <div className="d">problems solved</div>
           </div>
         )}
       </section>
