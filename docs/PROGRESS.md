@@ -19,17 +19,17 @@
 | Foundation / DB / infra | 6 | 0 | 1 | ~85% |
 | Auth & accounts | 4 | 0 | 1 | ~80% |
 | Platform connections | 4 | 0 | 0 | 100% |
-| Path A — stats & dashboard | 5 | 2 | 1 | ~65% |
-| Path B — code sync (git-service) | 6 | 0 | 2 | ~75% |
+| Path A — stats & dashboard | 8 | 0 | 1 | ~90% |
+| Path B — code sync (git-service) | 7 | 0 | 1 | ~90% |
 | Browser extension | 4 | 2 | 0 | ~70% |
-| Public profile | 1 | 1 | 0 | ~50% |
+| Public profile | 2 | 0 | 0 | ~90% |
 | Notifications | 1 | 1 | 1 | ~40% |
-| Repositories | 2 | 0 | 1 | ~65% |
+| Repositories | 3 | 1 | 0 | ~85% |
 | Pre-launch / compliance | 0 | 0 | ~61 | 0% |
 
 \* *Rough, feature-count based — not weighted by effort.*
 
-**Headline:** core product loop (login → connect → stats dashboard → GitHub sync) is **working end-to-end for LeetCode**. Remaining work is breadth (more platforms), wiring already-built backends (unmounted routes), and everything under **pre-launch/compliance**.
+**Headline:** core product loop (login → connect → stats dashboard → public profile → GitHub sync) is **working end-to-end with real data for all 4 platforms** (LeetCode, Codeforces, CodeChef, HackerRank). All previously-unmounted git-service routes are now live. Remaining work: real activity heatmap, notifications UI, refresh-token rotation, RLS, extension build-verify, and everything under **pre-launch/compliance**.
 
 ---
 
@@ -61,8 +61,9 @@
 - [x] Aggregated `GET /api/stats` — A
 - [x] **Dashboard wired to real stats** (mock `1,248` removed) — A ✨ *new*
 - [x] **Analytics page wired to backend** — A ✨ *new*
-- [~] CodeChef stats — service exists, **not aggregated** in `stats.service.ts` — A
-- [~] HackerRank stats — service exists, **not aggregated** — A
+- [x] CodeChef stats — profile scrape (solved + rating/stars), aggregated — G ✨ *new (`71e4a6c`)*
+- [x] HackerRank stats — badges API, aggregated — A ✨ *new*
+- [x] CodeChef rating/stars **dashboard tile** (rating, stars, peak, global rank) — G ✨ *new (`bc75483`)*
 - [ ] Activity heatmap on **real** solve data (currently random `MOCK_LEVELS`) — A
 
 ## 📦 Path B — code sync to GitHub (git-service)
@@ -72,7 +73,7 @@
 - [x] Per-problem folder push + auto README index — G
 - [x] BullMQ queue + worker + node-cron scheduler — G
 - [x] SSRF egress guard on outbound fetches — G
-- [ ] **Mount `problem` + `repo` routes** (files exist, NOT mounted → `/api/repos`, `/api/problems` dead) — G
+- [x] **`GET /api/repos` + `GET /api/problems` built & mounted** (JWT-auth, keyset pagination) — G ✨ *new (`de8c6ed`)*
 - [ ] CF / CC / HR code sync — 🔒 by design (no authorized source API; degrade to `[]`) — G
 
 ## 🧩 Browser extension (Path B v2)
@@ -85,7 +86,8 @@
 
 ## 🌐 Public shareable profile
 - [x] Public profile API (`GET /api/public/:handle`, no auth) — A
-- [~] `u/[username]` + `public-profile` pages — still **static mock**, not wired to the API — A
+- [x] `u/[username]` page **wired to `/api/public`** (real totals, difficulty, per-platform bars; mock removed) — G ✨ *new (`b98b115`)*
+  - *(heatmap + topic-strengths sections remain decorative — API returns no daily/topic data yet)*
 
 ## 🔔 Notifications
 - [x] Notification service + `Notification` table (emitted on sync/expiry) — A/G
@@ -95,7 +97,8 @@
 ## 📁 Repositories
 - [x] Repositories page wired to `GET /api/github-repos` (web-backend) — A ✨ *new*
 - [x] GitHub repo setup flow (`POST /api/github-repos`) — A
-- [ ] Deep repo browsing via git-service `/repos` (blocked on route mount above) — G
+- [x] **Per-platform repo-link manager** in Settings → GitHub (add/edit a repo per platform) — G ✨ *new (`aff4c53`)*
+- [~] Deep repo browsing — git-service `/repos` + `/problems` endpoints now **live**; frontend not yet wired to them — G
 
 ## 🚀 Pre-launch / compliance (`CERTIFICATES_BEFORE_LAUNCH/`)
 - [ ] **All ~61 items pending** — legal (ToS, Privacy, GDPR/CCPA), security certs (SOC2, ISO 27001, pentest), DNS/email (SPF/DKIM/DMARC), launch checklist, etc.
