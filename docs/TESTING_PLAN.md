@@ -218,3 +218,15 @@ tests/
 - [ ] Keyboard navigation + screen reader tested on all 15 pages
 - [ ] UAT: every page matches approved `frontendHtml/` prototype (stakeholder sign-off)
 - [ ] Pentest findings (SECURITY_PLAN §18) reviewed + resolved at Critical/High
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
