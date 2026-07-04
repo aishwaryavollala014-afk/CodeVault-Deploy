@@ -100,3 +100,15 @@ docker exec -i codevault-postgres psql -U codevault -d codevault -f - < database
 ```
 
 > Status: schema, constraints, indexes, views, triggers, functions, and roles are **implemented + applied** to the dev DB. RLS + partitioning are **ready scripts** to enable at the appropriate stage (see notes in each file).
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
