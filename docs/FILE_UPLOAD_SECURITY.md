@@ -118,3 +118,15 @@ await sharp(buf).rotate().webp().toBuffer();          // re-encode, strip metada
 
 - [SECURITY_PLAN.md](SECURITY_PLAN.md) §9 · [ATTACK_PREVENTION.md](ATTACK_PREVENTION.md) · [CLOUD_SECURITY.md](CLOUD_SECURITY.md)
 - OWASP File Upload Cheat Sheet
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
