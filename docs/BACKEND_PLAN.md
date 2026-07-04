@@ -662,3 +662,15 @@ Scopes: `be-*`, `git-service`, `fe-*`, `docs`, `chore`. **Author = you only, no 
 **types:** `sync.types.ts` — `Difficulty`, `Submission`, `Question`, `SolutionToSync`, `SubmissionAdapter`, `SyncResult`. `github.types.ts` — `GithubFile`, `RepoRef`, `CommitInfo`, `RepoFileEntry`. `index.ts` — `JwtClaims`, `AuthUser`, `PlatformName`, etc. **utils:** `errors.ts` (+`ExpiredSessionError`, `ServiceUnavailableError`); `helpers.ts` — `asyncHandler`, `padNumber(num,4)`, `slugify`, `langToExt` (`LANG_EXT` map). **validators:** `sync` (triggerSync, platformParams, problemParams, listQuery).
 
 > Rebuild order: schema (DATABASE_PLAN §17) → config/lib → types/utils/validators → middlewares → services → controllers → routes → entry. Same for both services; git-service adds jobs + github + submissions + egress.
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
