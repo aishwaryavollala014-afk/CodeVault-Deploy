@@ -129,3 +129,15 @@ if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(`sha256=${expected}`))
 
 - [API_CONTRACT.md](API_CONTRACT.md) · [BACKEND_SECURITY.md](BACKEND_SECURITY.md) · [GITHUB_SECURITY.md](GITHUB_SECURITY.md) · [MONITORING.md](MONITORING.md)
 - OWASP API Security Top 10 (2023)
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
