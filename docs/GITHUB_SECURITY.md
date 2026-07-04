@@ -133,3 +133,15 @@ crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(`sha256=${mac}`));
 
 - [AUTH_SECURITY.md](AUTH_SECURITY.md) · [QUEUE_SECURITY.md](QUEUE_SECURITY.md) · [SECRETS.md](SECRETS.md) · [PLATFORM_INTEGRATION.md](PLATFORM_INTEGRATION.md) §5
 - GitHub REST/Git Data API · GitHub Apps · Webhooks: securing payloads
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
