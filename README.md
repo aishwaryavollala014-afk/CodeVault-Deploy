@@ -305,15 +305,18 @@ npm run dev          # http://localhost:3000
 
 - [x] Monorepo skeleton (web-frontend + web-backend + git-service) & architecture
 - [x] HTML prototype of every screen (`frontendHtml/`) + design system
-- [ ] web-backend: LeetCode stats (Path A)
-- [ ] web-backend: Codeforces stats (official API)
-- [ ] git-service: LeetCode code sync (Path B) → GitHub push + README index
-- [ ] browser-extension: capture-at-source (Path B v2) → git-service ingest, same-user auth
-- [ ] web-frontend: build real pages from the prototype
+- [x] web-backend: LeetCode stats (Path A)
+- [x] web-backend: Codeforces stats (official API)
+- [x] git-service: LeetCode code sync (Path B) → GitHub push + README index
+- [x] browser-extension: capture-at-source (Path B v2) → git-service ingest, same-user auth *(built; not build-verified)*
+- [x] web-frontend: build real pages from the prototype *(dashboard/analytics/repositories/sync-status wired; public profile still mock)*
+- [ ] web-backend: CodeChef + HackerRank stats (aggregate in `stats.service.ts`)
+- [ ] Unified multi‑platform dashboard *(2 of 4 platforms aggregated so far)*
 - [ ] Pricing / plans page (deferred)
-- [ ] Unified multi‑platform dashboard
 - [ ] AI explanation & next‑problem recommendation
 - [ ] Gamification (streaks, goals, shareable cards)
+
+> 📋 Live, code-verified status: **[docs/PROGRESS.md](docs/PROGRESS.md)** and **[docs/FEATURES.md](docs/FEATURES.md)**.
 
 ---
 
