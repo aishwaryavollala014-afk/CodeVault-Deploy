@@ -162,3 +162,15 @@ Build **LeetCode end-to-end first**, then fan out.
 ## 11. Decision to confirm
 
 The extension and the original server-side Path B (session-token replay) now overlap. **Recommendation:** make the extension the **primary Path B** and deprecate/park the session-token fetcher — maintaining both doubles the platform-integration surface for the same result.
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
