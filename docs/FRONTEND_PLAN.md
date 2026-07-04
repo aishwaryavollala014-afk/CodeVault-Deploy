@@ -599,3 +599,15 @@ tokens+tooling ─▶ UI kit ─▶ layouts/routing ─┬─▶ marketing (no A
 - [ ] Every page matches the approved `frontendHtml/` prototype (UAT sign-off)
 
 > Next step when ready: I can expand any milestone into a component-by-component task checklist, or draft the **API contract / typed DTOs** doc that FE and BE build against — still no code.
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
