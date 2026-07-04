@@ -45,9 +45,10 @@
 | Add / list / remove platform connections | ✅ | A | `web-backend/platform.*`, `web-frontend/connect` |
 | Path A stats — LeetCode | ✅ | A | `web-backend/services/platforms/leetcode.ts` |
 | Path A stats — Codeforces | ✅ | A | aggregated in `stats.service.ts` (Aish `8d30a67`) |
-| Path A stats — CodeChef / HackerRank | 🟠 | A | services exist, **not aggregated** in `stats.service.ts` |
-| Unified analytics dashboard | ✅ | A | `(app)/dashboard` wired to `GET /api/stats` (mock removed) |
-| Public shareable profile | 🟠 mock | A | `web-frontend/u/[username]` (static) |
+| Path A stats — CodeChef | ✅ | G | profile scrape (solved + rating/stars), aggregated (`71e4a6c`) |
+| Path A stats — HackerRank | ✅ | A | badges API, aggregated |
+| Unified analytics dashboard | ✅ | A | `(app)/dashboard` wired to `GET /api/stats`; incl. CodeChef rating tile (`bc75483`) |
+| Public shareable profile | ✅ | G | `web-frontend/u/[username]` wired to `/api/public` (`b98b115`) |
 | GitHub repo setup | ✅ | A/G | `web-backend/githubRepo.*` |
 | Path B code sync — LeetCode | ✅ | G | `git-service/services/submissions/leetcode.service.ts` |
 | Path B code sync — CF / CC / HR | 🔒 | G | degrade to `[]` (platform ToS / no code API) |
@@ -57,8 +58,10 @@
 | Browser extension capture (Path B v2) | 🟠 | G | `browser-extension/` (built, not build-verified) |
 | Extension → git-service ingest | ✅ | G | `git-service/ingest.*`, `POST /api/ingest` |
 | Notifications | 🟠 | A | service built, **route unmounted** |
-| Repositories browser page | ✅ | A | `(app)/repositories` wired to `GET /api/github-repos` (deep git-service `/repos` still unmounted) |
-| Settings page | 🟠 mock | A/G | `web-frontend/(app)/settings` |
+| Repositories browser page | ✅ | A | `(app)/repositories` wired to `GET /api/github-repos` |
+| git-service `/api/repos` + `/api/problems` | ✅ | G | built & mounted, JWT-auth, keyset pagination (`de8c6ed`) |
+| Per-platform repo-link manager | ✅ | G | Settings → GitHub, wired to `POST /api/github-repos` (`aff4c53`) |
+| Settings page | 🟠 partial | A/G | repo manager live; some sections still static |
 | AI explain / recommend next problem | ⛔ | — | planned |
 
 ---
@@ -97,12 +100,13 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
 | LeetCode public stats | ✅ | A | GraphQL fetch, Redis-cached (`stats.service.ts` → `platforms/leetcode.ts`). |
-| Codeforces stats | 🟠 | A | Service file exists; **not aggregated** — `stats.service.ts` only branches on LeetCode. |
-| CodeChef / HackerRank stats | 🟠 | A | Service files exist; not aggregated. |
-| Aggregated dashboard stats API | 🟠 | A | `GET /api/stats` returns aggregate, but only LeetCode contributes today. |
-| Dashboard UI | 🟠 mock | A | `(app)/dashboard` renders **hardcoded `1,248`** — does not yet call `GET /api/stats`. |
-| Difficulty / topic / language breakdown | ⛔ | A | UI shells exist (`DifficultyRing`, etc.); fed by mock data. |
-| Activity heatmap | 🟠 mock | A | `ActivityHeatmap.tsx` uses random `MOCK_LEVELS`. |
+| Codeforces stats | ✅ | A | Official API, aggregated in `stats.service.ts`. |
+| CodeChef stats | ✅ | G | Profile-page scrape (solved + rating/stars/rank), aggregated. |
+| HackerRank stats | ✅ | A | `/rest/hackers/<u>/badges` (sum of solved), aggregated. |
+| Aggregated dashboard stats API | ✅ | A | `GET /api/stats` — all 4 platforms contribute. |
+| Dashboard UI | ✅ | A | `(app)/dashboard` calls `GET /api/stats`; real totals, difficulty, CodeChef rating tile. |
+| Difficulty / language breakdown | ✅ | A | Real LeetCode difficulty + Codeforces language data on dashboard/analytics. |
+| Activity heatmap | 🟠 mock | A | `ActivityHeatmap.tsx` still uses random `MOCK_LEVELS`. |
 
 **Endpoint:** `GET /api/stats` (auth)
 
@@ -151,7 +155,7 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
 | Public profile API by handle | ✅ | A | `GET /api/public/:handle` (no auth). |
-| Public profile page | 🟠 mock | A | `u/[username]` + `(app)/public-profile` render static `1,248`; not wired to the API. |
+| Public profile page | ✅ | G | `u/[username]` wired to `/api/public` — real totals, difficulty, per-platform bars (`b98b115`). Heatmap + topics still decorative. |
 
 **Endpoint:** `GET /api/public/:handle` (no auth)
 
@@ -171,8 +175,8 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
-| Repositories page UI | 🟠 mock | G | `(app)/repositories` + components (`RepoFileTree`, `RecentCommits`, `RepoHeader`, `RepositoryMapping`) render static data. |
-| `/api/repos` + `/api/problems` endpoints | 🟠 | G | `repo.routes.ts` / `problem.routes.ts` exist but are **NOT mounted** in `git-service/routes/index.ts`. Mount them to wire the page. |
+| Repositories page (list) | ✅ | A | `(app)/repositories` wired to `GET /api/github-repos`; deep file/commit browsing components still render static data. |
+| `/api/repos` + `/api/problems` endpoints | ✅ | G | Built & mounted in `git-service` — JWT-auth, keyset pagination (`de8c6ed`). Frontend deep-browse can now wire to these. |
 
 ---
 
@@ -219,13 +223,15 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 
 | # | Gap | Severity | Owner |
 |:-:|-----|:--------:|:-----:|
-| 1 | `stats.service.ts` aggregates **LeetCode only** | 🔴 | A |
-| 2 | Dashboard / analytics / public-profile show **static mock**, never call `/api/stats` or `/public/:handle` | 🔴 | A |
+| 1 | ~~`stats.service.ts` aggregates LeetCode only~~ → **FIXED**: all 4 platforms aggregate (CodeChef `71e4a6c`, HackerRank) | ✅ | A/G |
+| 2 | ~~Dashboard / analytics / public-profile show static mock~~ → **FIXED**: dashboard/analytics/repos (Aish `8d30a67`) + public profile (`b98b115`) wired | ✅ | A/G |
 | 3 | `user` / `notification` / `settings` routes **not mounted** in web-backend | 🟠 | A |
-| 4 | `problem` / `repo` routes **not mounted** in git-service → `/api/repos`, `/api/problems` don't exist | 🔴 | G |
-| 5 | Repositories page can't be wired until #4 is fixed | 🔴 | G |
+| 4 | ~~`problem` / `repo` routes not mounted in git-service~~ → **FIXED**: built & mounted, `/api/repos` + `/api/problems` live (`de8c6ed`) | ✅ | G |
+| 5 | ~~Repositories page blocked on #4~~ → backend ready; frontend deep-browse wiring still **pending** | 🟠 | G |
 | 6 | Extension README (PKCE) ≠ actual JWT-capture implementation; selectors untested live | 🟠 | G |
 | 7 | Prisma schema **duplicated** across `web-backend/prisma` + `git-service/prisma` — hand-sync required | ⚠️ | Both |
+
+**Still open:** #3 (web-backend unmounted routes + notifications UI), #5 (repositories deep-browse frontend), #6 (extension build-verify), #7 (schema dup), plus real activity heatmap, refresh-token rotation, and RLS.
 
 ---
 
