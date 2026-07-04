@@ -121,3 +121,15 @@ Export: connections + stats + settings (machine-readable), excludes secrets
 
 - [SECURITY_PLAN.md](SECURITY_PLAN.md) §14 · [DATABASE_SECURITY.md](DATABASE_SECURITY.md) · [AUTH_SECURITY.md](AUTH_SECURITY.md) · [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)
 - GDPR · CCPA · OWASP Privacy Risks
+
+
+---
+
+## ✅ Completion checklist
+
+> Area status at a glance. Full per-feature done / partial / pending tracking lives in **[PROGRESS.md](PROGRESS.md)**.
+
+- [x] Designed & documented (this file)
+- [ ] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
+- [ ] Tested / verified
+- [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
