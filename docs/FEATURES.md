@@ -8,6 +8,8 @@
 
 > **What this is:** the single source of truth for *what CodeVault does today* vs *what is planned*.
 > Status is derived from the actual code (routes mounted, services wired, pages calling backends) — not from aspirational plans. Last synced with the codebase: see git history for this file.
+> 📋 For a checkbox-style progress tracker with % done per area, see **[PROGRESS.md](PROGRESS.md)**.
+> 🔄 *Update after Aish commit `8d30a67`:* dashboard, analytics & repositories pages now call **real** backends (mock removed); Codeforces stats now aggregated. Rows below reflect this.
 
 **Legend** — ✅ Done & wired · 🟠 Partial / mock / not wired end-to-end · ⛔ Planned (not built) · 🔒 By-design limitation
 
@@ -42,8 +44,9 @@
 | Email magic-link login | ✅ | A | `web-backend/auth.*`, `web-frontend/login/callback/email` |
 | Add / list / remove platform connections | ✅ | A | `web-backend/platform.*`, `web-frontend/connect` |
 | Path A stats — LeetCode | ✅ | A | `web-backend/services/platforms/leetcode.ts` |
-| Path A stats — Codeforces / CodeChef / HackerRank | 🟠 | A | services exist, **not aggregated** in `stats.service.ts` |
-| Unified analytics dashboard | 🟠 mock | A | `web-frontend/(app)/dashboard` (hardcoded `1,248`) |
+| Path A stats — Codeforces | ✅ | A | aggregated in `stats.service.ts` (Aish `8d30a67`) |
+| Path A stats — CodeChef / HackerRank | 🟠 | A | services exist, **not aggregated** in `stats.service.ts` |
+| Unified analytics dashboard | ✅ | A | `(app)/dashboard` wired to `GET /api/stats` (mock removed) |
 | Public shareable profile | 🟠 mock | A | `web-frontend/u/[username]` (static) |
 | GitHub repo setup | ✅ | A/G | `web-backend/githubRepo.*` |
 | Path B code sync — LeetCode | ✅ | G | `git-service/services/submissions/leetcode.service.ts` |
@@ -54,7 +57,7 @@
 | Browser extension capture (Path B v2) | 🟠 | G | `browser-extension/` (built, not build-verified) |
 | Extension → git-service ingest | ✅ | G | `git-service/ingest.*`, `POST /api/ingest` |
 | Notifications | 🟠 | A | service built, **route unmounted** |
-| Repositories browser page | 🟠 mock | G | `web-frontend/(app)/repositories` + unmounted `/repos` |
+| Repositories browser page | ✅ | A | `(app)/repositories` wired to `GET /api/github-repos` (deep git-service `/repos` still unmounted) |
 | Settings page | 🟠 mock | A/G | `web-frontend/(app)/settings` |
 | AI explain / recommend next problem | ⛔ | — | planned |
 
