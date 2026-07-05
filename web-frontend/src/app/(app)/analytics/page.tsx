@@ -2,12 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CodeVaultLoader } from "@/components/CodeVaultLoader";
+
+const PLATFORM_LABELS: Record<string, string> = {
+  leetcode: "LeetCode",
+  codeforces: "Codeforces",
+  codechef: "CodeChef",
+  hackerrank: "HackerRank",
+};
+const PLATFORM_ORDER = ["leetcode", "codeforces", "codechef", "hackerrank"];
 
 export default function AnalyticsPage() {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null } | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activePlatform, setActivePlatform] = useState<string>("all");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -48,15 +58,22 @@ export default function AnalyticsPage() {
   }, [router]);
 
   if (isLoading || !user || !stats) {
-    return <div style={{ padding: "40px", textAlign: "center", color: "var(--faint)" }}>Loading deep analytics...</div>;
+    return <CodeVaultLoader text="Loading deep analytics" />;
   }
 
-  // --- MERGE DEEP DATA ---
+  // Connected platforms present in the stats, in a stable order.
+  const connectedPlatforms = PLATFORM_ORDER.filter((p) => stats.platforms?.[p]);
+  // Which platform(s) feed this view — respects the active tab.
+  const activeKeys = activePlatform === "all" ? connectedPlatforms : connectedPlatforms.filter((k) => k === activePlatform);
+  const showCf = activeKeys.includes("codeforces");
+  const showLc = activeKeys.includes("leetcode");
+
+  // --- MERGE DEEP DATA (only for the active platform(s)) ---
   const mergedLanguages: Record<string, number> = {};
   const mergedTopics: Record<string, number> = {};
   const monthlyCounts: Record<string, number> = {};
 
-  Object.values(stats.platforms || {}).forEach((p: any) => {
+  activeKeys.map((k) => stats.platforms[k]).forEach((p: any) => {
     // Merge Languages
     if (p.languages) {
       if (Array.isArray(p.languages)) { // LeetCode format: [{ languageName, problemsSolved }]
@@ -126,7 +143,7 @@ export default function AnalyticsPage() {
   let cfPeak = 0;
   let cfPoints = "";
   let cfLastRating = 0;
-  const cfRatingHist = stats.platforms?.codeforces?.ratingHistory || [];
+  const cfRatingHist = showCf ? (stats.platforms?.codeforces?.ratingHistory || []) : [];
   if (cfRatingHist.length > 0) {
     // Normalize to 320x95 box
     const ratings = cfRatingHist.map((r: any) => r.newRating);
@@ -154,15 +171,23 @@ export default function AnalyticsPage() {
     <>
       <div className="filters">
         <div className="seg" role="tablist">
-          <button type="button" className="on">All Platforms</button>
+          <button type="button" className={activePlatform === "all" ? "on" : ""} onClick={() => setActivePlatform("all")}>
+            All Platforms
+          </button>
+          {connectedPlatforms.map((p) => (
+            <button key={p} type="button" role="tab" aria-selected={activePlatform === p}
+              className={activePlatform === p ? "on" : ""} onClick={() => setActivePlatform(p)}>
+              {PLATFORM_LABELS[p] || p}
+            </button>
+          ))}
         </div>
       </div>
 
       <section className="stats" aria-label="Headline analytics">
         <div className="stat">
           <div className="l">Total solved</div>
-          <div className="n">{stats?.totalSolved?.toLocaleString() || "0"}</div>
-          <div className="d">across all platforms</div>
+          <div className="n">{(activePlatform === "all" ? stats?.totalSolved : stats.platforms?.[activePlatform]?.total)?.toLocaleString() || "0"}</div>
+          <div className="d">{activePlatform === "all" ? "across all platforms" : `on ${PLATFORM_LABELS[activePlatform] || activePlatform}`}</div>
         </div>
         {cfRatingHist.length > 0 && (
           <div className="stat">
@@ -193,7 +218,7 @@ export default function AnalyticsPage() {
       <div className="grid g-2">
         <section className="panel">
           <h2 className="h">Difficulty mix <span className="tag">LeetCode</span></h2>
-          {stats?.platforms?.leetcode ? (
+          {showLc && stats?.platforms?.leetcode ? (
             <div className="ringwrap">
               <div className="ring" role="img" aria-label="Difficulty breakdown">
                 <div className="rc"><b>{stats.platforms.leetcode.total?.toLocaleString() || "0"}</b><span>solved</span></div>
@@ -205,7 +230,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
           ) : (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>No LeetCode data.</div>
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>
+              {showLc ? "No LeetCode data." : "Difficulty breakdown is available for LeetCode only."}
+            </div>
           )}
         </section>
 
