@@ -102,6 +102,8 @@ export default function SyncStatusPage() {
         body: JSON.stringify({}),
       });
       await load();
+      // Nudge the NotificationBell to pick up the new sync notification immediately.
+      setTimeout(() => window.dispatchEvent(new Event("cv:refresh-notifications")), 2000);
     } catch {
       setError("Failed to trigger sync");
     } finally {

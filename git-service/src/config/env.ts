@@ -20,6 +20,8 @@ const envSchema = z.object({
   SYNC_CRON: z.string().default('0 */6 * * *'),
   SYNC_CONCURRENCY: z.coerce.number().int().positive().default(3),
   SYNC_PLATFORM_CONCURRENCY: z.coerce.number().int().positive().default(2),
+  SYNC_LIMIT_MAX: z.coerce.number().int().positive().default(1),
+  SYNC_LIMIT_DURATION: z.coerce.number().int().positive().default(2000), // milliseconds
   SYNC_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

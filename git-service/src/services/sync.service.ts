@@ -60,6 +60,16 @@ export async function runSync(connectionId: string, trigger: Trigger = 'manual')
 
     if (fresh.length === 0) {
       await finishRun(run.id, 'success', submissions.length, 0);
+      await prisma.notification
+        .create({
+          data: {
+            userId: connection.userId,
+            type: 'sync',
+            title: `${connection.platform} is up to date`,
+            body: `All ${submissions.length} accepted problem(s) already synced.`,
+          },
+        })
+        .catch(() => undefined);
       return { itemsFetched: submissions.length, itemsPushed: 0, skipped: submissions.length };
     }
 
@@ -130,6 +140,17 @@ export async function runSync(connectionId: string, trigger: Trigger = 'manual')
     } else {
       const code = err instanceof AppError ? err.code : 'INTERNAL';
       await finishRun(run.id, 'failed', 0, 0, code);
+      // Notify the user about the sync failure.
+      await prisma.notification
+        .create({
+          data: {
+            userId: connection.userId,
+            type: 'sync',
+            title: `Sync failed for ${connection.platform}`,
+            body: `Error: ${err instanceof Error ? err.message : code}. Check your repo settings or try again.`,
+          },
+        })
+        .catch(() => undefined);
     }
     throw err;
   }

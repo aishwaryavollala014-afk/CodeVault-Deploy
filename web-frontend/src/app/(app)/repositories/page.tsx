@@ -165,6 +165,8 @@ export default function RepositoriesPage() {
         body: JSON.stringify({}),
       });
       await loadProblems(selectedRepo.platform);
+      // Nudge the NotificationBell to pick up the new sync notification immediately.
+      setTimeout(() => window.dispatchEvent(new Event("cv:refresh-notifications")), 2000);
     } catch { /* ignore */ }
     setSyncing(false);
   };

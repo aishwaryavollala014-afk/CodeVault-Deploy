@@ -33,8 +33,11 @@ export function NotificationBell() {
 
   useEffect(() => {
     load();
-    const id = setInterval(load, 60000); // poll every 60s for new notifications
-    return () => clearInterval(id);
+    const id = setInterval(load, 15000); // poll every 15s for near-instant notification delivery
+    // Allow other components to trigger an immediate refresh (e.g. after manual sync).
+    const onRefresh = () => load();
+    window.addEventListener("cv:refresh-notifications", onRefresh);
+    return () => { clearInterval(id); window.removeEventListener("cv:refresh-notifications", onRefresh); };
   }, [load]);
 
   // Close on outside click.

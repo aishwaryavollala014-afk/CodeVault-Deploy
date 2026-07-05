@@ -58,7 +58,14 @@ export function startSyncWorker(): Worker<SyncJobData> {
         await redis.del(lockKey);
       }
     },
-    { connection: bullConnection, concurrency: env.SYNC_CONCURRENCY },
+    {
+      connection: bullConnection,
+      concurrency: env.SYNC_CONCURRENCY,
+      limiter: {
+        max: env.SYNC_LIMIT_MAX,
+        duration: env.SYNC_LIMIT_DURATION,
+      },
+    },
   );
 
   // Without an 'error' listener, a Redis/connection error would throw and crash the process.
