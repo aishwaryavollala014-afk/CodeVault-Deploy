@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationBell } from "@/components/NotificationBell";
+import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 export default function AppLayout({
   children,
@@ -38,7 +39,7 @@ export default function AppLayout({
   };
 
   if (!user) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>;
+    return <CodeVaultLoader text="Loading CodeVault" />;
   }
 
   return (
