@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PLATFORMS } from "@/constants/platforms";
 import { PlatformChip } from "@/components/PlatformChip";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5050/api";
 
@@ -110,7 +110,7 @@ export default function SyncStatusPage() {
   };
 
   if (conns === null) {
-    return <LoadingSpinner text="Loading sync status..." fullPage />;
+    return <CodeVaultLoader text="Loading sync status" />;
   }
 
   const activeCount = conns.filter((c) => c.status === "active" && c.syncEnabled).length;
