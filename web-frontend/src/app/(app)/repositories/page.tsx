@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
+import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -76,7 +77,7 @@ export default function RepositoriesPage() {
   };
 
   if (connections === null) {
-    return <div style={{ padding: 40, textAlign: "center", color: "var(--faint)" }}>Loading repositories…</div>;
+    return <CodeVaultLoader text="Loading repositories" />;
   }
 
   return (
