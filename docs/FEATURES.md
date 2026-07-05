@@ -57,11 +57,13 @@
 | Sync status / activity page | ✅ | G | `web-frontend/(app)/sync-status` |
 | Browser extension capture (Path B v2) | 🟠 | G | `browser-extension/` (built, not build-verified) |
 | Extension → git-service ingest | ✅ | G | `git-service/ingest.*`, `POST /api/ingest` |
-| Notifications | 🟠 | A | service built, **route unmounted** |
+| Notifications | ✅ | G | service + controller + routes mounted `/api/notifications`; bell dropdown + emit on connect (`96f6ac2`) |
+| Global search + branded loader | ✅ | G | topbar page/settings search + animated CodeVault loader across pages |
 | Repositories browser page | ✅ | A | `(app)/repositories` wired to `GET /api/github-repos` |
 | git-service `/api/repos` + `/api/problems` | ✅ | G | built & mounted, JWT-auth, keyset pagination (`de8c6ed`) |
 | Per-platform repo-link manager | ✅ | G | Settings → GitHub, wired to `POST /api/github-repos` (`aff4c53`) |
-| Settings page | 🟠 partial | A/G | repo manager live; some sections still static |
+| Settings page | ✅ | G | real connected platforms + repo manager + disconnect wired (`32fca74`); some cosmetic sections static |
+| Analytics per-platform tabs | ✅ | G | All / LeetCode / Codeforces / CodeChef / HackerRank filtering (`7e69389`) |
 | AI explain / recommend next problem | ⛔ | — | planned |
 
 ---
@@ -165,9 +167,10 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
-| Notification service + `Notification` table | ✅ | A | `notification.service.ts`; git-service emits on sync/expiry. |
-| Notifications API | 🟠 | A | `notification.controller.ts` + `notification.routes.ts` exist but **route is NOT mounted** in `web-backend/app.ts`. |
-| Notifications UI page | ⛔ | A | Not built. |
+| Notification service + `Notification` table | ✅ | G | `notification.service.ts` — list / unread-count / mark-read / create. |
+| Notifications API | ✅ | G | `notification.controller.ts` + `notification.routes.ts`, **mounted** at `/api/notifications`. |
+| Notifications UI | ✅ | G | Topbar **bell dropdown** — unread badge, mark-all-read; emits on platform connect. |
+| More emit triggers (sync complete / session expired) | 🟠 | G | Only connect-emit today. |
 
 ---
 
@@ -225,13 +228,13 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 |:-:|-----|:--------:|:-----:|
 | 1 | ~~`stats.service.ts` aggregates LeetCode only~~ → **FIXED**: all 4 platforms aggregate (CodeChef `71e4a6c`, HackerRank) | ✅ | A/G |
 | 2 | ~~Dashboard / analytics / public-profile show static mock~~ → **FIXED**: dashboard/analytics/repos (Aish `8d30a67`) + public profile (`b98b115`) wired | ✅ | A/G |
-| 3 | `user` / `notification` / `settings` routes **not mounted** in web-backend | 🟠 | A |
+| 3 | ~~`notification` routes not mounted~~ → **FIXED**: notifications fully built + mounted (`96f6ac2`). `user`/`settings` routes still unmounted (low priority) | ✅/🟠 | G/A |
 | 4 | ~~`problem` / `repo` routes not mounted in git-service~~ → **FIXED**: built & mounted, `/api/repos` + `/api/problems` live (`de8c6ed`) | ✅ | G |
-| 5 | ~~Repositories page blocked on #4~~ → backend ready; frontend deep-browse wiring still **pending** | 🟠 | G |
+| 5 | ~~Repositories page mock~~ → **FIXED**: per-connected-platform inline repo-attach (`125906d`); deep file/commit browse via `/problems` still to wire | 🟠 | G |
 | 6 | Extension README (PKCE) ≠ actual JWT-capture implementation; selectors untested live | 🟠 | G |
 | 7 | Prisma schema **duplicated** across `web-backend/prisma` + `git-service/prisma` — hand-sync required | ⚠️ | Both |
 
-**Still open:** #3 (web-backend unmounted routes + notifications UI), #5 (repositories deep-browse frontend), #6 (extension build-verify), #7 (schema dup), plus real activity heatmap, refresh-token rotation, and RLS.
+**Still open:** #5 (repositories *deep* file/commit browse), #6 (extension build-verify), #7 (schema dup), plus real activity heatmap, refresh-token rotation, RLS, and `user`/`settings` route mounting. *(Notifications #3 is now done.)*
 
 ---
 
@@ -239,11 +242,10 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 
 | Feature | Owner | Notes |
 |---------|:-----:|-------|
-| Aggregate all 4 platforms in Path A stats | A | Extend `stats.service.ts`. |
-| Wire real dashboard/profile to APIs | A | Kill the `1,248` mocks. |
-| Notifications page + mount route | A | Service already built. |
+| ~~Aggregate all 4 platforms · wire dashboard/profile · notifications · `/repos`+`/problems`~~ | — | ✅ **all done this cycle** |
+| Real activity heatmap (dashboard) from real solve data | A | Currently random `MOCK_LEVELS`. |
+| Repositories **deep** file/commit browse (wire to `/api/problems`) | G | Endpoint live; frontend pending. |
 | JWT refresh-token rotation endpoint | A | Schema ready. |
-| Mount + wire `/repos` and `/problems` | G | Then connect Repositories page. |
 | Enable Row-Level Security before prod | A | `database/rls.sql`. |
 | Build-verify extension + live selector test | G | `npm run build`. |
 | AI layer — explain solution, tag topic, recommend next problem | — | Uses the latest Claude models. |
