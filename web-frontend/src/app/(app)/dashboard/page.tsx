@@ -321,10 +321,10 @@ export default function DashboardPage() {
                   <tr key={i}>
                     <td className="prob-name">
                       {url ? (
-                        <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}
+                        <a href={url} target="_blank" rel="noopener noreferrer" title="Open problem ↗" style={{ color: "inherit", textDecoration: "none" }}
                            onMouseOver={(e) => (e.currentTarget.style.textDecoration = "underline")}
                            onMouseOut={(e) => (e.currentTarget.style.textDecoration = "none")}>
-                          {sub.title} <span aria-hidden="true" style={{ opacity: 0.5, fontSize: "0.85em" }}>↗</span>
+                          {sub.title}
                         </a>
                       ) : (
                         sub.title
