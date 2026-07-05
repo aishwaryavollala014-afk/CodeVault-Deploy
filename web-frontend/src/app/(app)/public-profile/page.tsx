@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
+import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 export default function PublicProfileSettings() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function PublicProfileSettings() {
   };
 
   if (!user) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Loading settings...</div>;
+    return <CodeVaultLoader text="Loading profile" />;
   }
 
   const username = user.githubLogin;
