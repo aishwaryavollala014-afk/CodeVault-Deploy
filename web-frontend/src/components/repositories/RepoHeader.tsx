@@ -1,87 +1,83 @@
+"use client";
+
 import React from "react";
-import { RefreshCw, ExternalLink } from "lucide-react";
 
 export interface RepoHeaderProps {
-  owner: string;
-  repoName: string;
-  isPublic: boolean;
-  branch: string;
+  repoFullName: string;
+  visibility: string;
+  defaultBranch: string;
   fileCount: number;
-  lastSync: string;
-  autoSync: boolean;
-  githubUrl: string;
+  lastSyncAt: string | null;
+  folderConvention: string;
+  onResync?: () => void;
+  syncing?: boolean;
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "never";
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export function RepoHeader({
-  owner,
-  repoName,
-  isPublic,
-  branch,
+  repoFullName,
+  visibility,
+  defaultBranch,
   fileCount,
-  lastSync,
-  autoSync,
-  githubUrl,
+  lastSyncAt,
+  folderConvention,
+  onResync,
+  syncing,
 }: RepoHeaderProps) {
+  const [owner, repoName] = repoFullName.split("/");
+  const githubUrl = `https://github.com/${repoFullName}`;
+
   return (
-    <div className="flex items-center gap-4 flex-wrap">
-      <div className="w-[46px] h-[46px] rounded-xl bg-[#16160f] text-white grid place-items-center flex-none">
-        <svg 
-          viewBox="0 0 24 24" 
-          width="24" 
-          height="24" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          fill="none" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
+    <div className="repohead">
+      <div className="ghmark">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff" aria-hidden="true">
           <path d="M9 19c-4 1.5-4-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.3 2.8 5.3 3.1 5.3 3.1a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 3.9 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" />
         </svg>
       </div>
-      
       <div>
-        <div className="text-[16px] font-bold">
+        <div className="nm">
           {owner} /{" "}
-          <a
-            href={githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand-d font-mono text-[13px] hover:underline"
-          >
+          <a href={githubUrl} target="_blank" rel="noopener noreferrer">
             {repoName}
           </a>{" "}
-          {isPublic && (
-            <span className="ml-1 text-[11px] font-bold px-[9px] py-[3px] rounded-full bg-brand-soft text-brand-d inline-block">
-              Public
-            </span>
-          )}
+          {visibility === "public" && <span className="pubpill">Public</span>}
         </div>
-        
-        <div className="text-[12.5px] text-faint mt-[3px] flex gap-[14px] flex-wrap">
-          <span>
-            default branch <b className="text-ink font-semibold">{branch}</b>
-          </span>
+        <div className="meta">
+          <span>branch <b>{defaultBranch}</b></span>
           <span>{fileCount} files</span>
-          <span>last sync {lastSync}</span>
-          <span>auto-sync {autoSync ? "on" : "off"}</span>
+          <span>last sync {timeAgo(lastSyncAt)}</span>
+          <span>folders: {folderConvention || "number"}</span>
         </div>
       </div>
-
-      <div className="ml-auto flex gap-2.5 max-sm:ml-0 max-sm:w-full">
+      <div className="acts">
         <a
           href={githubUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-[7px] font-semibold text-[13.5px] rounded-[9px] border border-border-2 bg-white px-[14px] py-[9px] cursor-pointer text-ink transition-colors hover:bg-paper"
+          className="btn btn-secondary"
+          style={{ fontSize: "13.5px" }}
         >
-          Open on GitHub <ExternalLink size={14} className="text-faint" />
+          Open on GitHub ↗
         </a>
         <button
           type="button"
-          className="inline-flex items-center gap-[7px] font-semibold text-[13.5px] rounded-[9px] border border-brand bg-brand text-white px-[14px] py-[9px] cursor-pointer transition-colors hover:bg-brand-d"
+          className="btn btn-primary"
+          style={{ fontSize: "13.5px" }}
+          onClick={onResync}
+          disabled={syncing}
         >
-          <RefreshCw size={14} />
-          Re-sync now
+          <svg className="ico sm" aria-hidden="true"><use href="#ic-sync" /></svg>
+          {syncing ? "Syncing…" : "Re-sync now"}
         </button>
       </div>
     </div>

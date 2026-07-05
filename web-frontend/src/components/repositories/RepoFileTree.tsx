@@ -1,64 +1,110 @@
-import React from "react";
-import { Code, FileJson } from "lucide-react";
+"use client";
 
-export interface Problem {
+import React from "react";
+
+export interface ProblemFile {
   id: string;
-  name: string;
-  lang: string;
-  time: string;
-  isSpecial?: boolean; // For README.md etc
+  platform: string;
+  number: number | null;
+  slug: string;
+  title: string;
+  difficulty: string | null;
+  language: string;
+  solutionPath: string | null;
+  solvedAt: string | null;
+  syncedToGit: boolean;
+  syncedAt: string | null;
 }
 
 export interface RepoFileTreeProps {
   branch: string;
-  totalProblems: number;
-  problems: Problem[];
-  rootDirectoryName?: string;
+  problems: ProblemFile[];
+  totalCount: number;
+  hasMore: boolean;
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
 }
 
-export function RepoFileTree({ branch, totalProblems, problems, rootDirectoryName = "LeetCodeQuestions/" }: RepoFileTreeProps) {
+function langBadge(lang: string): { bg: string; color: string } {
+  switch (lang.toLowerCase()) {
+    case "python":
+    case "python3":
+      return { bg: "var(--amber-soft)", color: "var(--amber-d)" };
+    case "javascript":
+    case "typescript":
+      return { bg: "var(--amber-soft)", color: "var(--amber-d)" };
+    case "java":
+      return { bg: "var(--brand-soft)", color: "var(--brand-d)" };
+    case "cpp":
+    case "c++":
+    case "c":
+      return { bg: "var(--rose-soft)", color: "var(--rose-d)" };
+    default:
+      return { bg: "var(--amber-soft)", color: "var(--amber-d)" };
+  }
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "—";
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+export function RepoFileTree({
+  branch,
+  problems,
+  totalCount,
+  hasMore,
+  onLoadMore,
+  loadingMore,
+}: RepoFileTreeProps) {
   return (
-    <section className="bg-white border border-[var(--border)] rounded-[var(--r)] p-[18px]">
-      <h2 className="text-[13.5px] font-bold m-0 mb-4 flex justify-between items-center">
+    <section className="panel">
+      <h2 className="h">
         Files{" "}
-        <span className="font-mono text-[11px] text-[var(--faint)] font-medium">
-          {rootDirectoryName}
+        <span className="tag" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--faint)", fontWeight: 500 }}>
+          {totalCount} problem{totalCount !== 1 ? "s" : ""}
         </span>
       </h2>
-      
-      <div className="border border-[var(--border)] rounded-xl overflow-hidden">
-        {/* Header Bar */}
-        <div className="flex items-center gap-2 px-[14px] py-2.5 bg-[var(--paper)] border-b border-[var(--border)] font-mono text-[12.5px] text-[var(--muted)]">
-          <Code size={14} />
-          {branch} &middot; {totalProblems} problems
+      <div className="fl">
+        <div className="fl-bar">
+          <svg className="ico sm" aria-hidden="true"><use href="#ic-repos" /></svg>
+          {branch} &middot; {problems.length} shown
         </div>
-        
-        {/* File Rows */}
-        {problems.map((p, index) => (
-          <div 
-            key={index} 
-            className="grid grid-cols-[1fr_auto_auto] items-center gap-3 px-[14px] py-[11px] border-b border-[var(--border)] text-[13.5px] last:border-b-0 hover:bg-[var(--paper)] cursor-pointer"
-          >
-            <span className="flex items-center gap-[9px] font-mono font-semibold">
-              {!p.isSpecial && <span className="text-[var(--brand-d)] flex-none">▸</span>}
-              {p.isSpecial && <FileJson size={14} className="text-[var(--faint)] flex-none" />}
-              {p.id !== p.name ? `${p.id} · ${p.name}` : p.name}
-            </span>
-            <span 
-              className="text-[11px] font-bold px-2 py-0.5 rounded-md"
-              style={{
-                background: p.isSpecial ? "var(--brand-soft)" : "var(--amber-soft)",
-                color: p.isSpecial ? "var(--brand-d)" : "var(--amber-d)"
-              }}
-            >
-              {p.lang}
-            </span>
-            <span className="text-[var(--faint)] text-[12px] font-mono">
-              {p.time}
-            </span>
+        {problems.length === 0 ? (
+          <div className="fl-row" style={{ justifyContent: "center", color: "var(--muted)" }}>
+            No problems synced yet
           </div>
-        ))}
+        ) : (
+          problems.map((p) => {
+            const badge = langBadge(p.language);
+            return (
+              <div className="fl-row" key={p.id}>
+                <span className="nm">
+                  {p.number != null && <span className="fold">▸</span>}
+                  {p.number != null ? `${p.number} · ` : ""}{p.title}
+                </span>
+                <span className="lang" style={{ background: badge.bg, color: badge.color }}>
+                  {p.language}
+                </span>
+                <span className="when">{timeAgo(p.solvedAt)}</span>
+              </div>
+            );
+          })
+        )}
       </div>
+      {hasMore && (
+        <div style={{ textAlign: "center", marginTop: 14 }}>
+          <button className="btn btn-secondary" onClick={onLoadMore} disabled={loadingMore}>
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

@@ -1,38 +1,53 @@
+"use client";
+
 import React from "react";
 
-export interface Commit {
-  sha: string;
-  msg: string;
-  time: string;
+export interface SyncCommit {
+  id: string;
+  slug: string;
+  title: string;
+  language: string;
+  syncedAt: string | null;
 }
 
 export interface RecentCommitsProps {
-  commits: Commit[];
+  commits: SyncCommit[];
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return "—";
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
 export function RecentCommits({ commits }: RecentCommitsProps) {
   return (
-    <section className="bg-white border border-[var(--border)] rounded-[var(--r)] p-[18px]">
-      <h2 className="text-[13.5px] font-bold m-0 mb-4 flex justify-between items-center">
-        Recent commits
+    <section className="panel">
+      <h2 className="h">
+        Recent syncs
+        <span className="tag" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--faint)", fontWeight: 500 }}>
+          last {commits.length}
+        </span>
       </h2>
-      <div className="flex flex-col">
-        {commits.map((c, i) => (
-          <div 
-            key={i} 
-            className="flex items-center gap-3 py-[11px] border-b border-[var(--border)] text-[13.5px] last:border-b-0"
-          >
-            <span className="font-mono text-[11.5px] text-[var(--faint)] bg-[var(--paper)] px-[7px] py-[2px] rounded-md flex-none">
-              {c.sha}
-            </span>
-            <span className="flex-1 truncate">
-              {c.msg}
-            </span>
-            <span className="text-[var(--faint)] text-[12px] flex-none">
-              {c.time}
-            </span>
+      <div className="commits">
+        {commits.length === 0 ? (
+          <div className="commit" style={{ justifyContent: "center", color: "var(--muted)" }}>
+            No synced problems yet
           </div>
-        ))}
+        ) : (
+          commits.map((c) => (
+            <div className="commit" key={c.id}>
+              <span className="sha">{c.slug}</span>
+              <span className="msg">{c.title} ({c.language})</span>
+              <span className="when">{timeAgo(c.syncedAt)}</span>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );

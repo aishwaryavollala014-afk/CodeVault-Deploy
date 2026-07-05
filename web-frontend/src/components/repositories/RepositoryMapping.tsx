@@ -1,61 +1,70 @@
-import React from "react";
+"use client";
 
-export interface Mapping {
-  id: string; // e.g. "lc", "cf", "cc", "hr"
-  name: string;
-  label: string; // "LC", "CF", etc
-  color: string; // tailwind color value e.g. "#ffa116"
-  mappedRepoName: string | null;
+import React from "react";
+import { PlatformChip } from "@/components/PlatformChip";
+
+export interface RepoMapping {
+  id: string;
+  platform: string;
+  repoFullName: string;
+  visibility: string;
+  defaultBranch: string;
+  fileCount: number;
+  lastSyncAt: string | null;
+  folderConvention: string;
 }
 
 export interface RepositoryMappingProps {
-  mappings: Mapping[];
-  onConfigure?: (mappingId: string) => void;
+  mappings: RepoMapping[];
+  onSelect?: (repo: RepoMapping) => void;
+  selectedPlatform?: string;
 }
 
-export function RepositoryMapping({ mappings, onConfigure }: RepositoryMappingProps) {
+const PLATFORM_LABELS: Record<string, string> = {
+  leetcode: "LeetCode",
+  codeforces: "Codeforces",
+  codechef: "CodeChef",
+  hackerrank: "HackerRank",
+};
+
+export function RepositoryMapping({ mappings, onSelect, selectedPlatform }: RepositoryMappingProps) {
   return (
-    <section className="bg-white border border-border rounded-r p-[18px]">
-      <h2 className="text-[13.5px] font-bold m-0 mb-4 flex justify-between items-center">
+    <section className="panel">
+      <h2 className="h">
         Repository mapping{" "}
-        <span className="font-medium text-[12px] text-faint">
+        <span className="tag" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--faint)", fontWeight: 500 }}>
           one repo per platform
         </span>
       </h2>
-      <div className="flex flex-col gap-2.5">
-        {mappings.map((m) => (
-          <div 
-            key={m.id} 
-            className="flex items-center gap-3 p-3 border border-border rounded-[11px]"
-          >
-            <span 
-              className="w-[18px] h-[18px] rounded-[5px] grid place-items-center text-white text-[9px] font-extrabold font-mono flex-none"
-              style={{ backgroundColor: m.color }}
-            >
-              {m.label}
-            </span>
-            <span className="text-[14.5px] font-medium">{m.name}</span>
-            <span className="text-faint ml-1 mr-1">→</span>
-            
-            {m.mappedRepoName ? (
-              <span className="font-mono text-[12.5px] text-brand-d">
-                {m.mappedRepoName}
-              </span>
-            ) : (
-              <span className="text-[12.5px] text-faint italic">
-                Not configured
-              </span>
-            )}
-            
-            <button 
-              type="button"
-              onClick={() => onConfigure?.(m.id)}
-              className="ml-auto inline-flex items-center gap-[7px] font-semibold text-[13.5px] rounded-[9px] border border-border-2 bg-white px-[14px] py-[9px] cursor-pointer text-ink transition-colors hover:bg-paper"
-            >
-              Configure
-            </button>
+      <div className="map">
+        {mappings.length === 0 ? (
+          <div style={{ color: "var(--muted)", fontSize: 14, textAlign: "center", padding: 20 }}>
+            No repositories linked yet.
           </div>
-        ))}
+        ) : (
+          mappings.map((m) => (
+            <div
+              className="map-row"
+              key={m.id}
+              style={{
+                cursor: "pointer",
+                borderColor: selectedPlatform === m.platform ? "var(--brand)" : undefined,
+                background: selectedPlatform === m.platform ? "var(--brand-soft)" : undefined,
+              }}
+              onClick={() => onSelect?.(m)}
+            >
+              <PlatformChip platformId={m.platform} size="sm" showName={false} variant="ghost" />
+              <span style={{ fontWeight: 600, fontSize: "14.5px" }}>
+                {PLATFORM_LABELS[m.platform] || m.platform}
+              </span>
+              <span className="arrow">→</span>
+              <span className="repo">{m.repoFullName}</span>
+              <span className="btn btn-secondary sm" style={{ marginLeft: "auto" }}>
+                Browse
+              </span>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );
