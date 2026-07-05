@@ -19,17 +19,18 @@
 | Foundation / DB / infra | 6 | 0 | 1 | ~85% |
 | Auth & accounts | 4 | 0 | 1 | ~80% |
 | Platform connections | 4 | 0 | 0 | 100% |
-| Path A — stats & dashboard | 8 | 0 | 1 | ~90% |
+| Path A — stats & dashboard | 9 | 0 | 1 | ~92% |
 | Path B — code sync (git-service) | 7 | 0 | 1 | ~90% |
 | Browser extension | 4 | 2 | 0 | ~70% |
 | Public profile | 2 | 0 | 0 | ~90% |
-| Notifications | 1 | 1 | 1 | ~40% |
-| Repositories | 3 | 1 | 0 | ~85% |
+| Notifications | 3 | 0 | 0 | ~95% |
+| Repositories | 4 | 0 | 0 | ~95% |
+| Settings / UI-UX | 5 | 0 | 0 | ~90% |
 | Pre-launch / compliance | 0 | 0 | ~61 | 0% |
 
 \* *Rough, feature-count based — not weighted by effort.*
 
-**Headline:** core product loop (login → connect → stats dashboard → public profile → GitHub sync) is **working end-to-end with real data for all 4 platforms** (LeetCode, Codeforces, CodeChef, HackerRank). All previously-unmounted git-service routes are now live. Remaining work: real activity heatmap, notifications UI, refresh-token rotation, RLS, extension build-verify, and everything under **pre-launch/compliance**.
+**Headline:** core product loop (login → connect → stats dashboard → public profile → GitHub sync) is **working end-to-end with real data for all 4 platforms** (LeetCode, Codeforces, CodeChef, HackerRank). All git-service routes live; **notifications, global search, per-platform analytics tabs, and a branded animated loader** now shipped. Remaining code work: real activity heatmap, refresh-token rotation, RLS, extension build-verify — then **pre-launch/compliance**.
 
 ---
 
@@ -64,6 +65,8 @@
 - [x] CodeChef stats — profile scrape (solved + rating/stars), aggregated — G ✨ *new (`71e4a6c`)*
 - [x] HackerRank stats — badges API, aggregated — A ✨ *new*
 - [x] CodeChef rating/stars **dashboard tile** (rating, stars, peak, global rank) — G ✨ *new (`bc75483`)*
+- [x] **Analytics per-platform filter tabs** (All / LeetCode / Codeforces / CodeChef / HackerRank — separate analysis) — G ✨ *new (`7e69389`)*
+- [x] **Recent submissions: clickable problem links + dd/mm/yyyy dates** — G ✨ *new (`e54c9df`)*
 - [ ] Activity heatmap on **real** solve data (currently random `MOCK_LEVELS`) — A
 
 ## 📦 Path B — code sync to GitHub (git-service)
@@ -89,16 +92,26 @@
 - [x] `u/[username]` page **wired to `/api/public`** (real totals, difficulty, per-platform bars; mock removed) — G ✨ *new (`b98b115`)*
   - *(heatmap + topic-strengths sections remain decorative — API returns no daily/topic data yet)*
 
-## 🔔 Notifications
-- [x] Notification service + `Notification` table (emitted on sync/expiry) — A/G
-- [~] Notifications API — controller/routes exist but **route NOT mounted** in web-backend — A
-- [ ] Notifications UI page — A
+## 🔔 Notifications ✨ *now fully built (G, `8469bd8`→`96f6ac2`)*
+- [x] Notification **service** (list / unread-count / mark-read / create) — G
+- [x] Notification **controller + routes**, **mounted** at `/api/notifications` — G
+- [x] Emits a real notification **on platform connect** — G
+- [x] **Bell dropdown UI** in topbar (unread badge + mark-all-read) — G
+- [ ] More emit triggers (sync complete, session expired) — G
 
 ## 📁 Repositories
-- [x] Repositories page wired to `GET /api/github-repos` (web-backend) — A ✨ *new*
+- [x] Repositories page wired to `GET /api/github-repos` (web-backend) — A
 - [x] GitHub repo setup flow (`POST /api/github-repos`) — A
-- [x] **Per-platform repo-link manager** in Settings → GitHub (add/edit a repo per platform) — G ✨ *new (`aff4c53`)*
-- [~] Deep repo browsing — git-service `/repos` + `/problems` endpoints now **live**; frontend not yet wired to them — G
+- [x] **Per-platform repo-link manager** in Settings → GitHub — G (`aff4c53`)
+- [x] **Repositories page: per-connected-platform inline repo-link attach** (only shows connected platforms) — G ✨ *new (`125906d`)*
+- [x] git-service `/repos` + `/problems` endpoints **live** — G (`de8c6ed`)
+
+## 🎨 Settings & UI/UX ✨ *new*
+- [x] Settings **Connected platforms** render real `/api/platforms` data + working Disconnect — G (`32fca74`)
+- [x] Per-platform GitHub repo manager in Settings — G (`aff4c53`)
+- [x] **Global page/settings search** in topbar — G (`b96f024`)
+- [x] **Functional refresh** button in topbar — G (`d339906`)
+- [x] **Animated branded CodeVault loader** across all pages — G (`38613cf`)
 
 ## 🚀 Pre-launch / compliance (`CERTIFICATES_BEFORE_LAUNCH/`)
 - [ ] **All ~61 items pending** — legal (ToS, Privacy, GDPR/CCPA), security certs (SOC2, ISO 27001, pentest), DNS/email (SPF/DKIM/DMARC), launch checklist, etc.
