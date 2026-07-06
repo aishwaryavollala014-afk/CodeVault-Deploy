@@ -1,15 +1,14 @@
 import type { CapturedSubmission, Difficulty } from '../types';
-import { once, sendCapture, text } from '../lib/capture';
+import { sendCapture, text } from '../lib/capture';
 
-// LeetCode content script (isolated world, Path B v2). The MAIN-world hook
-// (leetcode-inject.ts) detects an Accepted submission + reads the FULL Monaco code and
-// postMessages it here. This script enriches it with problem metadata from the DOM and
-// forwards it to the background worker → git-service /api/ingest. The server fills the
-// question statement when questionMarkdown is empty.
+// LeetCode content script (isolated world, Path B v2).
+// Detection strategy: watch the DOM for an "Accepted" verdict (reliable, survives SPA nav),
+// then ask the MAIN-world hook (leetcode-inject.ts) for the FULL Monaco code and forward the
+// whole submission to the background worker → git-service /api/ingest. Also captures an
+// Accepted result that is ALREADY on screen (e.g. viewing a submission), so no re-submit needed.
 
 const DIFF: Record<string, Difficulty> = { easy: 'easy', medium: 'medium', hard: 'hard' };
 
-// LeetCode language ids → clean names (git-service maps these to file extensions).
 const LANG_MAP: Record<string, string> = {
   cpp: 'cpp', c: 'c', java: 'java', python: 'python', python3: 'python3',
   javascript: 'javascript', typescript: 'typescript', csharp: 'csharp',
@@ -18,9 +17,35 @@ const LANG_MAP: Record<string, string> = {
   elixir: 'elixir', dart: 'dart', mysql: 'mysql', mssql: 'mssql', oraclesql: 'sql',
 };
 
+const sent = new Set<string>();
+let pendingLang: string | undefined;
+let inFlight = false;
+
 function parseSlug(): string | null {
   const m = location.pathname.match(/\/problems\/([^/]+)/);
   return m ? m[1] : null;
+}
+function submissionId(): string {
+  const m = location.pathname.match(/\/submissions\/(\d+)/);
+  return m ? m[1] : '';
+}
+
+function detectAccepted(): boolean {
+  const el = document.querySelector('[data-e2e-locator="submission-result"]');
+  if (el && /accepted/i.test(text(el))) return true;
+  // Fallback: a standalone green "Accepted" verdict heading.
+  return Array.from(document.querySelectorAll('span, div, h3, h4')).some(
+    (n) => /^accepted$/i.test(text(n)) && (n as HTMLElement).offsetParent !== null,
+  );
+}
+
+function readLangFromDom(): string | undefined {
+  const btn =
+    text(document.querySelector('button[aria-haspopup="listbox"]')) ||
+    text(document.querySelector('[id*="headlessui-listbox-button"]')) ||
+    text(document.querySelector('[data-mode-id]'));
+  const v = btn.trim().toLowerCase().replace(/\s+/g, '');
+  return v || undefined;
 }
 
 function grabMeta() {
@@ -47,45 +72,66 @@ function grabMeta() {
   return { slug, number, title, difficulty, topics };
 }
 
+function key(slug: string): string {
+  return `leetcode:${slug}:${submissionId()}`;
+}
+
+function tryCapture(): void {
+  if (inFlight) return;
+  const slug = parseSlug();
+  if (!slug || sent.has(key(slug))) return;
+  if (!detectAccepted()) return;
+  inFlight = true;
+  // Ask the MAIN-world hook for the full Monaco code.
+  window.postMessage({ __cv: 'get-code' }, '*');
+}
+
 window.addEventListener('message', (ev: MessageEvent) => {
-  const d = ev.data as {
-    __codevault?: string;
-    accepted?: boolean;
-    code?: string | null;
-    lang?: string;
-    questionId?: string;
-  };
-  if (ev.source !== window || d?.__codevault !== 'codevault-lc' || !d.accepted) return;
+  const d = ev.data as { __cv?: string; code?: string | null; lang?: string };
+  if (ev.source !== window || !d?.__cv) return;
 
-  const meta = grabMeta();
-  if (!meta) return;
-
-  const code = (d.code || '').trim();
-  if (!code) {
-    console.warn('[CodeVault] Accepted detected but code was empty (Monaco not readable).');
+  if (d.__cv === 'accepted') {
+    if (d.lang) pendingLang = d.lang;
+    tryCapture();
     return;
   }
 
-  const number = meta.number.replace(/\D/g, '') || d.questionId || meta.slug;
-  // Dedupe by slug+size so re-submitting an edited solution still syncs.
-  if (!once(`leetcode:${meta.slug}:${code.length}`)) return;
+  if (d.__cv === 'code') {
+    inFlight = false;
+    const meta = grabMeta();
+    if (!meta) return;
+    const code = (d.code || '').trim();
+    if (!code) {
+      console.warn('[CodeVault] Accepted detected but code was empty (Monaco not readable).');
+      return;
+    }
+    const k = key(meta.slug);
+    if (sent.has(k)) return;
+    sent.add(k);
 
-  const submission: CapturedSubmission = {
-    platform: 'leetcode',
-    number,
-    slug: meta.slug,
-    title: meta.title,
-    difficulty: meta.difficulty,
-    topics: meta.topics,
-    language: LANG_MAP[String(d.lang || '').toLowerCase()] || d.lang || 'unknown',
-    code,
-    questionMarkdown: '',
-    solvedAt: new Date().toISOString(),
-    url: `https://leetcode.com/problems/${meta.slug}/`,
-  };
-
-  sendCapture(submission);
-  console.info(`[CodeVault] captured LeetCode "${meta.title}" (${code.length} chars, ${submission.language})`);
+    const langRaw = String(pendingLang || readLangFromDom() || '').toLowerCase();
+    const submission: CapturedSubmission = {
+      platform: 'leetcode',
+      number: meta.number.replace(/\D/g, '') || meta.slug,
+      slug: meta.slug,
+      title: meta.title,
+      difficulty: meta.difficulty,
+      topics: meta.topics,
+      language: LANG_MAP[langRaw] || langRaw || 'unknown',
+      code,
+      questionMarkdown: '',
+      solvedAt: new Date().toISOString(),
+      url: `https://leetcode.com/problems/${meta.slug}/`,
+    };
+    sendCapture(submission);
+    console.info(`[CodeVault] captured "${meta.title}" (${code.length} chars, ${submission.language})`);
+  }
 });
 
-console.info('[CodeVault] LeetCode capture ready (network + Monaco full-code)');
+// Watch for a verdict appearing, and check once shortly after load (covers a result
+// that is already on screen when the page opens).
+const observer = new MutationObserver(() => tryCapture());
+observer.observe(document.documentElement, { childList: true, subtree: true });
+setTimeout(tryCapture, 1200);
+
+console.info('[CodeVault] LeetCode capture ready (DOM verdict + Monaco full-code)');
