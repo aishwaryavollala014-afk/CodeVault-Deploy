@@ -5,20 +5,29 @@
 (() => {
   console.info('[CodeVault] MAIN hook active');
 
-  function readMonacoCode(): string | null {
+  // Read the full solution code + the editor's own language id from Monaco.
+  function readMonaco(): { code: string | null; lang?: string } {
     try {
       const w = window as unknown as {
-        monaco?: { editor?: { getModels?: () => Array<{ getValue?: () => string }> } };
+        monaco?: {
+          editor?: {
+            getModels?: () => Array<{ getValue?: () => string; getLanguageId?: () => string }>;
+          };
+        };
       };
       const models = w.monaco?.editor?.getModels?.() ?? [];
-      let best = '';
+      let code = '';
+      let lang: string | undefined;
       for (const m of models) {
         const v = m.getValue?.() ?? '';
-        if (v.length > best.length) best = v;
+        if (v.length > code.length) {
+          code = v;
+          lang = m.getLanguageId?.();
+        }
       }
-      return best.trim() || null;
+      return { code: code.trim() || null, lang };
     } catch {
-      return null;
+      return { code: null };
     }
   }
 
@@ -26,7 +35,8 @@
   window.addEventListener('message', (ev: MessageEvent) => {
     const d = ev.data as { __cv?: string };
     if (ev.source !== window || d?.__cv !== 'get-code') return;
-    window.postMessage({ __cv: 'code', code: readMonacoCode() }, '*');
+    const { code, lang } = readMonaco();
+    window.postMessage({ __cv: 'code', code, lang }, '*');
   });
 
   // Bonus: sniff the submission-check response for language + Accepted confirmation.

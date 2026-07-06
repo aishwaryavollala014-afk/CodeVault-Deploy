@@ -39,15 +39,6 @@ function detectAccepted(): boolean {
   );
 }
 
-function readLangFromDom(): string | undefined {
-  const btn =
-    text(document.querySelector('button[aria-haspopup="listbox"]')) ||
-    text(document.querySelector('[id*="headlessui-listbox-button"]')) ||
-    text(document.querySelector('[data-mode-id]'));
-  const v = btn.trim().toLowerCase().replace(/\s+/g, '');
-  return v || undefined;
-}
-
 function grabMeta() {
   const slug = parseSlug();
   if (!slug) return null;
@@ -109,15 +100,18 @@ window.addEventListener('message', (ev: MessageEvent) => {
     if (sent.has(k)) return;
     sent.add(k);
 
-    const langRaw = String(pendingLang || readLangFromDom() || '').toLowerCase();
+    // Language from Monaco's own language id (reliable), sanitized to a short token.
+    const langRaw = String(d.lang || pendingLang || '').toLowerCase().trim();
+    const cleanLang = /^[a-z0-9+#.]{1,20}$/.test(langRaw) ? langRaw : '';
     const submission: CapturedSubmission = {
       platform: 'leetcode',
-      number: meta.number.replace(/\D/g, '') || meta.slug,
-      slug: meta.slug,
-      title: meta.title,
+      // Prefer a numeric problem id; fall back to the slug. Cap to the ingest limit (40).
+      number: (meta.number.replace(/\D/g, '') || meta.slug).slice(0, 40),
+      slug: meta.slug.slice(0, 200),
+      title: meta.title.slice(0, 300),
       difficulty: meta.difficulty,
       topics: meta.topics,
-      language: LANG_MAP[langRaw] || langRaw || 'unknown',
+      language: LANG_MAP[cleanLang] || cleanLang || 'unknown',
       code,
       questionMarkdown: '',
       solvedAt: new Date().toISOString(),
