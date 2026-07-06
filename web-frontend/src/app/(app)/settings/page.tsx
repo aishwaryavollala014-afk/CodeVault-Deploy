@@ -22,11 +22,14 @@ export default function SettingsPage() {
   // platform -> repo full name (owner/name), loaded from and saved to /api/github-repos
   const [repos, setRepos] = useState<Record<string, string>>({});
   const [repoStatus, setRepoStatus] = useState<Record<string, string>>({});
+  const [connections, setConnections] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
 
   // Load existing per-platform repo mappings.
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
+
     fetch(`${API_URL}/github-repos`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Array<{ platform: string; repoFullName: string }>) => {
@@ -34,6 +37,16 @@ export default function SettingsPage() {
         (rows || []).forEach((row) => { map[row.platform] = row.repoFullName; });
         setRepos(map);
       })
+      .catch(() => {});
+
+    fetch(`${API_URL}/platforms`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setConnections(data))
+      .catch(() => {});
+
+    fetch(`${API_URL}/stats`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setStats(data))
       .catch(() => {});
   }, [API_URL]);
 

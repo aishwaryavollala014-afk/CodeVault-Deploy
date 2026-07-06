@@ -10,6 +10,12 @@ export class HackerRankService {
         { headers: { 'User-Agent': 'Mozilla/5.0' } }
       );
 
+      // Fetch recent submissions
+      const recentRes = await axios.get(
+        `https://www.hackerrank.com/rest/hackers/${username}/recent_challenges?limit=15`,
+        { headers: { 'User-Agent': 'Mozilla/5.0' } }
+      ).catch(() => null);
+
       if (!badgesRes.data || !badgesRes.data.models) return null;
 
       const badges = badgesRes.data.models;
@@ -32,9 +38,21 @@ export class HackerRankService {
       // Sort by solved count descending
       trackBreakdown.sort((a, b) => b.score - a.score);
 
+      const recent: any[] = [];
+      if (recentRes?.data?.models) {
+        recentRes.data.models.forEach((sub: any) => {
+          recent.push({
+            title: sub.name,
+            titleSlug: sub.ch_slug,
+            timestamp: Math.floor(new Date(sub.created_at).getTime() / 1000)
+          });
+        });
+      }
+
       return {
         total: totalSolved,
-        tracks: trackBreakdown
+        tracks: trackBreakdown,
+        recent
       };
     } catch (error) {
       logger.error({ username }, 'Failed to fetch HackerRank stats');

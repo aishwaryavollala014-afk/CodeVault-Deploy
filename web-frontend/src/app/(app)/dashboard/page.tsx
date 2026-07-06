@@ -115,7 +115,7 @@ export default function DashboardPage() {
           
           // Sort recent
           allRecent.sort((a, b) => b.timestamp - a.timestamp);
-          setRecentSubs(allRecent.slice(0, 15));
+          setRecentSubs(allRecent);
           
         } else if (res.status === 404) {
           router.push("/connect");
@@ -318,13 +318,14 @@ export default function DashboardPage() {
             <tbody>
               {recentSubs.map((sub, i) => {
                 const url = problemUrl(sub);
+                const date = new Date(sub.timestamp * 1000);
                 return (
                   <tr key={i}>
                     <td className="prob-name">
                       {url ? (
                         <a href={url} target="_blank" rel="noopener noreferrer" title="Open problem ↗" style={{ color: "inherit", textDecoration: "none" }}
-                           onMouseOver={(e) => (e.currentTarget.style.textDecoration = "underline")}
-                           onMouseOut={(e) => (e.currentTarget.style.textDecoration = "none")}>
+                           onMouseOver={(e) => (e.currentTarget.style.color = "var(--brand)")}
+                           onMouseOut={(e) => (e.currentTarget.style.color = "inherit")}>
                           {sub.title}
                         </a>
                       ) : (
@@ -345,7 +346,7 @@ export default function DashboardPage() {
                       )}
                     </td>
                     <td className="verd">Accepted</td>
-                    <td className="tright">{formatDate(sub.timestamp)}</td>
+                    <td className="tright">{`${String(date.getDate()).padStart(2,'0')}-${String(date.getMonth()+1).padStart(2,'0')}-${date.getFullYear()}`}</td>
                   </tr>
                 );
               })}
