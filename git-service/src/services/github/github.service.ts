@@ -3,6 +3,11 @@ import logger from '../../lib/logger';
 import { ForbiddenError, NotFoundError, UpstreamError } from '../../utils/errors';
 import type { CommitInfo, GithubFile } from '../../types/github.types';
 
+// Encode a repo file path for the Contents API URL — keep '/' separators, encode segments.
+function encodeContentsPath(path: string): string {
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
 function splitRepo(repoFullName: string): { owner: string; repo: string } {
   const [owner, repo] = repoFullName.split('/');
   if (!owner || !repo) throw new UpstreamError(`Invalid repo name: ${repoFullName}`);
@@ -47,9 +52,9 @@ export async function pushFiles(
   const base = `/repos/${owner}/${repo}`;
 
   try {
-    // 1. current branch tip — may not exist if the repo is brand new / empty.
-    // GitHub returns 409 "Git Repository is empty" or 404 for a missing branch; in that
-    // case we bootstrap the very first commit (no base tree, no parent, create the ref).
+    // 1. current branch tip. A brand-new/empty repo has no commits — GitHub returns 409
+    // "Git Repository is empty" (or 404). The Git Data API (blobs/trees) also 409s on an
+    // empty repo, so we bootstrap the first commit via the Contents API instead.
     let baseSha: string | null = null;
     let baseTreeSha: string | null = null;
     try {
@@ -62,6 +67,24 @@ export async function pushFiles(
       if (status !== 409 && status !== 404) throw e;
     }
 
+    // Empty repo → Contents API (one PUT per file; the first PUT initialises the repo).
+    // The target branch doesn't exist yet, so the first file omits `branch` (commits to the
+    // repo's default branch, creating it); the rest target that branch explicitly.
+    if (baseSha === null) {
+      let lastSha = '';
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i]!;
+        const body: Record<string, string> = {
+          message,
+          content: Buffer.from(f.content, 'utf8').toString('base64'),
+        };
+        if (i > 0) body.branch = branch;
+        const res = await api.put(`${base}/contents/${encodeContentsPath(f.path)}`, body);
+        lastSha = res.data.commit?.sha ?? lastSha;
+      }
+      return { commitSha: lastSha };
+    }
+
     // 2. blobs
     const tree = [];
     for (const f of files) {
@@ -72,25 +95,21 @@ export async function pushFiles(
       tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.data.sha });
     }
 
-    // 3. new tree (only chain onto a base tree when the branch already has one)
+    // 3. new tree chained onto the current branch tree
     const newTree = await api.post(`${base}/git/trees`, {
-      ...(baseTreeSha ? { base_tree: baseTreeSha } : {}),
+      base_tree: baseTreeSha,
       tree,
     });
 
-    // 4. new commit (first commit on an empty repo has no parents)
+    // 4. new commit
     const commit = await api.post(`${base}/git/commits`, {
       message,
       tree: newTree.data.sha,
-      parents: baseSha ? [baseSha] : [],
+      parents: [baseSha],
     });
 
-    // 5. create the branch (empty repo) or move it (existing branch)
-    if (baseSha) {
-      await api.patch(`${base}/git/refs/heads/${branch}`, { sha: commit.data.sha });
-    } else {
-      await api.post(`${base}/git/refs`, { ref: `refs/heads/${branch}`, sha: commit.data.sha });
-    }
+    // 5. move the branch ref
+    await api.patch(`${base}/git/refs/heads/${branch}`, { sha: commit.data.sha });
 
     return { commitSha: commit.data.sha };
   } catch (err) {
