@@ -10,15 +10,10 @@ import { RepoFileTree, type ProblemFile } from "@/components/repositories/RepoFi
 import { RecentCommits } from "@/components/repositories/RecentCommits";
 import { RepositoryMapping, type RepoMapping } from "@/components/repositories/RepositoryMapping";
 
+import { platformName } from "@/constants/platforms";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5050/api";
-
-const PLATFORM_LABELS: Record<string, string> = {
-  leetcode: "LeetCode",
-  codeforces: "Codeforces",
-  codechef: "CodeChef",
-  hackerrank: "HackerRank",
-};
 
 type Conn = { platform: string; username: string };
 
@@ -222,7 +217,7 @@ export default function RepositoriesPage() {
                 <section className="panel" key={c.platform} style={{ marginBottom: 16, padding: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
                     <PlatformChip platformId={c.platform} size="sm" showName={false} variant="ghost" />
-                    <b style={{ fontSize: 15 }}>{PLATFORM_LABELS[c.platform] || c.platform}</b>
+                    <b style={{ fontSize: 15 }}>{platformName(c.platform)}</b>
                     <span style={{ color: "var(--faint)", fontSize: 13 }}>@{c.username}</span>
                     {repo ? (
                       <span className="st-pill ok" style={{ marginLeft: 4 }}>Repo linked</span>
