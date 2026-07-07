@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PlatformChip } from "@/components/PlatformChip";
+import { platformName } from "@/constants/platforms";
 
 export interface RepoMapping {
   id: string;
@@ -19,13 +20,6 @@ export interface RepositoryMappingProps {
   onSelect?: (repo: RepoMapping) => void;
   selectedPlatform?: string;
 }
-
-const PLATFORM_LABELS: Record<string, string> = {
-  leetcode: "LeetCode",
-  codeforces: "Codeforces",
-  codechef: "CodeChef",
-  hackerrank: "HackerRank",
-};
 
 export function RepositoryMapping({ mappings, onSelect, selectedPlatform }: RepositoryMappingProps) {
   return (
@@ -55,7 +49,7 @@ export function RepositoryMapping({ mappings, onSelect, selectedPlatform }: Repo
             >
               <PlatformChip platformId={m.platform} size="sm" showName={false} variant="ghost" />
               <span style={{ fontWeight: 600, fontSize: "14.5px" }}>
-                {PLATFORM_LABELS[m.platform] || m.platform}
+                {platformName(m.platform)}
               </span>
               <span className="arrow">→</span>
               <span className="repo">{m.repoFullName}</span>
