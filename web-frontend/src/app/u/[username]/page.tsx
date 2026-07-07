@@ -3,6 +3,7 @@
 import React, { useState, use, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
+import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -12,12 +13,8 @@ type PublicData = {
   stats?: { totalSolved?: number; platforms?: Record<string, PlatformStat> };
 };
 
-const PLATFORM_META: { id: string; name: string; color: string }[] = [
-  { id: "leetcode", name: "LeetCode", color: "#ffa116" },
-  { id: "codeforces", name: "Codeforces", color: "#1f8acb" },
-  { id: "codechef", name: "CodeChef", color: "#7a5230" },
-  { id: "hackerrank", name: "HackerRank", color: "#1aa260" },
-];
+// Platforms in display order (id/name/color come from the shared constant).
+const PLATFORM_META = PLATFORM_ORDER.map((id) => PLATFORMS[id]);
 
 const fmt = (n: number | undefined | null) => (typeof n === "number" ? n.toLocaleString() : "—");
 
