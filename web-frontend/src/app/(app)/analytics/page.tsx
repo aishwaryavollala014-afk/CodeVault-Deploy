@@ -3,14 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
-
-const PLATFORM_LABELS: Record<string, string> = {
-  leetcode: "LeetCode",
-  codeforces: "Codeforces",
-  codechef: "CodeChef",
-  hackerrank: "HackerRank",
-};
-const PLATFORM_ORDER = ["leetcode", "codeforces", "codechef", "hackerrank"];
+import { PLATFORM_ORDER, platformName } from "@/constants/platforms";
 
 export default function AnalyticsPage() {
   const router = useRouter();
@@ -177,7 +170,7 @@ export default function AnalyticsPage() {
           {connectedPlatforms.map((p) => (
             <button key={p} type="button" role="tab" aria-selected={activePlatform === p}
               className={activePlatform === p ? "on" : ""} onClick={() => setActivePlatform(p)}>
-              {PLATFORM_LABELS[p] || p}
+              {platformName(p)}
             </button>
           ))}
         </div>
@@ -187,7 +180,7 @@ export default function AnalyticsPage() {
         <div className="stat">
           <div className="l">Total solved</div>
           <div className="n">{(activePlatform === "all" ? stats?.totalSolved : stats.platforms?.[activePlatform]?.total)?.toLocaleString() || "0"}</div>
-          <div className="d">{activePlatform === "all" ? "across all platforms" : `on ${PLATFORM_LABELS[activePlatform] || activePlatform}`}</div>
+          <div className="d">{activePlatform === "all" ? "across all platforms" : `on ${platformName(activePlatform)}`}</div>
         </div>
         {cfRatingHist.length > 0 && (
           <div className="stat">
