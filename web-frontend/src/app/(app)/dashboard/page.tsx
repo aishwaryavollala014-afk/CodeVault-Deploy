@@ -5,29 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
-
-// Build the public problem URL from a submission's platform + titleSlug.
-function problemUrl(sub: { platform?: string; titleSlug?: string }): string | null {
-  const slug = sub.titleSlug;
-  if (!slug) return null;
-  switch (sub.platform) {
-    case "leetcode":
-      return `https://leetcode.com/problems/${slug}/`;
-    case "codeforces": {
-      // titleSlug is "<contestId>-<index>"
-      const [contestId, index] = slug.split("-");
-      return contestId && index
-        ? `https://codeforces.com/contest/${contestId}/problem/${index}`
-        : "https://codeforces.com/problemset";
-    }
-    case "codechef":
-      return `https://www.codechef.com/problems/${slug}`;
-    case "hackerrank":
-      return `https://www.hackerrank.com/challenges/${slug}/problem`;
-    default:
-      return null;
-  }
-}
+import { PLATFORMS, problemUrlFor } from "@/constants/platforms";
 
 // dd/mm/yyyy
 function formatDate(tsSeconds: number): string {
@@ -343,14 +321,7 @@ export default function DashboardPage() {
               const pData = stats.platforms[platformId];
               if (!pData || !pData.total) return null;
               
-              const platformConfig: Record<string, { name: string, color: string }> = {
-                leetcode: { name: 'LeetCode', color: '#ffa116' },
-                codeforces: { name: 'Codeforces', color: '#1f8acb' },
-                codechef: { name: 'CodeChef', color: '#7a5230' },
-                hackerrank: { name: 'HackerRank', color: '#1aa260' }
-              };
-              
-              const config = platformConfig[platformId];
+              const config = PLATFORMS[platformId];
               if (!config) return null;
               
               const width = Math.min(100, Math.max(1, (pData.total / (stats.totalSolved || 1)) * 100));
@@ -634,7 +605,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {visibleSubs.map((sub, i) => {
-                  const url = problemUrl(sub);
+                  const url = problemUrlFor(sub.platform, sub.titleSlug);
                   const date = new Date(sub.timestamp * 1000);
                   return (
                     <tr key={i}>
