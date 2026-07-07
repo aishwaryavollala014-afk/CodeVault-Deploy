@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
+import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -13,12 +14,7 @@ export default function SettingsPage() {
   const [activeTheme, setActiveTheme] = useState("Light");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-  const PLATFORMS_LIST = [
-    { id: "leetcode", name: "LeetCode" },
-    { id: "codeforces", name: "Codeforces" },
-    { id: "codechef", name: "CodeChef" },
-    { id: "hackerrank", name: "HackerRank" },
-  ];
+  const PLATFORMS_LIST = PLATFORM_ORDER.map((id) => PLATFORMS[id]);
   // platform -> repo full name (owner/name), loaded from and saved to /api/github-repos
   const [repos, setRepos] = useState<Record<string, string>>({});
   const [repoStatus, setRepoStatus] = useState<Record<string, string>>({});
