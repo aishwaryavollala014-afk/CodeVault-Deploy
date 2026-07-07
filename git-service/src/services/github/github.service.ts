@@ -47,15 +47,22 @@ export async function pushFiles(
   const base = `/repos/${owner}/${repo}`;
 
   try {
-    // 1. current branch tip
-    const ref = await api.get(`${base}/git/ref/heads/${branch}`);
-    const baseSha: string = ref.data.object.sha;
+    // 1. current branch tip — may not exist if the repo is brand new / empty.
+    // GitHub returns 409 "Git Repository is empty" or 404 for a missing branch; in that
+    // case we bootstrap the very first commit (no base tree, no parent, create the ref).
+    let baseSha: string | null = null;
+    let baseTreeSha: string | null = null;
+    try {
+      const ref = await api.get(`${base}/git/ref/heads/${branch}`);
+      baseSha = ref.data.object.sha;
+      const baseCommit = await api.get(`${base}/git/commits/${baseSha}`);
+      baseTreeSha = baseCommit.data.tree.sha;
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status !== 409 && status !== 404) throw e;
+    }
 
-    // 2. base tree
-    const baseCommit = await api.get(`${base}/git/commits/${baseSha}`);
-    const baseTreeSha: string = baseCommit.data.tree.sha;
-
-    // 3. blobs
+    // 2. blobs
     const tree = [];
     for (const f of files) {
       const blob = await api.post(`${base}/git/blobs`, {
@@ -65,21 +72,25 @@ export async function pushFiles(
       tree.push({ path: f.path, mode: '100644', type: 'blob', sha: blob.data.sha });
     }
 
-    // 4. new tree
+    // 3. new tree (only chain onto a base tree when the branch already has one)
     const newTree = await api.post(`${base}/git/trees`, {
-      base_tree: baseTreeSha,
+      ...(baseTreeSha ? { base_tree: baseTreeSha } : {}),
       tree,
     });
 
-    // 5. new commit
+    // 4. new commit (first commit on an empty repo has no parents)
     const commit = await api.post(`${base}/git/commits`, {
       message,
       tree: newTree.data.sha,
-      parents: [baseSha],
+      parents: baseSha ? [baseSha] : [],
     });
 
-    // 6. move branch ref
-    await api.patch(`${base}/git/refs/heads/${branch}`, { sha: commit.data.sha });
+    // 5. create the branch (empty repo) or move it (existing branch)
+    if (baseSha) {
+      await api.patch(`${base}/git/refs/heads/${branch}`, { sha: commit.data.sha });
+    } else {
+      await api.post(`${base}/git/refs`, { ref: `refs/heads/${branch}`, sha: commit.data.sha });
+    }
 
     return { commitSha: commit.data.sha };
   } catch (err) {
