@@ -4,6 +4,19 @@ import { clearToken, getToken, setToken } from '../lib/storage';
 
 // MV3 service worker. The sole holder of the JWT — content scripts/popup message here,
 // and only this worker talks to git-service /api/ingest.
+
+// Content scripts only inject on a page LOAD. A LeetCode tab that was already open when the
+// extension is installed/updated/reloaded has no capture script — reload those tabs once so
+// the fresh scripts inject. This removes the need to manually hard-refresh.
+chrome.runtime.onInstalled.addListener(async () => {
+  try {
+    const tabs = await chrome.tabs.query({ url: 'https://leetcode.com/*' });
+    for (const t of tabs) if (t.id) chrome.tabs.reload(t.id);
+  } catch {
+    /* no tabs permission for some tab / ignore */
+  }
+});
+
 chrome.runtime.onMessage.addListener(
   (msg: ExtMessage, sender, sendResponse: (res: IngestResponse | AuthStatus) => void) => {
     switch (msg?.type) {
