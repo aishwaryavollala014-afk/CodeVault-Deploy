@@ -75,9 +75,9 @@ export class HackerRankService {
             if (model) {
               if (model.track && model.track.name) tags.push(model.track.name);
               if (Array.isArray(model.topics)) {
-                model.topics.forEach((t: any) => {
-                  if (t.name) tags.push(t.name);
-                });
+                for (const t of model.topics) {
+                  if (t && t.name) tags.push(t.name);
+                }
               }
             }
             tags = Array.from(new Set(tags.filter(t => typeof t === 'string' && t.trim() !== '')));
