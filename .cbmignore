@@ -1,0 +1,13 @@
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.next/
+**/.next/
+build/
+coverage/
+.git/
+*.log
+*.tar.gz
+frontendHtml/
+.codebase-memory/

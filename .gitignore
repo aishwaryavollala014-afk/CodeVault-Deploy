@@ -37,3 +37,6 @@ Thumbs.db
 
 # ---- archives / misc ----
 *.zip
+
+# ---- codebase-memory MCP (index artifact is local; re-index is instant) ----
+.codebase-memory/
