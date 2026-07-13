@@ -5,6 +5,27 @@ import { useRouter } from "next/navigation";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 import { PLATFORM_ORDER, platformName } from "@/constants/platforms";
 
+// Build the last-6-months submission bars from a single platform's heatmap
+// (timestamp[seconds] -> count). Returns the bars plus the max for scaling.
+function buildMonthBars(heatmap: unknown): { bars: { name: string; count: number }[]; max: number } {
+  const counts: Record<string, number> = {};
+  const hm: Record<string, number> =
+    typeof heatmap === "string" ? JSON.parse(heatmap || "{}") : ((heatmap as Record<string, number>) || {});
+  Object.entries(hm).forEach(([ts, count]) => {
+    const d = new Date(parseInt(ts) * 1000);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    counts[k] = (counts[k] || 0) + (count as number);
+  });
+  const bars: { name: string; count: number }[] = [];
+  const today = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    bars.push({ name: d.toLocaleString("default", { month: "short" }), count: counts[k] || 0 });
+  }
+  return { bars, max: Math.max(1, ...bars.map((b) => b.count)) };
+}
+
 export default function AnalyticsPage() {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null } | null>(null);
@@ -64,7 +85,6 @@ export default function AnalyticsPage() {
   // --- MERGE DEEP DATA (only for the active platform(s)) ---
   const mergedLanguages: Record<string, number> = {};
   const mergedTopics: Record<string, number> = {};
-  const monthlyCounts: Record<string, number> = {};
 
   activeKeys.map((k) => stats.platforms[k]).forEach((p: any) => {
     // Merge Languages
@@ -98,16 +118,13 @@ export default function AnalyticsPage() {
       }
     }
     
-    // Merge Heatmap into Monthly
-    if (p.heatmap) {
-      const pHeatmap = typeof p.heatmap === 'string' ? JSON.parse(p.heatmap) : p.heatmap;
-      Object.entries(pHeatmap).forEach(([ts, count]) => {
-        const d = new Date(parseInt(ts) * 1000);
-        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + (count as number);
-      });
-    }
   });
+
+  // Per-platform monthly submission bars (one chart per active platform).
+  const perPlatformMonthly = activeKeys.map((k) => ({
+    platform: k,
+    ...buildMonthBars(stats.platforms?.[k]?.heatmap),
+  }));
 
   // Sort Languages
   const sortedLanguages = Object.entries(mergedLanguages)
@@ -120,17 +137,6 @@ export default function AnalyticsPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8);
   const topTopicCount = sortedTopics[0]?.[1] || 1;
-
-  // Process Monthly Chart (last 6 months)
-  const monthBars = [];
-  const today = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const mName = d.toLocaleString('default', { month: 'short' });
-    monthBars.push({ name: mName, count: monthlyCounts[mKey] || 0 });
-  }
-  const maxMonth = Math.max(1, ...monthBars.map(m => m.count));
 
   // Process Codeforces Sparkline
   let cfPeak = 0;
@@ -191,22 +197,28 @@ export default function AnalyticsPage() {
         )}
       </section>
 
-      <section className="panel">
-        <h2 className="h">Submissions per month <span className="tag">last 6 months</span></h2>
-        <div className="mbars">
-          {monthBars.map((bar, i) => {
-            const h = Math.max(5, (bar.count / maxMonth) * 100);
-            return (
-              <div key={i} className="col" style={{ flex: 1, minWidth: 40 }}>
-                <div className="bar" style={{ height: `${h}%` }}>
-                  <span>{bar.count}</span>
-                </div>
-                <div className="lbl">{bar.name}</div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <div className="grid g-2">
+        {perPlatformMonthly.map(({ platform, bars, max }) => (
+          <section className="panel" key={platform}>
+            <h2 className="h">
+              Submissions per month <span className="tag">{platformName(platform)} · last 6 months</span>
+            </h2>
+            <div className="mbars">
+              {bars.map((bar, i) => {
+                const h = Math.max(5, (bar.count / max) * 100);
+                return (
+                  <div key={i} className="col" style={{ flex: 1, minWidth: 40 }}>
+                    <div className="bar" style={{ height: `${h}%` }}>
+                      <span>{bar.count}</span>
+                    </div>
+                    <div className="lbl">{bar.name}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
 
       <div className="grid g-2">
         <section className="panel">
