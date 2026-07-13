@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import prisma from '../lib/prisma';
 import logger from '../lib/logger';
 import { decrypt } from '../lib/crypto';
@@ -15,6 +16,13 @@ export interface IngestResult {
   accepted: number;
   pushed: number;
   skipped: number;
+}
+
+// Hash of the submitted code — lets us re-push when a later capture has different/fuller code
+// (self-heal: a full-code capture overwrites an earlier template that got stuck). Stored on
+// problem.metadata.codeHash (no schema change).
+function codeHash(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
 }
 
 function toSolution(c: CapturedSubmissionInput): SolutionToSync {
@@ -78,10 +86,20 @@ export async function runIngest(
     try {
       const existing = await prisma.problem.findMany({
         where: { connectionId: connection.id, syncedToGit: true },
-        select: { slug: true },
+        select: { slug: true, metadata: true },
       });
-      const synced = new Set(existing.map((e) => e.slug));
-      const fresh = items.filter((i) => !synced.has(i.slug)).map(toSolution);
+      // slug → hash of the code we last pushed (undefined = never recorded a hash).
+      const syncedHash = new Map(
+        existing.map((e) => [e.slug, (e.metadata as { codeHash?: string } | null)?.codeHash]),
+      );
+      // Fresh = never synced, OR synced but the incoming code differs (self-heal a stuck push).
+      const fresh = items
+        .filter((i) => {
+          if (!syncedHash.has(i.slug)) return true;
+          const prev = syncedHash.get(i.slug);
+          return prev === undefined || prev !== codeHash(i.code);
+        })
+        .map(toSolution);
 
       if (fresh.length === 0) {
         await prisma.syncRun.update({
@@ -158,6 +176,7 @@ export async function runIngest(
             solvedAt: item.solvedAt,
             syncedToGit: true,
             syncedAt: new Date(),
+            metadata: { codeHash: codeHash(item.code) },
           },
           update: {
             title: item.title,
@@ -167,6 +186,7 @@ export async function runIngest(
             solutionPath: solutionPath(item, convention),
             syncedToGit: true,
             syncedAt: new Date(),
+            metadata: { codeHash: codeHash(item.code) },
           },
         });
       }
