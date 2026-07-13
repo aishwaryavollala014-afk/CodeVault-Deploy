@@ -21,6 +21,16 @@ function CallbackHandler() {
       return;
     }
 
+    // CSRF check: the state GitHub echoes back must match the one we generated pre-redirect.
+    const returnedState = searchParams.get("state");
+    const savedState = sessionStorage.getItem("gh_oauth_state");
+    sessionStorage.removeItem("gh_oauth_state");
+    if (!returnedState || !savedState || returnedState !== savedState) {
+      setStatus("error");
+      setErrorMsg("Invalid or missing sign-in state (possible CSRF). Please start sign-in again.");
+      return;
+    }
+
     const exchangeCode = async () => {
       try {
         const res = await fetch(`${API_URL}/auth/github`, {

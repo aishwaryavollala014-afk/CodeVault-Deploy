@@ -14,7 +14,14 @@ export default function Login() {
   const [emailError, setEmailError] = useState("");
 
   const handleGitHubLogin = () => {
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo,read:user,user:email&prompt=select_account`;
+    // CSRF protection: generate a random state, stash it same-tab, and require the callback to
+    // echo it back before exchanging the code.
+    const state =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem("gh_oauth_state", state);
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=repo,read:user,user:email&state=${encodeURIComponent(state)}&prompt=select_account`;
     window.location.href = githubAuthUrl;
   };
 
