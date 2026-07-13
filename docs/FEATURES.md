@@ -142,8 +142,10 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
 | MV3 scaffold + build (CRXJS + Vite) + icons | ✅ | G | **build-verified** (`npm run build`), loads unpacked. |
-| LeetCode capture | ✅ | G | DOM-verdict detection + **`submissionDetails` GraphQL** as primary code source → **full submitted code for every language** (Monaco read-back kept only as fallback, since it returns the starter template on submission pages). Fix `fc530bd`. **Verified live 2026-07-12** against real accepted submissions — `python3`, `python`, `mysql` all returned complete code. |
-| Content scripts (CF / CC / HR) | 🟠 | G | Built; selectors not yet live-verified. |
+| LeetCode capture | ✅ | G | DOM-verdict detection + **`submissionDetails` GraphQL** → **full code, every language** + **full `question.md`** (`question.content`: statement/examples/I-O) + latest-Accepted lookup so `/description/` isn't the editor template (`fc530bd`, `37e8b80`). **Verified live 2026-07-12**. |
+| Self-heal ingest | ✅ | G | git-service re-pushes when captured code changes (`codeHash` in `problem.metadata`) → stuck templates auto-fix (`94f3949`). |
+| Codeforces capture | 🟠 | G | Extension via same-origin `/data/submitSource` (`f8a5c6f`); built, live-verify pending. **Server-side handle-only sync is impossible** — CF source is Cloudflare-gated (verified: `user.status`=200, source page + `/data/submitSource`=403 server-side); the in-browser extension is the only path. |
+| CodeChef / HackerRank capture | 🟠 | G | CodeChef via `viewplaintext` (`c207804`), HackerRank via REST `/submissions` (`8775b6c`); built, live-verify pending. |
 | CodeVault web-app content script (JWT capture) | ✅ | G | `content/codevault.ts` reads the JWT from the signed-in web app. |
 | Background service worker | ✅ | G | `background/index.ts` owns the token, dispatches ingest. |
 | Ingest to git-service | ✅ | G | `POST /api/ingest` (JWT verify + GitHub push). |
