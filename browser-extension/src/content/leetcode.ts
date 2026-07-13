@@ -81,22 +81,88 @@ async function fetchSubmissionDetails(submissionId: string): Promise<SubmissionD
   }
 }
 
+async function gql<T>(operationName: string, query: string, variables: object): Promise<T | null> {
+  try {
+    const res = await fetch('https://leetcode.com/graphql/', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json', 'x-csrftoken': csrfToken() },
+      body: JSON.stringify({ operationName, query, variables }),
+    });
+    if (!res.ok) return null;
+    return ((await res.json())?.data as T) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Full problem statement (HTML) → lightly cleaned Markdown for question.md.
+// Includes description, examples, and the input/output format LeetCode ships in `content`.
+async function fetchQuestionMarkdown(slug: string, number: string, title: string): Promise<string> {
+  const data = await gql<{ question?: { content?: string } }>(
+    'questionContent',
+    'query questionContent($titleSlug: String!) { question(titleSlug: $titleSlug) { content } }',
+    { titleSlug: slug },
+  );
+  const html = data?.question?.content || '';
+  if (!html) return '';
+  const md = htmlToMarkdown(html);
+  return `# ${number}. ${title}\n\n${md}\n\n[View on LeetCode](https://leetcode.com/problems/${slug}/)\n`;
+}
+
+// LeetCode's `content` is HTML. GitHub renders inline HTML in .md, but a light conversion
+// yields cleaner diffs and readable examples/constraints.
+function htmlToMarkdown(html: string): string {
+  return html
+    .replace(/<\/?(strong|b)>/gi, '**')
+    .replace(/<\/?(em|i)>/gi, '_')
+    .replace(/<\/?code>/gi, '`')
+    .replace(/<pre[^>]*>/gi, '\n```\n')
+    .replace(/<\/pre>/gi, '\n```\n')
+    .replace(/<li[^>]*>/gi, '\n- ')
+    .replace(/<\/li>/gi, '')
+    .replace(/<\/(p|div|ul|ol|h[1-6])>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// Find the user's latest ACCEPTED submission id for a problem — used when the page has no
+// submission id in the URL (e.g. the /description/ tab), so we still fetch the real code
+// instead of falling back to the editor template.
+async function latestAcceptedSubmissionId(slug: string): Promise<string> {
+  const data = await gql<{ questionSubmissionList?: { submissions?: Array<{ id?: string | number; statusDisplay?: string }> } }>(
+    'submissionList',
+    'query submissionList($offset: Int!, $limit: Int!, $questionSlug: String!) { questionSubmissionList(offset: $offset, limit: $limit, questionSlug: $questionSlug) { submissions { id statusDisplay } } }',
+    { offset: 0, limit: 20, questionSlug: slug },
+  );
+  const subs = data?.questionSubmissionList?.submissions || [];
+  const acc = subs.find((s) => /accepted/i.test(s.statusDisplay || ''));
+  return acc?.id ? String(acc.id) : '';
+}
+
 async function captureViaGraphQL(submissionId: string): Promise<boolean> {
   const d = await fetchSubmissionDetails(submissionId);
   const code = (d?.code || '').trim();
   if (!code) return false;
   const q = d!.question || {};
   const slug = q.titleSlug || parseSlug() || 'unknown';
+  const number = String(q.questionFrontendId || slug).slice(0, 40);
+  const title = (q.title || slug).slice(0, 300);
+  const questionMarkdown = await fetchQuestionMarkdown(slug, number, title);
   const submission: CapturedSubmission = {
     platform: 'leetcode',
-    number: String(q.questionFrontendId || slug).slice(0, 40),
+    number,
     slug: slug.slice(0, 200),
-    title: (q.title || slug).slice(0, 300),
+    title,
     difficulty: DIFF[String(q.difficulty || '').toLowerCase()],
     topics: (q.topicTags || []).map((t) => t.name || '').filter(Boolean).slice(0, 40),
     language: cleanLang(d!.lang?.name || pendingLang),
     code,
-    questionMarkdown: '',
+    questionMarkdown,
     solvedAt: new Date().toISOString(),
     url: `https://leetcode.com/problems/${slug}/`,
   };
@@ -125,12 +191,17 @@ async function tryCapture(): Promise<void> {
   const slug = parseSlug();
   if (!slug || !detectAccepted()) return;
 
-  const sid = submissionIdFromUrl() || pendingSubmissionId || '';
-  const key = `leetcode:${slug}:${sid || 'nosid'}`;
-  if (sent.has(key)) return;
-
   inFlight = true;
   try {
+    // Resolve a submission id: URL → sniffed check-response → the latest ACCEPTED submission
+    // for this problem (so /description/ and re-visits still get the REAL code, not the editor
+    // template). Only fall back to Monaco if GraphQL truly yields nothing.
+    let sid = submissionIdFromUrl() || pendingSubmissionId || '';
+    if (!sid) sid = await latestAcceptedSubmissionId(slug);
+
+    const key = `leetcode:${slug}:${sid || 'nosid'}`;
+    if (sent.has(key)) return;
+
     if (sid) {
       sent.add(key);
       const ok = await captureViaGraphQL(sid);
