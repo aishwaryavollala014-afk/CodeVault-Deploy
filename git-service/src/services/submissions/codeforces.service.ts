@@ -2,16 +2,25 @@ import logger from '../../lib/logger';
 import { UpstreamError } from '../../utils/errors';
 import type { Question, Submission, SubmissionAdapter } from '../../types/sync.types';
 
-// Codeforces' official API (user.status) returns submission METADATA but NOT source code,
-// and scraping the source page violates their ToS. So Path B code-sync is NOT supported here.
-// Stats (Path A) still work in web-backend via the official API. This adapter degrades safely.
+// Codeforces server-side code-sync is NOT supported — this was verified, not assumed.
+//
+// Codeforces' official public API `user.status?handle=X` lists submissions by handle with no
+// cookie, BUT it returns only METADATA — never source code. The source lives only on each
+// submission's HTML page (`#program-source-text`), and fetching that page server-side is
+// blocked by Cloudflare: a plain request returns HTTP 403 ("Just a moment" JS challenge),
+// even from a residential IP. Only a real browser can pass the challenge.
+//
+// → For Codeforces SOURCE, the browser extension (Path B v2, `content/codeforces.ts`) is the
+//   correct path: it runs inside the user's logged-in browser, so it clears Cloudflare
+//   naturally and can read the submitted code. This adapter therefore degrades safely.
+//   (Stats/Path A still use `user.status` in web-backend, which needs metadata only.)
 export const codeforcesSubmissionAdapter: SubmissionAdapter = {
   platform: 'codeforces',
   supportsCodeSync: false,
 
-  async getRecentSubmissions(_token, _opts): Promise<Submission[]> {
-    // No legal API path to the user's source code — nothing to sync.
-    logger.warn('Codeforces code-sync is not supported (API exposes no source); skipping.');
+  async getRecentSubmissions(_handle, _opts): Promise<Submission[]> {
+    // Source code isn't reachable server-side (API exposes none; source page is Cloudflare-gated).
+    logger.warn('Codeforces server-side code-sync unavailable (Cloudflare-gated source); use the extension.');
     return [];
   },
 
