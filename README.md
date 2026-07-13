@@ -330,9 +330,12 @@ npm run dev          # http://localhost:3000
 
 ---
 
-## 👤 Author
+## 👤 Authors
 
-**Gaurav Ganesh Teegulla** — [@Gaurav06120714](https://github.com/Gaurav06120714)
+Built by two developers working in parallel:
+
+- **Gaurav Ganesh Teegulla** — [@Gaurav06120714](https://github.com/Gaurav06120714) · git-service, browser extension, sync/repos frontend
+- **Aishwarya** — [@aishwaryaV007](https://github.com/aishwaryaV007) · web-backend, stats & profile frontend
 
 <div align="center">
 
