@@ -67,7 +67,9 @@
 - [x] CodeChef rating/stars **dashboard tile** (rating, stars, peak, global rank) — G ✨ *new (`bc75483`)*
 - [x] **Analytics per-platform filter tabs** (All / LeetCode / Codeforces / CodeChef / HackerRank — separate analysis) — G ✨ *new (`7e69389`)*
 - [x] **Recent submissions: clickable problem links + dd/mm/yyyy dates** — G ✨ *new (`e54c9df`)*
-- [ ] Activity heatmap on **real** solve data (currently random `MOCK_LEVELS`) — A
+- [x] **Activity heatmap on real solve data** — dashboard merges all 4 platforms' API calendars into 365 real cells + a manual fallback that counts extension-captured submissions (git-service `/api/problems`) so platforms with no API calendar still show activity (`c22b795`); dead mock `ActivityHeatmap.tsx` retired — G
+- [x] **Per-platform "Submissions per month"** — Analytics renders one chart per platform from each platform's heatmap (`44c6bf7`) — G
+- [x] **UI polish** — settings nav icon fixed (sun→proper gear, `93a4051`) — G
 
 ## 📦 Path B — code sync to GitHub (git-service)
 - [x] Trigger sync (`POST /api/sync`) — G
@@ -86,8 +88,13 @@
 - [x] Background worker + JWT capture from web app + popup — G
 - [x] Ingest to git-service (`POST /api/ingest`) — G
 - [x] **LeetCode capture WORKING — full submitted code, ALL languages** via `submissionDetails` GraphQL (`fc530bd`); DOM-verdict detection; Monaco read kept only as fallback (returned starter template on submission pages). **Verified live 2026-07-12** — replayed the extension's exact query against real accepted submissions: `python3` (0147), `python` (454), `mysql` (178) all returned complete code — G
-- [x] **End-to-end GitHub push** — SQL problems pushed live (`0177`/`0178`, `syncedToGit=true`); push path is language-agnostic (`solution.<ext>`) and full-code fetch now verified for every language. *(Belt-and-suspenders: a fresh non-SQL submit→push observation not yet re-run.)* — G
-- [~] CF / CC / HR content scripts — built, selectors not yet live-verified — G
+- [x] **End-to-end GitHub push** — SQL problems pushed live (`0177`/`0178`, `syncedToGit=true`); push path is language-agnostic (`solution.<ext>`) and full-code fetch now verified for every language — G
+- [x] **Full `question.md` capture** — LeetCode `question.content` GraphQL → statement + examples + I/O format (was title-only); fetches the latest Accepted submission on any page so `/description/` no longer captures the editor template (`37e8b80`) — G
+- [x] **Self-heal ingest** — git-service re-pushes when captured code changes (`codeHash` in `problem.metadata`), so a stuck early template auto-overwrites on the next full capture (`94f3949`) — G
+- [x] **Context-invalidated guard** — content scripts check `chrome.runtime?.id` + try/catch so a stale post-reload script no longer throws (`862bfea`) — G
+- [~] **Codeforces** capture — extension via same-origin `/data/submitSource` (`f8a5c6f`); built, live-verify pending. *(Server-side handle-only sync is impossible — CF source is Cloudflare-gated: user.status=200 but source page + `/data/submitSource` both 403 server-side. Verified.)* — G
+- [~] **HackerRank** capture — REST `/submissions` API (`8775b6c`); built, live-verify pending — G
+- [~] **CodeChef** capture — `viewplaintext` source (`c207804`); built, live-verify pending — G
 - [ ] Options page (`options/main.ts` empty), token refresh, store packaging — G
 
 ## 🌐 Public shareable profile
