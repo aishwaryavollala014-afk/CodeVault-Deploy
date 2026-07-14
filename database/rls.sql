@@ -53,5 +53,24 @@ CREATE POLICY self_isolation ON users
   USING (id = app_current_user_id())
   WITH CHECK (id = app_current_user_id());
 
+-- Public read: allow SELECT on users when publicProfileEnabled is true
+-- (used by /api/public/:handle which runs without authentication).
+DROP POLICY IF EXISTS public_read ON users;
+CREATE POLICY public_read ON users
+  FOR SELECT
+  USING ("publicProfileEnabled" = true);
+
+-- Public read: allow SELECT on connections for public profile stats.
+-- The public profile endpoint queries connections by userId to aggregate stats.
+DROP POLICY IF EXISTS public_read ON connections;
+CREATE POLICY public_read ON connections
+  FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM users u
+    WHERE u.id = connections."userId"
+      AND u."publicProfileEnabled" = true
+  ));
+
 -- To DISABLE during local dev:
 --   ALTER TABLE connections DISABLE ROW LEVEL SECURITY;  -- (repeat per table)
+
