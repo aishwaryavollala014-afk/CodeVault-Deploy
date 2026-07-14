@@ -40,3 +40,6 @@ Thumbs.db
 
 # ---- codebase-memory MCP (index artifact is local; re-index is instant) ----
 .codebase-memory/
+
+# ---- codex CLI (local MCP config) ----
+.codex/
