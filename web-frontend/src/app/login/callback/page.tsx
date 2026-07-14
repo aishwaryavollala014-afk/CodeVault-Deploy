@@ -36,6 +36,7 @@ function CallbackHandler() {
         const res = await fetch(`${API_URL}/auth/github`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ code }),
         });
 
@@ -46,8 +47,8 @@ function CallbackHandler() {
 
         const data = await res.json();
 
-        // Store the JWT token and user info
-        localStorage.setItem("token", data.token);
+        // Store the short-lived access token and user info
+        localStorage.setItem("token", data.accessToken);
         localStorage.setItem("user", JSON.stringify(data.user));
 
         // Redirect to dashboard (or home for now)
