@@ -11,6 +11,7 @@ import statsRoutes from './routes/stats.routes';
 import publicRoutes from './routes/public.routes';
 import githubRepoRoutes from './routes/githubRepo.routes';
 import notificationRoutes from './routes/notification.routes';
+import settingsRoutes from './routes/settings.routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -41,6 +42,7 @@ export const createApp = (): Application => {
   app.use('/api/public', publicRoutes);
   app.use('/api/github-repos', githubRepoRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/settings', settingsRoutes);
 
   // Basic Error Handler (will be expanded later)
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {

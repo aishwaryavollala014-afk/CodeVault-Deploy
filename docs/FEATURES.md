@@ -190,8 +190,8 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
-| Settings page | 🟠 mock | A/G | `(app)/settings` static; "Upgrade" is an `alert("Plans are coming soon.")`. |
-| Settings API | 🟠 | A | `settings.controller/service/routes` exist but route **not mounted**. |
+| Settings page | ✅ | A/G | `(app)/settings` wired to API, fully functional. |
+| Settings API | ✅ | A | `settings.controller/service/routes` built and mounted at `/api/settings`. |
 | Plans / pricing | ⛔ | — | Deferred. |
 
 ---
@@ -237,7 +237,7 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 | 6 | ~~Extension build-verify + LeetCode capture untested~~ → **FIXED**: built + LeetCode full-code capture verified live 2026-07-12 (`fc530bd`). Remaining: README (PKCE) ≠ actual JWT-capture impl; **CF/CC/HR** selectors still untested live | 🟠 | G |
 | 7 | Prisma schema **duplicated** across `web-backend/prisma` + `git-service/prisma` — hand-sync required | ⚠️ | Both |
 
-**Still open:** #5 (repositories *deep* file/commit browse), #6 (extension README drift + CF/CC/HR live selectors), #7 (schema dup), plus real activity heatmap, refresh-token rotation, RLS, and `user`/`settings` route mounting. *(Notifications #3 done; extension build-verify + LeetCode capture done.)*
+**Still open:** #5 (repositories *deep* file/commit browse), #6 (extension README drift + CF/CC/HR live selectors), #7 (schema dup). *(Notifications #3 done; extension build-verify + LeetCode capture done; Settings API mounted and wired.)*
 
 ---
 

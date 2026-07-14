@@ -18,6 +18,32 @@ export default function SettingsPage() {
   // platform -> repo full name (owner/name), loaded from and saved to /api/github-repos
   const [repos, setRepos] = useState<Record<string, string>>({});
   const [repoStatus, setRepoStatus] = useState<Record<string, string>>({});
+  
+  // New Settings State
+  const [settingsForm, setSettingsForm] = useState({
+    displayName: "",
+    handle: "",
+    publicProfileEnabled: true,
+    sync: {
+      autoSync: true,
+      frequency: "Every 6 hours",
+      includeQuestion: true,
+      maintainReadme: true,
+      onlyAccepted: true
+    },
+    notifications: {
+      syncFailures: true,
+      weeklySummary: false,
+      productUpdates: false
+    },
+    appearance: {
+      theme: "System"
+    }
+  });
+  const [savingAccount, setSavingAccount] = useState(false);
+  const [accountError, setAccountError] = useState("");
+  const [accountSuccess, setAccountSuccess] = useState(false);
+
   // Load existing per-platform repo mappings.
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -31,6 +57,40 @@ export default function SettingsPage() {
         setRepos(map);
       })
       .catch(() => {});
+  }, [API_URL]);
+
+  // Load Settings
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    fetch(`${API_URL}/settings`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data || data.error) return;
+        setSettingsForm({
+          displayName: data.displayName || "",
+          handle: data.handle || "",
+          publicProfileEnabled: data.publicProfileEnabled ?? true,
+          sync: {
+            autoSync: data.settings?.sync?.autoSync ?? true,
+            frequency: data.settings?.sync?.frequency ?? "Every 6 hours",
+            includeQuestion: data.settings?.sync?.includeQuestion ?? true,
+            maintainReadme: data.settings?.sync?.maintainReadme ?? true,
+            onlyAccepted: data.settings?.sync?.onlyAccepted ?? true,
+          },
+          notifications: {
+            syncFailures: data.settings?.notifications?.syncFailures ?? true,
+            weeklySummary: data.settings?.notifications?.weeklySummary ?? false,
+            productUpdates: data.settings?.notifications?.productUpdates ?? false,
+          },
+          appearance: {
+            theme: data.settings?.appearance?.theme ?? "System"
+          }
+        });
+        setActiveTheme(data.settings?.appearance?.theme ?? "System");
+      })
+      .catch(console.error);
   }, [API_URL]);
 
   // Save (upsert) one platform's repo link.
@@ -52,6 +112,86 @@ export default function SettingsPage() {
     } catch {
       setRepoStatus((s) => ({ ...s, [platform]: "error" }));
     }
+  };
+
+  const saveAccountDetails = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSavingAccount(true);
+    setAccountError("");
+    setAccountSuccess(false);
+    try {
+      const res = await fetch(`${API_URL}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          displayName: settingsForm.displayName,
+          handle: settingsForm.handle,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAccountError(data.error || "Failed to save");
+      } else {
+        setAccountSuccess(true);
+        // Update user state and local storage with new display name
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+           const u = JSON.parse(storedUser);
+           u.displayName = data.displayName;
+           localStorage.setItem("user", JSON.stringify(u));
+           setUser(u);
+        }
+        setTimeout(() => setAccountSuccess(false), 3000);
+      }
+    } catch (e: any) {
+      setAccountError(e.message || "Failed to save");
+    } finally {
+      setSavingAccount(false);
+    }
+  };
+
+  const updateSetting = async (category: "sync" | "notifications" | "appearance", key: string, value: any) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    // Optimistic update
+    setSettingsForm((prev) => ({
+      ...prev,
+      [category]: {
+         ...(prev[category as keyof typeof prev] as any),
+         [key]: value
+      }
+    }));
+    
+    if (category === "appearance" && key === "theme") {
+      setActiveTheme(value);
+    }
+
+    try {
+      await fetch(`${API_URL}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          settings: {
+            [category]: { [key]: value }
+          }
+        })
+      });
+    } catch(e) { console.error(e); }
+  };
+
+  const updatePublicProfile = async (enabled: boolean) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setSettingsForm((prev) => ({ ...prev, publicProfileEnabled: enabled }));
+    try {
+      await fetch(`${API_URL}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ publicProfileEnabled: enabled })
+      });
+    } catch(e) { console.error(e); }
   };
 
   // Real connected platforms + solved counts (no more hardcoded rows).
@@ -175,13 +315,30 @@ export default function SettingsPage() {
           <div className="two">
             <div className="field">
               <label className="fl" htmlFor="name">Full name</label>
-              <input className="txt" id="name" type="text" defaultValue={user.displayName || user.githubLogin} />
+              <input 
+                className="txt" 
+                id="name" 
+                type="text" 
+                value={settingsForm.displayName} 
+                onChange={(e) => setSettingsForm({ ...settingsForm, displayName: e.target.value })} 
+              />
             </div>
             <div className="field">
               <label className="fl" htmlFor="handle">Profile handle</label>
-              <input className="txt" id="handle" type="text" defaultValue={user.githubLogin} />
+              <input 
+                className="txt" 
+                id="handle" 
+                type="text" 
+                value={settingsForm.handle} 
+                onChange={(e) => setSettingsForm({ ...settingsForm, handle: e.target.value })} 
+              />
             </div>
           </div>
+          {accountError && (
+            <div style={{ color: "var(--brand-d)", fontSize: 13, marginBottom: 12 }}>
+              {accountError}
+            </div>
+          )}
           <div className="field">
             <label className="fl" htmlFor="email">Email (from GitHub)</label>
             <input className="txt" id="email" type="email" defaultValue={user.email || `${user.githubLogin}@users.noreply.github.com`} readOnly />
@@ -194,8 +351,9 @@ export default function SettingsPage() {
             <button className="btn brand right" type="button" onClick={() => alert("Plans are coming soon.")}>Upgrade</button>
           </div>
           <div className="save-bar">
-            <button className="btn" type="button">Cancel</button>
-            <button className="btn brand" type="button">Save changes</button>
+            <button className="btn brand" type="button" onClick={saveAccountDetails} disabled={savingAccount}>
+              {savingAccount ? "Saving..." : accountSuccess ? "Saved ✓" : "Save changes"}
+            </button>
           </div>
         </section>
 
@@ -321,7 +479,11 @@ export default function SettingsPage() {
               <div className="m">Run on a schedule in the background</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.sync.autoSync} 
+                onChange={(e) => updateSetting("sync", "autoSync", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -330,7 +492,12 @@ export default function SettingsPage() {
               <div className="n">Frequency</div>
               <div className="m">How often to check for new submissions</div>
             </div>
-            <select className="right" style={{ width: "auto" }}>
+            <select 
+              className="right" 
+              style={{ width: "auto" }}
+              value={settingsForm.sync.frequency}
+              onChange={(e) => updateSetting("sync", "frequency", e.target.value)}
+            >
               <option>Every 3 hours</option>
               <option>Every 6 hours</option>
               <option>Once a day</option>
@@ -342,7 +509,11 @@ export default function SettingsPage() {
               <div className="m">Save the problem statement next to your solution</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.sync.includeQuestion} 
+                onChange={(e) => updateSetting("sync", "includeQuestion", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -352,7 +523,11 @@ export default function SettingsPage() {
               <div className="m">Regenerate the repo's index table after each sync</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.sync.maintainReadme} 
+                onChange={(e) => updateSetting("sync", "maintainReadme", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -362,7 +537,11 @@ export default function SettingsPage() {
               <div className="m">Skip partials and wrong answers</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.sync.onlyAccepted} 
+                onChange={(e) => updateSetting("sync", "onlyAccepted", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -375,15 +554,19 @@ export default function SettingsPage() {
           <div className="row">
             <div className="rt">
               <div className="n">Enable public profile</div>
-              <div className="m mono">codevault.dev/u/{user.githubLogin}</div>
+              <div className="m mono">codevault.dev/u/{settingsForm.handle || user.githubLogin}</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.publicProfileEnabled} 
+                onChange={(e) => updatePublicProfile(e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
           <div className="save-bar">
-            <Link className="btn" href="/public-profile">Manage public profile →</Link>
+            <Link className="btn" href={`/u/${settingsForm.handle || user.githubLogin}`}>View public profile →</Link>
           </div>
         </section>
 
@@ -397,7 +580,11 @@ export default function SettingsPage() {
               <div className="m">Email me when a sync fails or a session expires</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.notifications.syncFailures} 
+                onChange={(e) => updateSetting("notifications", "syncFailures", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -407,7 +594,11 @@ export default function SettingsPage() {
               <div className="m">A digest of what you solved each week</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.notifications.weeklySummary} 
+                onChange={(e) => updateSetting("notifications", "weeklySummary", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -417,7 +608,11 @@ export default function SettingsPage() {
               <div className="m">Occasional news about new features</div>
             </div>
             <label className="switch right">
-              <input type="checkbox" />
+              <input 
+                type="checkbox" 
+                checked={settingsForm.notifications.productUpdates} 
+                onChange={(e) => updateSetting("notifications", "productUpdates", e.target.checked)} 
+              />
               <span className="sl"></span>
             </label>
           </div>
@@ -433,7 +628,7 @@ export default function SettingsPage() {
                 key={t}
                 type="button"
                 className={activeTheme === t ? "on" : ""}
-                onClick={() => setActiveTheme(t)}
+                onClick={() => updateSetting("appearance", "theme", t)}
               >
                 {t}
               </button>
