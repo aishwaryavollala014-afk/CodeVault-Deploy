@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JwtPayload } from '../utils/jwt';
+import { withRlsContext } from '../lib/rls-context';
 import logger from '../lib/logger';
 
 declare global {
@@ -23,7 +24,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
-    next();
+    // Run the rest of the request inside an RLS context so every Prisma
+    // call automatically sets the PostgreSQL GUC for Row-Level Security.
+    withRlsContext(decoded.userId, () => next());
   } catch (err) {
     logger.warn({ err }, 'Invalid or expired JWT token');
     res.status(401).json({ error: 'Unauthorized - Invalid token' });
