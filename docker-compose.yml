@@ -56,7 +56,7 @@ services:
     environment:
       # In-container networking: reach the data layer by service name,
       # overriding the localhost values used by host-run tooling.
-      DATABASE_URL: postgresql://codevault:codevault@postgres:5432/codevault
+      DATABASE_URL: postgresql://cv_web:cv_web_dev@postgres:5432/codevault?schema=public
       REDIS_URL: redis://redis:6379
     ports:
       - "${WEB_BACKEND_PORT:-4000}:4000"
@@ -79,7 +79,7 @@ services:
     environment:
       # In-container networking: reach the data layer by service name,
       # overriding the localhost values used by host-run tooling.
-      DATABASE_URL: postgresql://codevault:codevault@postgres:5432/codevault
+      DATABASE_URL: postgresql://cv_git:cv_git_dev@postgres:5432/codevault
       REDIS_URL: redis://redis:6379
     ports:
       - "${GIT_SERVICE_PORT:-5000}:5000"
