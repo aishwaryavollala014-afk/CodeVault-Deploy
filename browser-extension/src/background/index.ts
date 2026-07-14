@@ -1,5 +1,5 @@
-import type { AuthStatus, ExtMessage, IngestResponse } from '../types';
-import { postIngest } from '../lib/api-client';
+import type { AuthStatus, ExtMessage, IngestResponse, RecentResponse } from '../types';
+import { getRecentProblems, postIngest } from '../lib/api-client';
 import { clearToken, getToken, setToken } from '../lib/storage';
 
 // MV3 service worker. The sole holder of the JWT — content scripts/popup message here,
@@ -18,7 +18,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onMessage.addListener(
-  (msg: ExtMessage, sender, sendResponse: (res: IngestResponse | AuthStatus) => void) => {
+  (msg: ExtMessage, sender, sendResponse: (res: IngestResponse | AuthStatus | RecentResponse) => void) => {
     switch (msg?.type) {
       case 'capture': {
         if (!sender.tab || !sender.url) {
@@ -71,6 +71,15 @@ chrome.runtime.onMessage.addListener(
           .then((t) => sendResponse({ signedIn: !!t }))
           .catch(() => sendResponse({ signedIn: false }));
         return true;
+      }
+
+      case 'getRecent': {
+        getRecentProblems(6)
+          .then((res) => sendResponse(res))
+          .catch((err) =>
+            sendResponse({ ok: false, error: err instanceof Error ? err.message : 'unknown' }),
+          );
+        return true; // async
       }
 
       default:

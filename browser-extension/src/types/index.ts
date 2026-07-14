@@ -35,7 +35,30 @@ export interface GetStatusMessage {
   type: 'getStatus';
 }
 
-export type ExtMessage = CaptureMessage | SetTokenMessage | SignOutMessage | GetStatusMessage;
+export interface GetRecentMessage {
+  type: 'getRecent';
+}
+
+export type ExtMessage =
+  | CaptureMessage
+  | SetTokenMessage
+  | SignOutMessage
+  | GetStatusMessage
+  | GetRecentMessage;
+
+export interface RecentItem {
+  platform: PlatformName;
+  number: string;
+  slug: string;
+  title: string;
+  solvedAt?: string;
+}
+
+export interface RecentResponse {
+  ok: boolean;
+  items?: RecentItem[];
+  error?: string;
+}
 
 export interface IngestResponse {
   ok: boolean;
