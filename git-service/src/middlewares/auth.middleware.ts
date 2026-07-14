@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../lib/jwt';
 import { UnauthenticatedError } from '../utils/errors';
+import { withRlsContext } from '../lib/rls-context';
 import logger from '../lib/logger';
 
 // Verify the SAME user JWT web-backend issues (S1): `Authorization: Bearer <token>`.
@@ -13,7 +14,9 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
   }
   try {
     req.user = verifyToken(header.slice('Bearer '.length));
-    next();
+    // Run the rest of the request inside an RLS context so every Prisma
+    // call automatically sets the PostgreSQL GUC for Row-Level Security.
+    withRlsContext(req.user.userId, () => next());
   } catch (err) {
     logger.warn({ err, reqId: req.id }, 'Invalid or expired JWT');
     next(new UnauthenticatedError('Invalid or expired token'));
