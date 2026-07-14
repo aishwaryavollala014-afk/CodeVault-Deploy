@@ -6,6 +6,7 @@ import { env } from '../config/env';
 import { signToken } from '../utils/jwt';
 import { encryptToken } from '../lib/crypto';
 import { MailerService } from './mailer.service';
+import { Request } from 'express';
 
 interface GitHubUserResponse {
   id: number;
@@ -15,19 +16,55 @@ interface GitHubUserResponse {
   avatar_url: string;
 }
 
-interface AuthResult {
-  token: string;
-  user: {
-    id: string;
-    handle: string;
-    githubLogin: string | null;
-    displayName: string | null;
-    avatarUrl: string | null;
-  };
+interface UserPayload {
+  id: string;
+  handle: string;
+  githubLogin: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
 }
 
+export interface AuthResult {
+  accessToken: string;
+  refreshToken: string;
+  user: UserPayload;
+}
+
+const REFRESH_TOKEN_EXPIRY_DAYS = 7;
+
 export class AuthService {
-  static async authenticateWithGitHub(code: string): Promise<AuthResult> {
+  /**
+   * Create a new auth session with access + refresh tokens.
+   * Each login starts a new "family" for rotation-based reuse detection.
+   */
+  private static async createSession(
+    userId: string,
+    req: Request,
+    familyId?: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessToken = signToken({ userId });
+
+    // Generate opaque refresh token and hash it for storage
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+    await prisma.authSession.create({
+      data: {
+        userId,
+        refreshTokenHash,
+        familyId: familyId || crypto.randomUUID(),
+        userAgent: req.headers['user-agent'] || null,
+        ip: req.ip || null,
+        expiresAt,
+      },
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  static async authenticateWithGitHub(code: string, req: Request): Promise<AuthResult> {
     try {
       // 1. Exchange code for access token
       const tokenResponse = await axios.post(
@@ -119,11 +156,11 @@ export class AuthService {
         return u;
       });
 
-      // 4. Issue JWT
-      const jwtToken = signToken({ userId: user.id });
+      // 4. Issue access + refresh tokens
+      const tokens = await this.createSession(user.id, req);
 
       return {
-        token: jwtToken,
+        ...tokens,
         user: {
           id: user.id,
           handle: user.handle,
@@ -167,7 +204,7 @@ export class AuthService {
     }
   }
 
-  static async verifyMagicLink(token: string): Promise<AuthResult> {
+  static async verifyMagicLink(token: string, req: Request): Promise<AuthResult> {
     try {
       if (!token) throw new Error('Token is required');
 
@@ -216,14 +253,14 @@ export class AuthService {
         });
       }
 
-      // Issue JWT
-      const jwtToken = signToken({ userId: user.id });
+      // Issue access + refresh tokens
+      const tokens = await this.createSession(user.id, req);
 
       // Clean up token
       await prisma.verificationToken.delete({ where: { token } });
 
       return {
-        token: jwtToken,
+        ...tokens,
         user: {
           id: user.id,
           handle: user.handle,
@@ -235,6 +272,71 @@ export class AuthService {
     } catch (error: any) {
       logger.error({ err: error.message }, 'Email link verification failed');
       throw new Error(error.message || 'Verification failed');
+    }
+  }
+
+  /**
+   * Rotate a refresh token: revoke old session, issue new tokens in the same family.
+   * If the incoming token has already been revoked (replay attack), revoke the entire family.
+   */
+  static async refreshSession(
+    oldRefreshToken: string,
+    req: Request,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const oldHash = crypto.createHash('sha256').update(oldRefreshToken).digest('hex');
+
+    const session = await prisma.authSession.findUnique({
+      where: { refreshTokenHash: oldHash },
+    });
+
+    if (!session) {
+      throw new Error('Invalid refresh token');
+    }
+
+    // Reuse detection: token was already revoked → compromise detected
+    if (session.revokedAt) {
+      logger.warn({ familyId: session.familyId, userId: session.userId }, 'Refresh-token reuse detected — revoking family');
+      await prisma.authSession.updateMany({
+        where: { familyId: session.familyId },
+        data: { revokedAt: new Date() },
+      });
+      throw new Error('Refresh token reuse detected');
+    }
+
+    // Expired
+    if (session.expiresAt < new Date()) {
+      await prisma.authSession.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      });
+      throw new Error('Refresh token expired');
+    }
+
+    // Revoke old session
+    await prisma.authSession.update({
+      where: { id: session.id },
+      data: { revokedAt: new Date() },
+    });
+
+    // Issue new tokens in the same family
+    return this.createSession(session.userId, req, session.familyId);
+  }
+
+  /**
+   * Explicitly revoke a session (logout).
+   */
+  static async revokeSession(refreshToken: string): Promise<void> {
+    const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+    const session = await prisma.authSession.findUnique({
+      where: { refreshTokenHash: hash },
+    });
+
+    if (session && !session.revokedAt) {
+      await prisma.authSession.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      });
     }
   }
 }
