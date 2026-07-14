@@ -32,7 +32,18 @@ export default function AppLayout({
     }
   }, [router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+    const token = localStorage.getItem("token");
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      // best-effort: even if the request fails, we still clear local state
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     router.push("/");
