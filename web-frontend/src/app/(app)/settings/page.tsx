@@ -46,10 +46,7 @@ export default function SettingsPage() {
 
   // Load existing per-platform repo mappings.
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    fetch(`${API_URL}/github-repos`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_URL}/github-repos`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Array<{ platform: string; repoFullName: string }>) => {
         const map: Record<string, string> = {};
@@ -61,10 +58,7 @@ export default function SettingsPage() {
 
   // Load Settings
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    
-    fetch(`${API_URL}/settings`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_URL}/settings`, { credentials: 'include' })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (!data || data.error) return;
@@ -95,9 +89,8 @@ export default function SettingsPage() {
 
   // Save (upsert) one platform's repo link.
   const saveRepo = async (platform: string) => {
-    const token = localStorage.getItem("token");
     const repoFullName = (repos[platform] || "").trim();
-    if (!token || !/^[\w.-]+\/[\w.-]+$/.test(repoFullName)) {
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repoFullName)) {
       setRepoStatus((s) => ({ ...s, [platform]: "error" }));
       return;
     }
@@ -105,7 +98,8 @@ export default function SettingsPage() {
     try {
       const res = await fetch(`${API_URL}/github-repos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform, repoFullName }),
       });
       setRepoStatus((s) => ({ ...s, [platform]: res.ok ? "saved" : "error" }));
@@ -115,15 +109,14 @@ export default function SettingsPage() {
   };
 
   const saveAccountDetails = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setSavingAccount(true);
     setAccountError("");
     setAccountSuccess(false);
     try {
       const res = await fetch(`${API_URL}/settings`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           displayName: settingsForm.displayName,
           handle: settingsForm.handle,
@@ -152,9 +145,6 @@ export default function SettingsPage() {
   };
 
   const updateSetting = async (category: "sync" | "notifications" | "appearance", key: string, value: any) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    
     // Optimistic update
     setSettingsForm((prev) => ({
       ...prev,
@@ -171,7 +161,8 @@ export default function SettingsPage() {
     try {
       await fetch(`${API_URL}/settings`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           settings: {
             [category]: { [key]: value }
@@ -182,13 +173,12 @@ export default function SettingsPage() {
   };
 
   const updatePublicProfile = async (enabled: boolean) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setSettingsForm((prev) => ({ ...prev, publicProfileEnabled: enabled }));
     try {
       await fetch(`${API_URL}/settings`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ publicProfileEnabled: enabled })
       });
     } catch(e) { console.error(e); }
@@ -200,14 +190,11 @@ export default function SettingsPage() {
   const [solved, setSolved] = useState<Record<string, number>>({});
 
   const loadConnections = React.useCallback(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
-    fetch(`${API_URL}/platforms`, { headers })
+    fetch(`${API_URL}/platforms`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Conn[]) => setConnections(Array.isArray(rows) ? rows : []))
       .catch(() => setConnections([]));
-    fetch(`${API_URL}/stats`, { headers })
+    fetch(`${API_URL}/stats`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const p = d?.platforms || {};
@@ -221,20 +208,17 @@ export default function SettingsPage() {
   useEffect(() => { loadConnections(); }, [loadConnections]);
 
   const disconnectPlatform = async (platform: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     await fetch(`${API_URL}/platforms/${platform}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     }).catch(() => {});
     loadConnections();
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (!token || !storedUser) {
+    if (!storedUser) {
       router.push("/login");
       return;
     }
@@ -659,3 +643,4 @@ export default function SettingsPage() {
     </>
   );
 }
+

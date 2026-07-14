@@ -12,14 +12,23 @@ declare global {
 }
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
+  // 1. Prefer the HttpOnly access-token cookie (set by auth controller).
+  // 2. Fall back to Authorization: Bearer header (for the browser extension and API clients).
+  let token: string | undefined;
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Unauthorized - Missing or invalid token format' });
-    return;
+  if (req.cookies?.cv_access) {
+    token = req.cookies.cv_access;
+  } else {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized - Missing or invalid token' });
+    return;
+  }
 
   try {
     const decoded = verifyToken(token);
@@ -32,3 +41,4 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
     res.status(401).json({ error: 'Unauthorized - Invalid token' });
   }
 };
+

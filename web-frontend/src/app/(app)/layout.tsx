@@ -17,10 +17,9 @@ export default function AppLayout({
   const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null; avatarUrl?: string } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (!token || !storedUser) {
+    if (!storedUser) {
       router.push("/login");
       return;
     }
@@ -34,17 +33,14 @@ export default function AppLayout({
 
   const handleLogout = async () => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-    const token = localStorage.getItem("token");
     try {
       await fetch(`${API_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
     } catch {
       // best-effort: even if the request fails, we still clear local state
     }
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
     router.push("/");
   };

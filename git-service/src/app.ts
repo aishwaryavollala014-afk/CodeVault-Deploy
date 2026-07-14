@@ -1,6 +1,7 @@
 import express, { type Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
 import logger from './lib/logger';
 import { env } from './config/env';
@@ -20,6 +21,7 @@ export function createApp(): Application {
     }),
   );
   app.use(express.json({ limit: '1mb' }));
+  app.use(cookieParser());
   app.use(requestId);
   app.use(pinoHttp({ logger, genReqId: (req) => (req as any).id }));
 

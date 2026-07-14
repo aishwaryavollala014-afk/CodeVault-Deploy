@@ -33,7 +33,7 @@ export class PlatformController {
       res.status(201).json(connection);
     } catch (error: any) {
       logger.error(error, 'Add connection error');
-      res.status(409).json({ error: error.message });
+      res.status(409).json({ error: 'This platform is already connected or the username is invalid.' });
     }
   }
 

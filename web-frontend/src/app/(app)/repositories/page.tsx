@@ -42,20 +42,18 @@ export default function RepositoriesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const headers = useCallback(() => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : null;
+  const headers = useCallback((): Record<string, string> => {
+    return { "Content-Type": "application/json" };
   }, []);
 
   // ── Load connections + basic repo map (manage view) ──
   const loadManageData = useCallback(() => {
     const h = headers();
-    if (!h) { router.push("/login"); return; }
-    fetch(`${API_URL}/platforms`, { headers: h })
+    fetch(`${API_URL}/platforms`, { headers: h, credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Conn[]) => setConnections(Array.isArray(rows) ? rows : []))
       .catch(() => setConnections([]));
-    fetch(`${API_URL}/github-repos`, { headers: h })
+    fetch(`${API_URL}/github-repos`, { headers: h, credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: { platform: string; repoFullName: string; visibility?: string; defaultBranch?: string; folderConvention?: string; fileCount?: number }[]) => {
         const m: Record<string, typeof rows[0]> = {};
@@ -63,14 +61,13 @@ export default function RepositoriesPage() {
         setRepoMap(m);
       })
       .catch(() => {});
-  }, [headers, router]);
+  }, [headers]);
 
   // ── Load repos from git-service (browse view) ──
   const loadRepos = useCallback(async () => {
     const h = headers();
-    if (!h) return;
     try {
-      const res = await fetch(`${GIT_URL}/repos`, { headers: h });
+      const res = await fetch(`${GIT_URL}/repos`, { headers: h, credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setRepos(data.items || []);
@@ -83,7 +80,6 @@ export default function RepositoriesPage() {
   // ── Load problems for a platform ──
   const loadProblems = useCallback(async (platform: string, cursor?: string) => {
     const h = headers();
-    if (!h) return;
     const isMore = !!cursor;
     if (isMore) {
       setLoadingMore(true);
@@ -93,7 +89,7 @@ export default function RepositoriesPage() {
     try {
       const params = new URLSearchParams({ platform, limit: "30" });
       if (cursor) params.set("cursor", cursor);
-      const res = await fetch(`${GIT_URL}/problems?${params}`, { headers: h });
+      const res = await fetch(`${GIT_URL}/problems?${params}`, { headers: h, credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         const items: ProblemFile[] = data.items || [];
@@ -120,7 +116,7 @@ export default function RepositoriesPage() {
   const save = async (platform: string) => {
     const h = headers();
     const repoFullName = (draft[platform] ?? repoMap[platform]?.repoFullName ?? "").trim();
-    if (!h || !/^[\w.-]+\/[\w.-]+$/.test(repoFullName)) {
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repoFullName)) {
       setStatus((s) => ({ ...s, [platform]: "error" }));
       return;
     }
@@ -128,6 +124,7 @@ export default function RepositoriesPage() {
     try {
       const res = await fetch(`${API_URL}/github-repos`, {
         method: "POST",
+        credentials: 'include',
         headers: h,
         body: JSON.stringify({ platform, repoFullName }),
       });
@@ -155,11 +152,12 @@ export default function RepositoriesPage() {
   // ── Re-sync a repo ──
   const handleResync = async () => {
     const h = headers();
-    if (!h || !selectedRepo) return;
+    if (!selectedRepo) return;
     setSyncing(true);
     try {
       await fetch(`${GIT_URL}/sync`, {
         method: "POST",
+        credentials: 'include',
         headers: h,
         body: JSON.stringify({}),
       });

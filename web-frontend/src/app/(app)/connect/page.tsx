@@ -42,14 +42,8 @@ export default function ConnectPage() {
   useEffect(() => {
     const fetchConnections = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          router.push('/login');
-          return;
-        }
-
         const res = await fetch(`${API_URL}/platforms`, {
-          headers: { Authorization: `Bearer ${token}` }
+          credentials: 'include'
         });
 
         if (res.ok) {
@@ -100,18 +94,15 @@ export default function ConnectPage() {
       setIsSubmitting(true);
       setError('');
       setSuccess('');
-      
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Not logged in');
 
       const results = [];
 
       for (const platform of selectedPlatforms) {
         const res = await fetch(`${API_URL}/platforms/connect`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             platform,
@@ -145,12 +136,10 @@ export default function ConnectPage() {
     
     try {
       setDisconnecting(platform);
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Not logged in');
 
       const res = await fetch(`${API_URL}/platforms/${platform}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        credentials: 'include'
       });
 
       if (!res.ok) throw new Error('Failed to disconnect');

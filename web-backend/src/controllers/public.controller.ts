@@ -9,8 +9,13 @@ export class PublicController {
       const profile = await PublicService.getPublicProfile(handle);
       res.json(profile);
     } catch (error: any) {
-      if (error.message === 'User not found' || error.message === 'This profile is private') {
-        res.status(404).json({ error: error.message });
+      const safeMessages: Record<string, string> = {
+        'User not found': 'User not found',
+        'This profile is private': 'This profile is private',
+      };
+      const msg = safeMessages[error.message];
+      if (msg) {
+        res.status(404).json({ error: msg });
         return;
       }
       logger.error(error, 'Error fetching public profile');

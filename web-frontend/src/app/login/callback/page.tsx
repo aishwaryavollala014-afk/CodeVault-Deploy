@@ -47,8 +47,8 @@ function CallbackHandler() {
 
         const data = await res.json();
 
-        // Store the short-lived access token and user info
-        localStorage.setItem("token", data.accessToken);
+        // The access token is now in an HttpOnly cookie (cv_access) set by the server.
+        // We only store the user object for UI rendering (non-sensitive).
         localStorage.setItem("user", JSON.stringify(data.user));
 
         // Redirect to dashboard (or home for now)

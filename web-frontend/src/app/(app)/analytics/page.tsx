@@ -34,10 +34,9 @@ export default function AnalyticsPage() {
   const [activePlatform, setActivePlatform] = useState<string>("all");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (!token || !storedUser) {
+    if (!storedUser) {
       router.push("/login");
       return;
     }
@@ -52,7 +51,7 @@ export default function AnalyticsPage() {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
         const res = await fetch(`${API_URL}/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
+          credentials: 'include'
         });
         
         if (res.ok) {

@@ -61,17 +61,11 @@ export default function SyncStatusPage() {
   const [syncing, setSyncing] = useState(false);
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
     try {
       setError("");
-      const headers = { Authorization: `Bearer ${token}` };
       const [sRes, aRes] = await Promise.all([
-        fetch(`${GIT_URL}/sync/status`, { headers }),
-        fetch(`${GIT_URL}/sync/activity?limit=20`, { headers }),
+        fetch(`${GIT_URL}/sync/status`, { credentials: 'include' }),
+        fetch(`${GIT_URL}/sync/activity?limit=20`, { credentials: 'include' }),
       ]);
       if (!sRes.ok) throw new Error("Failed to load sync status");
       const sData = await sRes.json();
@@ -91,14 +85,13 @@ export default function SyncStatusPage() {
   }, [load]);
 
   const runSync = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
       setSyncing(true);
       setError("");
       await fetch(`${GIT_URL}/sync`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
       await load();

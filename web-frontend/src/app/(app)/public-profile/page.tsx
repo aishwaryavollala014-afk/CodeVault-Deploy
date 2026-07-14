@@ -12,10 +12,9 @@ export default function PublicProfileSettings() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (!token || !storedUser) {
+    if (!storedUser) {
       router.push("/login");
       return;
     }

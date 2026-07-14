@@ -44,12 +44,12 @@ export const createApp = (): Application => {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/settings', settingsRoutes);
 
-  // Basic Error Handler (will be expanded later)
+  // Global Error Handler — never leak internal details to the client
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     logger.error(err);
     res.status(err.status || 500).json({
       error: {
-        message: err.message || 'Internal Server Error',
+        message: 'Internal server error',
       }
     });
   });

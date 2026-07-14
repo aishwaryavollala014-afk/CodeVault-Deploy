@@ -97,10 +97,9 @@ export default function DashboardPage() {
   const hasMore = !searchQuery.trim() && selectedTags.length === 0 && selectedPlatforms.length === 0 && filteredSubs.length > VISIBLE_COUNT;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (!token || !storedUser) {
+    if (!storedUser) {
       router.push("/login");
       return;
     }
@@ -115,7 +114,7 @@ export default function DashboardPage() {
       try {
         const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
         const res = await fetch(`${API_URL}/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
+          credentials: 'include'
         });
         
         if (res.ok) {
@@ -153,7 +152,7 @@ export default function DashboardPage() {
           try {
             const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || 'http://localhost:5050/api';
             const pRes = await fetch(`${GIT_URL}/problems?limit=100`, {
-              headers: { Authorization: `Bearer ${token}` },
+              credentials: 'include',
             });
             if (pRes.ok) {
               const pData = await pRes.json();

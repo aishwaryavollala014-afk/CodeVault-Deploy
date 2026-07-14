@@ -23,9 +23,7 @@ export function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_URL}/notifications`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) { setItems(d.items || []); setUnread(d.unread || 0); } })
       .catch(() => {});
@@ -51,8 +49,7 @@ export function NotificationBell() {
     const next = !open;
     setOpen(next);
     if (next && unread > 0) {
-      const token = localStorage.getItem("token");
-      await fetch(`${API_URL}/notifications/read-all`, { method: "POST", headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      await fetch(`${API_URL}/notifications/read-all`, { method: "POST", credentials: 'include' }).catch(() => {});
       setUnread(0);
       setItems((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
     }

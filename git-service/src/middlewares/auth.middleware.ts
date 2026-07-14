@@ -4,16 +4,28 @@ import { UnauthenticatedError } from '../utils/errors';
 import { withRlsContext } from '../lib/rls-context';
 import logger from '../lib/logger';
 
-// Verify the SAME user JWT web-backend issues (S1): `Authorization: Bearer <token>`.
-// No static internal key — the browser/extension presents the user's own token.
+// Verify the SAME user JWT web-backend issues (S1).
+// 1. Prefer the HttpOnly access-token cookie (cv_access).
+// 2. Fall back to Authorization: Bearer header (for the browser extension).
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
-    next(new UnauthenticatedError('Missing or invalid Authorization header'));
+  let token: string | undefined;
+
+  if (req.cookies?.cv_access) {
+    token = req.cookies.cv_access;
+  } else {
+    const header = req.headers.authorization;
+    if (header?.startsWith('Bearer ')) {
+      token = header.slice('Bearer '.length);
+    }
+  }
+
+  if (!token) {
+    next(new UnauthenticatedError('Missing or invalid Authorization'));
     return;
   }
+
   try {
-    req.user = verifyToken(header.slice('Bearer '.length));
+    req.user = verifyToken(token);
     // Run the rest of the request inside an RLS context so every Prisma
     // call automatically sets the PostgreSQL GUC for Row-Level Security.
     withRlsContext(req.user.userId, () => next());
