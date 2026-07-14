@@ -99,8 +99,9 @@
 
 ## 🌐 Public shareable profile
 - [x] Public profile API (`GET /api/public/:handle`, no auth) — A
-- [x] `u/[username]` page **wired to `/api/public`** (real totals, difficulty, per-platform bars; mock removed) — G ✨ *new (`b98b115`)*
-  - *(heatmap + topic-strengths sections remain decorative — API returns no daily/topic data yet)*
+- [x] `u/[username]` page **wired to `/api/public`** (real totals, difficulty, per-platform bars, real heatmap; mock removed) — G
+  - [x] **OpenGraph + Twitter Card meta tags** via `generateMetadata()` in `u/[username]/layout.tsx` — A ✨ *new*
+  - *(topic-strengths section remains decorative)*
 
 ## 🔔 Notifications ✨ *now fully built (G, `8469bd8`→`96f6ac2`)*
 - [x] Notification **service** (list / unread-count / mark-read / create) — G

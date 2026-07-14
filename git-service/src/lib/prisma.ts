@@ -14,41 +14,28 @@ import logger from './logger';
  * We reset it to empty string after the query to prevent leaking between
  * requests on the same pooled connection.
  */
-const prisma = new PrismaClient({
+const basePrisma = new PrismaClient({
   log: isProd ? ['error'] : ['query', 'info', 'warn', 'error'],
 });
 
-prisma.$use(async (params, next) => {
-  // Prevent infinite loop: our own $executeRawUnsafe calls go through this middleware
-  if (params.action === 'executeRaw' || params.action === 'queryRaw') {
-    return next(params);
-  }
-
-  const userId = getRlsUserId();
-
-  if (userId) {
-    // Sanitize: cuid() is alphanumeric, but defence-in-depth
-    const safe = userId.replace(/'/g, "''");
-    try {
-      await prisma.$executeRawUnsafe(`SET app.current_user_id = '${safe}'`);
-    } catch (err) {
-      logger.warn({ err }, 'Failed to set RLS GUC');
-    }
-  }
-
-  try {
-    return await next(params);
-  } finally {
-    if (userId) {
-      // Reset the GUC so the connection doesn't leak the userId to the next request
-      try {
-        await prisma.$executeRawUnsafe(`RESET app.current_user_id`);
-      } catch {
-        // best-effort reset
-      }
-    }
-  }
-});
+const prisma = basePrisma.$extends({
+  query: {
+    $allModels: {
+      async $allOperations({ args, query }) {
+        const userId = getRlsUserId();
+        if (userId) {
+          const safe = userId.replace(/'/g, "''");
+          const [, result] = await basePrisma.$transaction([
+            basePrisma.$executeRawUnsafe(`SELECT set_config('app.current_user_id', '${safe}', true)`),
+            query(args),
+          ]);
+          return result;
+        }
+        return query(args);
+      },
+    },
+  },
+}) as unknown as PrismaClient;
 
 export default prisma;
 
