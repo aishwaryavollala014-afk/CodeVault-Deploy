@@ -116,16 +116,40 @@ async function scanSubmissionsTable(problemCode: string): Promise<boolean> {
   return false;
 }
 
-// Path 2: fallback — read the editor on the problem page (may be the template).
+// Accepted verdict text — covers standard practice ("Accepted"/"(100)") AND the Learn course
+// ("Excellent work!", "test cases passed").
+const ACCEPT_RE = /\b(Accepted|Correct Answer|\(100\)|Excellent work|All (?:test )?cases? passed|test cases? passed)\b/i;
+
+// Best-effort editor read from the isolated world: Monaco global (if reachable) → visible Ace
+// lines. NOTE: CodeChef's Learn course uses an Ace editor whose full value lives on the page's
+// `window.ace` global, which an isolated content script can't read — so only the *visible* lines
+// are captured here. Full support needs a MAIN-world hook like LeetCode's `leetcode-inject.ts`.
+function readEditorCode(): string | null {
+  const monaco = readMonaco();
+  if (monaco) return monaco;
+  const aceLines = Array.from(document.querySelectorAll('.ace_line'))
+    .map((l) => (l as HTMLElement).innerText)
+    .join('\n')
+    .trim();
+  return aceLines || null;
+}
+
+// Path 2: fallback — read the editor on the problem page (standard flow + Learn course).
 async function scanEditor(problemCode: string): Promise<void> {
-  const accepted = Array.from(document.querySelectorAll('[class*="result"], span, td')).some((el) =>
-    /\b(Accepted|Correct Answer|\(100\))\b/i.test(text(el)),
-  );
-  if (!accepted) return;
+  const accepted = Array.from(document.querySelectorAll('[class*="result"], [class*="verdict"], span, div, td'))
+    .some((el) => ACCEPT_RE.test(text(el)));
+  if (!accepted) {
+    console.info('[CodeVault] CC: on', problemCode, '— no accepted verdict detected yet.');
+    return;
+  }
   if (!once(`codechef:${problemCode}:editor`)) return;
-  const code = readMonaco();
-  if (!code) return;
-  console.warn('[CodeVault] CC: used editor fallback (viewplaintext unavailable).');
+  const code = readEditorCode();
+  if (!code) {
+    console.warn('[CodeVault] CC: accepted but could not read editor code (Ace value is page-scoped — needs a MAIN-world hook).');
+    once(`codechef:${problemCode}:editor`); // let it retry
+    return;
+  }
+  console.warn(`[CodeVault] CC: editor capture (${code.length} chars) — Learn/practice fallback.`);
   await emit(problemCode, code, cleanLang(text(document.querySelector('[class*="language"]'))));
 }
 
