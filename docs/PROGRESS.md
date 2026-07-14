@@ -41,14 +41,14 @@
 - [x] Views / triggers / functions + least-priv roles applied to dev — A
 - [x] Encryption + JWT secrets shared across both services — A/G
 - [x] Redis wired (cache + queue) — G
-- [ ] Enable Row-Level Security (`database/rls.sql` written, **not enabled**) — A
+- [x] Enable Row-Level Security (`database/rls.sql` enabled via Prisma middleware and low-priv roles) — A
 
 ## 🔐 Auth & accounts
 - [x] GitHub OAuth login — end-to-end verified — A
 - [x] Email magic-link login (request + verify) — A
 - [x] `GET /api/auth/me` current user — A
 - [x] Shared JWT verified by web-backend **and** git-service — A/G
-- [ ] Refresh-token rotation endpoint (schema ready, not wired) — A
+- [x] Refresh-token rotation endpoint (fully wired and rotated via cookies) — A
 
 ## 🔌 Platform connections
 - [x] Add platform username (`POST /api/platforms/connect`) — A
