@@ -7,7 +7,7 @@ import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
-type PlatformStat = { total?: number; easy?: number; medium?: number; hard?: number; rating?: number };
+type PlatformStat = { total?: number; easy?: number; medium?: number; hard?: number; rating?: number; heatmap?: any };
 type PublicData = {
   user?: { handle?: string; displayName?: string | null; avatarUrl?: string | null };
   stats?: { totalSolved?: number; platforms?: Record<string, PlatformStat> };
@@ -43,23 +43,36 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
   const displayName = data?.user?.displayName || username;
 
   const heatmapCells = useMemo(() => {
-    // Generate heatmap cells
-    const lv = ["", "l1", "l2", "l3", "l4"];
-    let s = 1337;
+    const mergedHeatmap: Record<string, number> = {};
+    
+    // Aggregate from all connected platforms
+    Object.keys(platforms).forEach((pKey) => {
+      const p = platforms[pKey];
+      if (p.heatmap) {
+        const pHeatmap = typeof p.heatmap === 'string' ? JSON.parse(p.heatmap) : p.heatmap;
+        Object.entries(pHeatmap).forEach(([ts, count]) => {
+          const dateStr = new Date(parseInt(ts) * 1000).toISOString().split('T')[0];
+          mergedHeatmap[dateStr] = (mergedHeatmap[dateStr] || 0) + (count as number);
+        });
+      }
+    });
+
     const cells = [];
-    for (let i = 0; i < 53 * 7; i++) {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      const v = s / 0x7fffffff;
-      const rec = i > 53 * 7 * 0.62;
-      let l = 0;
-      if (v > 0.5) l = 1;
-      if (v > 0.7) l = 2;
-      if (v > 0.85) l = 3;
-      if (v > 0.93 || (rec && v > 0.72)) l = 4;
-      cells.push(lv[l]);
+    const today = new Date();
+    for (let i = 364; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dStr = d.toISOString().split('T')[0];
+      const count = mergedHeatmap[dStr] || 0;
+      
+      if (count >= 5) cells.push("l4");
+      else if (count >= 3) cells.push("l3");
+      else if (count >= 2) cells.push("l2");
+      else if (count >= 1) cells.push("l1");
+      else cells.push("");
     }
     return cells;
-  }, []);
+  }, [platforms]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://codevault.dev/u/${username}`);

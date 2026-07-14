@@ -160,7 +160,7 @@ Supported platforms: **LeetCode, Codeforces, CodeChef, HackerRank** (`PlatformTy
 | Feature | Status | Owner | Details |
 |---------|:------:|:-----:|---------|
 | Public profile API by handle | ✅ | A | `GET /api/public/:handle` (no auth). |
-| Public profile page | ✅ | G | `u/[username]` wired to `/api/public` — real totals, difficulty, per-platform bars (`b98b115`). Heatmap + topics still decorative. |
+| Public profile page | ✅ | G | `u/[username]` wired to `/api/public` — real totals, difficulty, per-platform bars, and real activity heatmap. |
 
 **Endpoint:** `GET /api/public/:handle` (no auth)
 
@@ -246,7 +246,7 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 | Feature | Owner | Notes |
 |---------|:-----:|-------|
 | ~~Aggregate all 4 platforms · wire dashboard/profile · notifications · `/repos`+`/problems`~~ | — | ✅ **all done this cycle** |
-| Real activity heatmap (dashboard) from real solve data | A | Currently random `MOCK_LEVELS`. |
+| Real activity heatmap (dashboard) from real solve data | A | 🟢 **done this cycle** (both dashboard and public profile now use real API heatmap) |
 | Repositories **deep** file/commit browse (wire to `/api/problems`) | G | Endpoint live; frontend pending. |
 | JWT refresh-token rotation endpoint | A | Schema ready. |
 | Enable Row-Level Security before prod | A | `database/rls.sql`. |
