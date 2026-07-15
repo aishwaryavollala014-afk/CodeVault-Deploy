@@ -268,24 +268,86 @@ One-time connect ──▶ Submission Fetcher ──▶ Organizer ──▶ GitH
 
 ## 🚀 Getting started
 
+**Prerequisites:** Node.js ≥ 20 and Docker (Docker Desktop on Windows; Docker Desktop or Colima on macOS). Ports used: web-frontend `3000`, web-backend `4000`, git-service `5050`, Postgres `5433`, Redis `6380`.
+
+### 0. Database (Postgres + Redis)
+
+**macOS**
 ```bash
-# 1) Web backend (website API)
+colima start
+docker compose up -d postgres redis
+```
+
+**Windows** — open Docker Desktop first, then in PowerShell:
+```powershell
+docker compose up -d postgres redis
+```
+
+### 1. web-backend → http://localhost:4000
+
+**macOS**
+```bash
 cd web-backend
-npm install && cp .env.example .env && npx prisma db push
-npm run dev          # http://localhost:4000
+npm install
+cp .env.example .env
+npx prisma db push
+npm run dev
+```
+**Windows**
+```powershell
+cd web-backend
+npm install
+copy .env.example .env
+npx prisma db push
+npm run dev
+```
 
-# 2) Git service (sync engine) — new terminal
+### 2. git-service → http://localhost:5050 (new terminal)
+
+**macOS**
+```bash
 cd git-service
-npm install && cp .env.example .env && npx prisma db push
-npm run dev          # http://localhost:5050
+npm install
+cp .env.example .env
+npx prisma generate
+npm run dev
+```
+**Windows**
+```powershell
+cd git-service
+npm install
+copy .env.example .env
+npx prisma generate
+npm run dev
+```
 
-# 3) Web frontend (UI) — new terminal
+### 3. web-frontend → http://localhost:3000 (new terminal)
+
+**macOS**
+```bash
 cd web-frontend
 npm install
-cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:4000
-                             # NEXT_PUBLIC_GIT_SERVICE_URL=http://localhost:5050
-npm run dev          # http://localhost:3000
+cp .env.example .env.local
+npm run dev
 ```
+**Windows**
+```powershell
+cd web-frontend
+npm install
+copy .env.example .env.local
+npm run dev
+```
+
+### 4. browser-extension (build, then load `dist/` in Chrome)
+
+**macOS / Windows**
+```bash
+cd browser-extension
+npm install
+npm run build
+```
+
+> Docker stopped? **macOS:** `colima stop`. **Windows:** quit Docker Desktop. Restart with the step-0 commands.
 
 ---
 
