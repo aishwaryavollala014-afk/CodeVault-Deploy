@@ -42,3 +42,36 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
   }
 };
 
+/**
+ * Like requireAuth but never rejects: attaches req.user + RLS context when a
+ * valid token is present, and continues anonymously otherwise. Used by public
+ * endpoints that personalise their response for signed-in viewers
+ * (e.g. `isFollowing` on public profiles).
+ */
+export const optionalAuth = (req: Request, _res: Response, next: NextFunction): void => {
+  let token: string | undefined;
+
+  if (req.cookies?.cv_access) {
+    token = req.cookies.cv_access;
+  } else {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    }
+  }
+
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    const decoded = verifyToken(token);
+    req.user = decoded;
+    withRlsContext(decoded.userId, () => next());
+  } catch {
+    // Invalid/expired token on a public route → treat as anonymous.
+    next();
+  }
+};
+

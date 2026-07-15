@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { NotificationBell } from "@/components/NotificationBell";
+import { MessagesBadge } from "@/components/MessagesBadge";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 export default function AppLayout({
@@ -59,6 +60,7 @@ export default function AppLayout({
         <symbol id="ic-sync" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><polyline points="21 3 21 9 15 9"/></symbol>
         <symbol id="ic-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
         <symbol id="ic-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+        <symbol id="ic-mail" viewBox="0 0 24 24"><path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/><polyline points="3.5 7 12 13 20.5 7"/></symbol>
         <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.7" y2="16.7"/></symbol>
         <symbol id="ic-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
         <symbol id="ic-flame" viewBox="0 0 24 24"><path d="M12 3c0 3-4 4-4 8a4 4 0 0 0 8 0c0-1.5-1-2.8-1-2.8S16 12 16 14"/><path d="M12 21a6 6 0 0 0 6-6c0-5-6-12-6-12"/></symbol>
@@ -90,6 +92,11 @@ export default function AppLayout({
           <Link href="/public-profile" className={pathname === "/public-profile" ? "active" : ""}>
             <svg className="ico"><use href="#ic-profile"/></svg>
             Public profile
+          </Link>
+          <Link href="/messages" className={pathname === "/messages" ? "active" : ""}>
+            <svg className="ico"><use href="#ic-mail"/></svg>
+            Messages
+            <MessagesBadge />
           </Link>
           <Link href="/sync-status" className={pathname === "/sync-status" ? "active" : ""}>
             <svg className="ico"><use href="#ic-sync"/></svg>
@@ -142,6 +149,7 @@ export default function AppLayout({
             if (pathname === "/repositories") title = "Repositories";
             else if (pathname === "/analytics") title = "Analytics";
             else if (pathname?.startsWith("/u/")) title = "Public profile";
+            else if (pathname === "/messages") title = "Messages";
             else if (pathname === "/sync-status") title = "Sync status";
             else if (pathname === "/settings") title = "Settings";
 

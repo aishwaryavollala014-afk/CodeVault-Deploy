@@ -39,8 +39,19 @@ const prisma = basePrisma.$extends({
 
 export default prisma;
 
+/**
+ * Admin Prisma client that bypasses RLS by connecting as the database owner.
+ * Use ONLY for system-level operations (e.g. auth login/registration) where
+ * the user context is not yet established.
+ */
+export const adminPrisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL?.replace('cv_web:cv_web_dev', 'codevault:codevault'),
+  log: isProd ? ['error'] : ['warn', 'error'],
+});
+
 declare global {
   var prisma: undefined | PrismaClient;
+  var adminPrisma: undefined | PrismaClient;
 }
 
 if (!isProd) globalThis.prisma = prisma;

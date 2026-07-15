@@ -74,3 +74,41 @@ CREATE POLICY public_read ON connections
 -- To DISABLE during local dev:
 --   ALTER TABLE connections DISABLE ROW LEVEL SECURITY;  -- (repeat per table)
 
+-- ============================================================================
+-- Social graph: follows + messages
+-- ============================================================================
+
+-- follows: follower lists / counts are public (SELECT true), but a user may
+-- only create or remove follow rows where THEY are the follower.
+ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS public_read ON follows;
+CREATE POLICY public_read ON follows
+  FOR SELECT
+  USING (true);
+DROP POLICY IF EXISTS follower_insert ON follows;
+CREATE POLICY follower_insert ON follows
+  FOR INSERT
+  WITH CHECK ("followerId" = app_current_user_id());
+DROP POLICY IF EXISTS follower_delete ON follows;
+CREATE POLICY follower_delete ON follows
+  FOR DELETE
+  USING ("followerId" = app_current_user_id());
+
+-- messages: strictly participant-only. Only the sender may insert (as
+-- themselves); only the two participants may read; only the receiver may
+-- update (to set readAt).
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS participant_read ON messages;
+CREATE POLICY participant_read ON messages
+  FOR SELECT
+  USING ("senderId" = app_current_user_id() OR "receiverId" = app_current_user_id());
+DROP POLICY IF EXISTS sender_insert ON messages;
+CREATE POLICY sender_insert ON messages
+  FOR INSERT
+  WITH CHECK ("senderId" = app_current_user_id());
+DROP POLICY IF EXISTS receiver_update ON messages;
+CREATE POLICY receiver_update ON messages
+  FOR UPDATE
+  USING ("receiverId" = app_current_user_id())
+  WITH CHECK ("receiverId" = app_current_user_id());
+

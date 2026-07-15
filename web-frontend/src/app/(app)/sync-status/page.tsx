@@ -108,8 +108,9 @@ export default function SyncStatusPage() {
     return <CodeVaultLoader text="Loading sync status" />;
   }
 
-  const activeCount = conns.filter((c) => c.status === "active" && c.syncEnabled).length;
-  const total = conns.length;
+  const serverSideConns = conns.filter(c => !["codeforces", "codechef", "hackerrank"].includes(c.platform));
+  const activeCount = serverSideConns.filter((c) => c.status === "active" && c.syncEnabled).length;
+  const total = serverSideConns.length;
 
   return (
     <>
@@ -118,7 +119,7 @@ export default function SyncStatusPage() {
           <div className="hi">●</div>
           <div className="t">
             <div className="n">
-              {activeCount} of {total} platform{total === 1 ? "" : "s"} syncing
+              {activeCount} of {total} server-side platform{total === 1 ? "" : "s"} syncing
             </div>
             <div className="m">
               {activity[0] ? `Last activity ${timeAgo(activity[0].createdAt)}` : "No sync activity yet"}
@@ -158,6 +159,8 @@ export default function SyncStatusPage() {
             <tbody>
               {conns.map((c) => {
                 const meta = PLATFORMS[c.platform] ?? { shortName: "?", iconClass: "", name: c.platform };
+                const isExtensionOnly = ["codeforces", "codechef", "hackerrank"].includes(c.platform);
+
                 return (
                   <tr key={c.connectionId}>
                     <td>
@@ -171,13 +174,24 @@ export default function SyncStatusPage() {
                         <span className="st-pill exp">
                           <span className="d"></span> Session expired
                         </span>
+                      ) : isExtensionOnly ? (
+                        <span className="st-pill" style={{ background: "var(--bg-2)", color: "var(--brand)" }}>
+                          <span className="d" style={{ background: "var(--brand)" }}></span> Extension Sync
+                        </span>
                       ) : (
                         <span className="st-pill ok">
                           <span className="d"></span> Active
                         </span>
                       )}
                     </td>
-                    <td className="tmono">{timeAgo(c.lastSyncedAt)}</td>
+                    <td className="tmono">
+                      {timeAgo(c.lastSyncedAt)}
+                      {isExtensionOnly && c.lastSyncedAt === null && (
+                        <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px", lineHeight: 1.2 }}>
+                          Syncs via extension<br/>while browsing
+                        </div>
+                      )}
+                    </td>
                     <td className="tmono">{c.itemsSynced}</td>
                     <td>
                       {c.status === "expired" ? (
@@ -194,6 +208,8 @@ export default function SyncStatusPage() {
         )}
         <p style={{ fontSize: "12.5px", color: "var(--faint)", marginTop: "12px" }}>
           Stats keep working from public data even when a session expires — only code sync pauses until you reconnect.
+          <br/>
+          <strong style={{ color: "var(--brand)", fontWeight: 500 }}>Note:</strong> Codeforces, CodeChef, and HackerRank do not support automated background sync. They will sync your accepted code automatically via the <Link href="/extension" style={{ textDecoration: "underline" }}>CodeVault Browser Extension</Link> when you browse those platforms.
         </p>
       </section>
 

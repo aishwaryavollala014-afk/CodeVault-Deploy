@@ -6,7 +6,9 @@ export class PublicController {
   static async getProfile(req: Request, res: Response): Promise<void> {
     try {
       const { handle } = req.params;
-      const profile = await PublicService.getPublicProfile(handle);
+      // optionalAuth attaches req.user when the viewer is signed in → lets the
+      // profile include isFollowing/isSelf without requiring authentication.
+      const profile = await PublicService.getPublicProfile(handle, req.user?.userId);
       res.json(profile);
     } catch (error: any) {
       const safeMessages: Record<string, string> = {

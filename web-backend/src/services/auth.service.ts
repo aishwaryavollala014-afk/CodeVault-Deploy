@@ -1,6 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import prisma from '../lib/prisma';
+import prisma, { adminPrisma } from '../lib/prisma';
 import logger from '../lib/logger';
 import { env } from '../config/env';
 import { signToken } from '../utils/jwt';
@@ -50,7 +50,7 @@ export class AuthService {
 
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-    await prisma.authSession.create({
+    await adminPrisma.authSession.create({
       data: {
         userId,
         refreshTokenHash,
@@ -94,7 +94,7 @@ export class AuthService {
       const { cipher, iv } = encryptToken(accessToken);
 
       // 3. Upsert User & OAuthIdentity
-      const user = await prisma.$transaction(async (tx) => {
+      const user = await adminPrisma.$transaction(async (tx) => {
         // Find existing user by githubLogin
         let u = await tx.user.findUnique({
           where: { githubLogin: ghUser.login.toLowerCase() }
@@ -184,7 +184,7 @@ export class AuthService {
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
       // Store verification token
-      await prisma.verificationToken.create({
+      await adminPrisma.verificationToken.create({
         data: {
           email: cleanEmail,
           token,
@@ -209,7 +209,7 @@ export class AuthService {
       if (!token) throw new Error('Token is required');
 
       // Find token
-      const dbToken = await prisma.verificationToken.findUnique({
+      const dbToken = await adminPrisma.verificationToken.findUnique({
         where: { token },
       });
 
@@ -218,14 +218,14 @@ export class AuthService {
       }
 
       if (dbToken.expiresAt < new Date()) {
-        await prisma.verificationToken.delete({ where: { token } });
+        await adminPrisma.verificationToken.delete({ where: { token } });
         throw new Error('Login link has expired');
       }
 
       const email = dbToken.email;
 
       // Find or create User
-      let user = await prisma.user.findFirst({
+      let user = await adminPrisma.user.findFirst({
         where: { email: email.toLowerCase() },
       });
 
@@ -237,13 +237,13 @@ export class AuthService {
         // Ensure uniqueness of handle
         let attempts = 0;
         while (attempts < 10) {
-          const exists = await prisma.user.findUnique({ where: { handle } });
+          const exists = await adminPrisma.user.findUnique({ where: { handle } });
           if (!exists) break;
           handle = `${prefix}_${Math.floor(1000 + Math.random() * 9000)}`;
           attempts++;
         }
 
-        user = await prisma.user.create({
+        user = await adminPrisma.user.create({
           data: {
             email: email.toLowerCase(),
             handle,
@@ -257,7 +257,7 @@ export class AuthService {
       const tokens = await this.createSession(user.id, req);
 
       // Clean up token
-      await prisma.verificationToken.delete({ where: { token } });
+      await adminPrisma.verificationToken.delete({ where: { token } });
 
       return {
         ...tokens,
@@ -285,7 +285,7 @@ export class AuthService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const oldHash = crypto.createHash('sha256').update(oldRefreshToken).digest('hex');
 
-    const session = await prisma.authSession.findUnique({
+    const session = await adminPrisma.authSession.findUnique({
       where: { refreshTokenHash: oldHash },
     });
 
@@ -296,7 +296,7 @@ export class AuthService {
     // Reuse detection: token was already revoked → compromise detected
     if (session.revokedAt) {
       logger.warn({ familyId: session.familyId, userId: session.userId }, 'Refresh-token reuse detected — revoking family');
-      await prisma.authSession.updateMany({
+      await adminPrisma.authSession.updateMany({
         where: { familyId: session.familyId },
         data: { revokedAt: new Date() },
       });
@@ -305,7 +305,7 @@ export class AuthService {
 
     // Expired
     if (session.expiresAt < new Date()) {
-      await prisma.authSession.update({
+      await adminPrisma.authSession.update({
         where: { id: session.id },
         data: { revokedAt: new Date() },
       });
@@ -313,7 +313,7 @@ export class AuthService {
     }
 
     // Revoke old session
-    await prisma.authSession.update({
+    await adminPrisma.authSession.update({
       where: { id: session.id },
       data: { revokedAt: new Date() },
     });
@@ -328,12 +328,12 @@ export class AuthService {
   static async revokeSession(refreshToken: string): Promise<void> {
     const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
-    const session = await prisma.authSession.findUnique({
+    const session = await adminPrisma.authSession.findUnique({
       where: { refreshTokenHash: hash },
     });
 
     if (session && !session.revokedAt) {
-      await prisma.authSession.update({
+      await adminPrisma.authSession.update({
         where: { id: session.id },
         data: { revokedAt: new Date() },
       });

@@ -2,7 +2,9 @@
 
 import React, { useState, use, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PlatformChip } from "@/components/PlatformChip";
+import { FollowListModal } from "@/components/FollowListModal";
 import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -11,6 +13,7 @@ type PlatformStat = { total?: number; easy?: number; medium?: number; hard?: num
 type PublicData = {
   user?: { handle?: string; displayName?: string | null; avatarUrl?: string | null };
   stats?: { totalSolved?: number; platforms?: Record<string, PlatformStat> };
+  social?: { followerCount: number; followingCount: number; isFollowing: boolean; isSelf: boolean };
 };
 
 // Platforms in display order (id/name/color come from the shared constant).
@@ -21,18 +24,61 @@ const fmt = (n: number | undefined | null) => (typeof n === "number" ? n.toLocal
 export default function PublicProfileView({ params }: { params: Promise<{ username: string }> }) {
   const resolvedParams = use(params);
   const username = resolvedParams.username || "gaurav";
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [data, setData] = useState<PublicData | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  // Optimistic local follow state (seeded from the API response).
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [listModal, setListModal] = useState<null | "followers" | "following">(null);
 
-  // Fetch the public profile (no auth) from web-backend.
+  // Fetch the public profile from web-backend. Cookies included so the
+  // response is personalised (isFollowing / isSelf) for signed-in viewers.
   useEffect(() => {
     let alive = true;
-    fetch(`${API_URL}/public/${username}`)
+    fetch(`${API_URL}/public/${username}`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (alive) setData(d); })
+      .then((d) => {
+        if (!alive) return;
+        setData(d);
+        if (d?.social) {
+          setIsFollowing(d.social.isFollowing);
+          setFollowerCount(d.social.followerCount);
+        }
+      })
       .catch(() => {});
+    setSignedIn(!!localStorage.getItem("user"));
     return () => { alive = false; };
   }, [username]);
+
+  const toggleFollow = async () => {
+    if (!signedIn) { router.push("/login"); return; }
+    if (followBusy) return;
+    setFollowBusy(true);
+    // Optimistic flip; roll back on failure.
+    const wasFollowing = isFollowing;
+    setIsFollowing(!wasFollowing);
+    setFollowerCount((c) => c + (wasFollowing ? -1 : 1));
+    try {
+      const res = await fetch(`${API_URL}/users/${username}/follow`, {
+        method: wasFollowing ? "DELETE" : "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setIsFollowing(wasFollowing);
+      setFollowerCount((c) => c + (wasFollowing ? 1 : -1));
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
+  const openMessages = () => {
+    if (!signedIn) { router.push("/login"); return; }
+    router.push(`/messages?with=${encodeURIComponent(username)}`);
+  };
 
   const platforms = data?.stats?.platforms || {};
   const lc = platforms.leetcode;
@@ -106,6 +152,23 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
           <div className="pid">
             <h1 style={{ fontSize: "24px" }}>{displayName}</h1>
             <div className="ln">codevault.dev/u/{username}</div>
+            {data?.social && (
+              <div style={{ display: "flex", gap: 14, marginTop: 7, fontSize: 13, color: "var(--muted)" }}>
+                <button
+                  onClick={() => setListModal("followers")}
+                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit", color: "inherit" }}
+                >
+                  <b style={{ color: "var(--ink)" }}>{followerCount.toLocaleString()}</b> Followers
+                </button>
+                <span aria-hidden="true">·</span>
+                <button
+                  onClick={() => setListModal("following")}
+                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit", color: "inherit" }}
+                >
+                  <b style={{ color: "var(--ink)" }}>{data.social.followingCount.toLocaleString()}</b> Following
+                </button>
+              </div>
+            )}
             <div className="chips" style={{ marginTop: "12px" }}>
               {PLATFORM_META.filter((p) => platforms[p.id]).map((p) => (
                 <span className="pchip" key={p.id}>
@@ -115,12 +178,35 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
             </div>
           </div>
           <div className="pa">
+            {data?.social && !data.social.isSelf && (
+              <>
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={toggleFollow}
+                  disabled={followBusy}
+                  style={isFollowing
+                    ? { background: "#fff", color: "var(--ink)", borderColor: "var(--border-2)" }
+                    : { background: "var(--brand)", color: "#fff", borderColor: "var(--brand)" }}
+                >
+                  {isFollowing ? "Following ✓" : "+ Follow"}
+                </button>
+                <button className="btn" type="button" onClick={openMessages}>
+                  <svg className="ico sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/><polyline points="3.5 7 12 13 20.5 7"/></svg>
+                  Message
+                </button>
+              </>
+            )}
             <button className="btn" type="button" onClick={handleCopyLink}>
               <svg className="ico sm" aria-hidden="true"><use href="#ic-copy"/></svg> {copied ? "Copied ✓" : "Copy link"}
             </button>
             <a className="btn" href={`https://github.com/${username}/LeetCodeQuestions`} target="_blank" rel="noopener noreferrer">View solutions ↗</a>
           </div>
         </section>
+
+        {listModal && (
+          <FollowListModal handle={username} initialTab={listModal} onClose={() => setListModal(null)} />
+        )}
 
         <section className="stats">
           <div className="stat"><div className="n">{fmt(totalSolved)}</div><div className="l">Total solved</div></div>
