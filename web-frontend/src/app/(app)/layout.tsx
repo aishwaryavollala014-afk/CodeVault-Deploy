@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { NetworkMonitor } from "@/components/NetworkMonitor";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessagesBadge } from "@/components/MessagesBadge";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
@@ -137,6 +138,7 @@ export default function AppLayout({
                 <>
                   <h1>Dashboard</h1>
                   <GlobalSearch />
+                  <NetworkMonitor />
                   <button className="ic-btn" title="Refresh" onClick={() => window.location.reload()}>
                     <svg className="ico"><use href="#ic-sync"/></svg>
                   </button>
@@ -157,6 +159,7 @@ export default function AppLayout({
               <>
                 <h1>{title}</h1>
                 <span className="spacer"></span>
+                <NetworkMonitor />
                 <button className="ic-btn" title="Refresh" onClick={() => window.location.reload()}>
                   <svg className="ico"><use href="#ic-sync"/></svg>
                 </button>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`} style={{ backgroundColor: "var(--paper)" }}>
         {children}
+        <CookieConsent />
       </body>
     </html>
   );
