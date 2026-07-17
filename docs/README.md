@@ -46,6 +46,14 @@ All security docs now live in **[`../security/`](../security/README.md)** — th
 implementation scorecard plus the detailed per-area blueprints (auth, API, database, secrets,
 extension, cloud, DevSecOps, attack prevention, testing, etc.).
 
+## 🔐 Admin & business
+
+| Doc | Topic |
+|-----|-------|
+| [../admin/plan.md](../admin/plan.md) | Owner-only admin console — access control, users/logins, payments (refund/cancel), audit, feature flags. |
+| [../admin/readme.md](../admin/readme.md) | Admin module overview. |
+| [business_model.md](business_model.md) | Business & monetization model (market, user scenarios, freemium + B2B revenue). |
+
 ## ⚙️ Operations
 
 | Doc | Topic |
