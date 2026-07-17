@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { AccessDenied } from "../page";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-
 type AdminUser = {
   id: string;
   githubLogin: string | null;
@@ -16,18 +14,15 @@ type AdminUser = {
   createdAt: string;
 };
 
-export default function AdminUsersPage() {
+export default function UsersPage() {
   const [items, setItems] = useState<AdminUser[]>([]);
   const [q, setQ] = useState("");
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
 
   const load = (query: string) => {
-    fetch(`${API}/admin/users?query=${encodeURIComponent(query)}`, { credentials: "include" })
+    fetch(`/api/users?query=${encodeURIComponent(query)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((d: { items: AdminUser[] }) => {
-        setItems(d.items);
-        setState("ok");
-      })
+      .then((d: { items: AdminUser[] }) => { setItems(d.items); setState("ok"); })
       .catch(() => setState("denied"));
   };
 
@@ -39,13 +34,7 @@ export default function AdminUsersPage() {
     <section>
       <h1 style={{ margin: "0 0 4px" }}>Users</h1>
       <p style={{ color: "#6b7280", marginTop: 0 }}>All users — search by login, handle, email, or name.</p>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          load(q);
-        }}
-        style={{ display: "flex", gap: 8, margin: "14px 0" }}
-      >
+      <form onSubmit={(e) => { e.preventDefault(); load(q); }} style={{ display: "flex", gap: 8, margin: "14px 0" }}>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -76,9 +65,7 @@ export default function AdminUsersPage() {
               items.map((u) => (
                 <tr key={u.id} style={{ borderTop: "1px solid #f0eee8" }}>
                   <td style={{ padding: "10px 14px" }}>
-                    <a href={`/admin/users/${u.id}`} style={{ fontWeight: 600, color: "#1a160f" }}>
-                      {u.displayName || u.githubLogin || u.handle}
-                    </a>
+                    <span style={{ fontWeight: 600 }}>{u.displayName || u.githubLogin || u.handle}</span>
                     <div style={{ color: "#9c9a8e", fontSize: 11 }}>@{u.githubLogin || u.handle}</div>
                   </td>
                   <td style={{ padding: "10px 14px", color: "#6b7280" }}>{u.email || "—"}</td>

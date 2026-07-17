@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
-
 type Overview = {
   users: number;
   admins: number;
@@ -14,29 +12,21 @@ type Overview = {
   revenueMinor: number;
 };
 
-const card: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #ecece4",
-  borderRadius: 14,
-  padding: 18,
-};
+const card: React.CSSProperties = { background: "#fff", border: "1px solid #ecece4", borderRadius: 14, padding: 18 };
 
-export default function AdminOverviewPage() {
+export default function OverviewPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "denied">("loading");
 
   useEffect(() => {
-    fetch(`${API}/admin/overview`, { credentials: "include" })
+    fetch("/api/overview")
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((d: Overview) => {
-        setData(d);
-        setState("ok");
-      })
+      .then((d: Overview) => { setData(d); setState("ok"); })
       .catch(() => setState("denied"));
   }, []);
 
   if (state === "denied") return <AccessDenied />;
-  if (state === "loading" || !data) return <p style={{ color: "#6b7280" }}>Loading…</p>;
+  if (!data) return <p style={{ color: "#6b7280" }}>Loading…</p>;
 
   const kpis: [string, string][] = [
     ["Total users", data.users.toLocaleString()],
@@ -69,8 +59,8 @@ export function AccessDenied() {
     <div style={{ textAlign: "center", padding: "80px 20px", color: "#6b7280" }}>
       <div style={{ fontSize: 40 }}>🔒</div>
       <h2 style={{ color: "#1a160f" }}>Access denied</h2>
-      <p>This area is restricted to CodeVault owners.</p>
-      <a href="/dashboard" style={{ color: "#f1543f", fontWeight: 600 }}>← Back to dashboard</a>
+      <p>This console is restricted to CodeVault owners. Sign in to the main app first.</p>
+      <a href="http://localhost:3000/login" style={{ color: "#f1543f", fontWeight: 600 }}>Go to sign-in →</a>
     </div>
   );
 }

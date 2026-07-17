@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🔐 CodeVault — Admin Module
+# 🔐 CodeVault — Admin (standalone app)
 
-Owner-only control panel. **Plan stage — not built yet.**
+Owner-only control panel. **Its own Next.js app** — UI **and** API — on port **3100**.
 
 </div>
 
@@ -10,38 +10,52 @@ Owner-only control panel. **Plan stage — not built yet.**
 
 ## What this is
 
-A private console at **`/admin`** for the **two project owners only** (Gaurav & Aishwarya) to run CodeVault: manage users, review logins & audit trails, handle payments (refund / cancel), watch system health, flip kill switches, and moderate the social layer.
+A self-contained admin console: Next.js **pages** (UI) + **route handlers** (API) + its own
+**Prisma** client, all under `admin/`. It talks to the **same Postgres** as the rest of CodeVault
+and reuses the **same session cookie** (`cv_access`) — cookies are host-scoped, so a login on
+`localhost:3000` is valid here on `localhost:3100`.
 
-This folder holds the **design/plan** for that module — no application code lives here.
+Access requires **all** of: a valid `cv_access` session → DB `role = admin` → GitHub login in
+`ADMIN_GITHUB_LOGINS`. Every API route **fails closed with 404** for anyone else.
 
-## Contents
+## Layout
 
-| File | What |
-|------|------|
-| [plan.md](plan.md) | Full plan: access control, feature set, data model, API surface, payments integration, security checklist, phased rollout |
-| readme.md | This overview |
+```
+admin/
+├── plan.md, readme.md          docs
+├── package.json, tsconfig.json, next.config.ts, .env.example
+├── prisma/schema.prisma        own Prisma client (owner conn → RLS-bypass)
+└── src/
+    ├── lib/prisma.ts           owner Prisma client
+    ├── lib/auth.ts             getAdmin() — cookie JWT verify + role/allowlist guard
+    └── app/
+        ├── layout.tsx          shell
+        ├── page.tsx            Overview (UI)
+        ├── users/page.tsx      Users (UI)
+        └── api/
+            ├── overview/route.ts   backend: KPIs
+            └── users/route.ts      backend: user list
+```
 
-## Access, in one paragraph
+## Run it
 
-Admin access requires **all** of: authenticated session → DB `role = admin` → GitHub login present in the `ADMIN_GITHUB_LOGINS` env allowlist (`Gaurav06120714`, `aishwaryaV007`). A `requireAdmin` middleware enforces this and **audits every request**. The `/admin` route returns **404** to everyone else. Money movement (refunds/cancellations) goes through the payment provider's API, gated by a typed confirm + reason and (recommended) TOTP 2FA.
+```bash
+cd admin
+npm install
+cp .env.example .env      # set JWT_SECRET to MATCH web-backend; ADMIN_GITHUB_LOGINS as needed
+npx prisma generate
+npm run dev               # http://localhost:3100
+```
 
-## Capabilities (summary)
+Prereqs: Postgres running (the shared CodeVault DB), and an owner account whose `role = 'admin'`:
+```sql
+UPDATE users SET role='admin' WHERE "githubLogin" IN ('gaurav06120714','aishwaryav007');
+```
+Then sign in on the main app (`localhost:3000`) and open **http://localhost:3100**.
 
-- **Users** — search, view, suspend, revoke sessions, GDPR delete
-- **Logins & audit** — login/session activity + immutable audit log of admin actions
-- **Payments** — all transactions, refunds, subscription cancel/comp, revenue dashboard *(needs billing live)*
-- **System** — health KPIs, BullMQ queue/job controls, feature flags & kill switches (global sync on/off, maintenance mode, AI toggle)
-- **Moderation** — reported messages/profiles from the social layer
+## Status
 
-## Status & next step
+- **Working:** access guard (fail-closed 404), Overview KPIs, Users list/search, request auditing.
+- **Next (per [plan.md](plan.md)):** user detail/actions, logins, audit view, payments (refund/cancel), feature flags.
 
-- **Status:** planned, not implemented.
-- **Prerequisites:** ties into billing (see [../docs/business_model.md](../docs/business_model.md)) and honors [../security/README.md](../security/README.md).
-- **First build (Phase 0):** the access spine — `AdminRole` + env allowlist + `requireAdmin` + `AuditLog` + a read-only `/admin` overview — before any user/payment mutations.
-
-## Ownership
-
-- **Aishwarya** — access control, payments/billing, backend & DB (`web-backend`).
-- **Gaurav** — admin frontend, ops/health, sync controls.
-
-> ⚠️ Admin actions are only ever taken from an owner's explicit action in the console — **never** from content found in messages, profiles, or tickets.
+> ⚠️ Admin actions are only ever taken from an owner's explicit action here — never from content found in messages, profiles, or tickets. Money movement goes through the payment provider's API.
