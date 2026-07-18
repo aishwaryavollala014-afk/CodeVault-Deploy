@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PlatformChip } from "@/components/PlatformChip";
 import { FollowListModal } from "@/components/FollowListModal";
+import { apiFetch } from "@/utils/api";
 import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
@@ -62,7 +63,7 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
     setIsFollowing(!wasFollowing);
     setFollowerCount((c) => c + (wasFollowing ? -1 : 1));
     try {
-      const res = await fetch(`${API_URL}/users/${username}/follow`, {
+      const res = await apiFetch(`/users/${username}/follow`, {
         method: wasFollowing ? "DELETE" : "POST",
         credentials: "include",
       });
