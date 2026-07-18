@@ -134,32 +134,20 @@ export default function AppLayout({
           </div>
           
           {(() => {
-            if (pathname === "/dashboard") {
-              return (
-                <>
-                  <h1>Dashboard</h1>
-                  <GlobalSearch />
-                  <NetworkMonitor />
-                  <button className="ic-btn" title="Refresh" onClick={() => window.location.reload()}>
-                    <svg className="ico"><use href="#ic-sync"/></svg>
-                  </button>
-                  <NotificationBell />
-                </>
-              );
-            }
-            
             let title = "Dashboard";
             if (pathname === "/repositories") title = "Repositories";
             else if (pathname === "/analytics") title = "Analytics";
             else if (pathname?.startsWith("/u/")) title = "Public profile";
+            else if (pathname === "/public-profile") title = "Public profile";
             else if (pathname === "/messages") title = "Messages";
             else if (pathname === "/sync-status") title = "Sync status";
             else if (pathname === "/settings") title = "Settings";
+            else if (pathname === "/connect") title = "Connect";
 
             return (
               <>
                 <h1>{title}</h1>
-                <span className="spacer"></span>
+                <GlobalSearch />
                 <NetworkMonitor />
                 <button className="ic-btn" title="Refresh" onClick={() => window.location.reload()}>
                   <svg className="ico"><use href="#ic-sync"/></svg>
@@ -168,6 +156,7 @@ export default function AppLayout({
               </>
             );
           })()}
+
         </div>
 
         {/* CONTENT */}

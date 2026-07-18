@@ -55,20 +55,26 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
   }, [username]);
 
   const toggleFollow = async () => {
-    if (!signedIn) { router.push("/login"); return; }
     if (followBusy) return;
     setFollowBusy(true);
-    // Optimistic flip; roll back on failure.
+
     const wasFollowing = isFollowing;
+    // Optimistic flip — update UI immediately.
     setIsFollowing(!wasFollowing);
     setFollowerCount((c) => c + (wasFollowing ? -1 : 1));
+
     try {
       const res = await apiFetch(`/users/${username}/follow`, {
         method: wasFollowing ? "DELETE" : "POST",
         credentials: "include",
       });
-      if (!res.ok) throw new Error();
-    } catch {
+      if (!res.ok) {
+        console.warn("Follow API returned", res.status);
+        setIsFollowing(wasFollowing);
+        setFollowerCount((c) => c + (wasFollowing ? 1 : -1));
+      }
+    } catch (err) {
+      console.warn("Follow request failed:", err);
       setIsFollowing(wasFollowing);
       setFollowerCount((c) => c + (wasFollowing ? 1 : -1));
     } finally {
@@ -85,14 +91,26 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
   const lc = platforms.leetcode;
   const totalSolved = data?.stats?.totalSolved;
   const platformCount = Object.keys(platforms).length;
-  const hardSolved = lc?.hard;
   const maxTotal = Math.max(1, ...PLATFORM_META.map((p) => platforms[p.id]?.total || 0));
   const displayName = data?.user?.displayName || username;
+  const hasLcData = lc && typeof lc.total === "number" && lc.total > 0;
+  const hasAnyData = typeof totalSolved === "number" && totalSolved > 0;
+  const connectedPlatforms = PLATFORM_META.filter((p) => platforms[p.id]);
 
+  // Compute actual conic-gradient angles for the difficulty ring
+  const ringGradient = useMemo(() => {
+    if (!lc || !lc.total) return "conic-gradient(var(--border) 0% 100%)";
+    const total = lc.total;
+    const easy = ((lc.easy || 0) / total) * 100;
+    const medium = ((lc.medium || 0) / total) * 100;
+    const hard = ((lc.hard || 0) / total) * 100;
+    return `conic-gradient(var(--amber) 0% ${easy}%, var(--brand) ${easy}% ${easy + medium}%, var(--rose) ${easy + medium}% ${easy + medium + hard}%)`;
+  }, [lc]);
+
+  // Aggregate heatmap from all connected platforms
   const heatmapCells = useMemo(() => {
     const mergedHeatmap: Record<string, number> = {};
     
-    // Aggregate from all connected platforms
     Object.keys(platforms).forEach((pKey) => {
       const p = platforms[pKey];
       if (p.heatmap) {
@@ -121,65 +139,88 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
     return cells;
   }, [platforms]);
 
+  const hasHeatmapActivity = heatmapCells.some((c) => c !== "");
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://codevault.dev/u/${username}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 1300);
   };
 
-  const initial = username.charAt(0).toUpperCase();
+  const initial = (displayName || username).charAt(0).toUpperCase();
+
+  // Build topic strengths from real data (aggregated across platforms)
+  const topicStrengths = useMemo(() => {
+    const topicMap: Record<string, number> = {};
+    // We don't have topic data in the public API yet, so return empty.
+    // When the API exposes problem topics, this will aggregate them.
+    return Object.entries(topicMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+  }, []);
 
   return (
     <>
-      {/* SVG sprite inline references (copied from overview) */}
+      {/* SVG sprite inline references */}
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true" focusable="false">
         <symbol id="ic-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
       </svg>
 
+      {/* Sticky nav */}
       <div className="nav" style={{ position: "sticky", top: 0, zIndex: 20, background: "rgba(248,246,241,.85)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--border)" }}>
         <div className="nav-in" style={{ maxWidth: "920px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "60px", padding: "0 24px" }}>
           <Link className="brand" href="/">
             <span className="mark">CV</span> CodeVault
           </Link>
-          <Link className="btn brand" href="/login">
+          <Link className="btn btn-primary" href="/login">
             Build your own profile
           </Link>
         </div>
       </div>
 
       <div className="wrap" style={{ maxWidth: "920px", margin: "28px auto 60px", padding: "0 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-        <section className="phead" style={{ padding: "26px", borderRadius: "18px" }}>
-          <div className="pav" style={{ width: "80px", height: "80px", borderRadius: "20px", fontSize: "34px" }}>{initial}</div>
-          <div className="pid">
-            <h1 style={{ fontSize: "24px" }}>{displayName}</h1>
-            <div className="ln">codevault.dev/u/{username}</div>
-            {data?.social && (
-              <div style={{ display: "flex", gap: 14, marginTop: 7, fontSize: 13, color: "var(--muted)" }}>
-                <button
-                  onClick={() => setListModal("followers")}
-                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit", color: "inherit" }}
-                >
-                  <b style={{ color: "var(--ink)" }}>{followerCount.toLocaleString()}</b> Followers
-                </button>
-                <span aria-hidden="true">·</span>
-                <button
-                  onClick={() => setListModal("following")}
-                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit", color: "inherit" }}
-                >
-                  <b style={{ color: "var(--ink)" }}>{data.social.followingCount.toLocaleString()}</b> Following
-                </button>
-              </div>
-            )}
-            <div className="chips" style={{ marginTop: "12px" }}>
-              {PLATFORM_META.filter((p) => platforms[p.id]).map((p) => (
-                <span className="pchip" key={p.id}>
-                  <PlatformChip platformId={p.id} size="sm" showName={false} variant="ghost" /> {p.name}
-                </span>
-              ))}
+
+        {/* ── Hero Header ─────────────────────────────────────────── */}
+        <section className="phead">
+          <div className="phead-top">
+            <div className="pav">
+              {data?.user?.avatarUrl
+                ? <img src={data.user.avatarUrl} alt={displayName} />
+                : initial
+              }
+            </div>
+            <div className="pid">
+              <h1>{displayName}</h1>
+              <div className="ln">codevault.dev/u/{username}</div>
+
+              {data?.social && (
+                <div className="social-row">
+                  <button onClick={() => setListModal("followers")} type="button">
+                    <b>{followerCount.toLocaleString()}</b> Followers
+                  </button>
+                  <span aria-hidden="true" style={{ color: "var(--border-2)" }}>·</span>
+                  <button onClick={() => setListModal("following")} type="button">
+                    <b>{data.social.followingCount.toLocaleString()}</b> Following
+                  </button>
+                </div>
+              )}
+
+              {connectedPlatforms.length > 0 && (
+                <div className="chips">
+                  {connectedPlatforms.map((p) => (
+                    <span className="pchip" key={p.id}>
+                      <PlatformChip platformId={p.id} size="sm" showName={false} variant="ghost" /> {p.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          <div className="pa">
-            {data?.social && !data.social.isSelf && (
+
+          {/* Action buttons */}
+          <div className="phead-actions">
+            {/* Show Follow + Message for other users' profiles (not your own) */}
+            {!(data?.social?.isSelf) && (
               <>
                 <button
                   className="btn"
@@ -187,21 +228,22 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
                   onClick={toggleFollow}
                   disabled={followBusy}
                   style={isFollowing
-                    ? { background: "#fff", color: "var(--ink)", borderColor: "var(--border-2)" }
-                    : { background: "var(--brand)", color: "#fff", borderColor: "var(--brand)" }}
+                    ? { background: "#fff", color: "var(--ink)", border: "1px solid var(--border-2)", transition: "all .2s" }
+                    : { background: "var(--brand)", color: "#fff", border: "1px solid var(--brand)", transition: "all .2s" }
+                  }
                 >
                   {isFollowing ? "Following ✓" : "+ Follow"}
                 </button>
-                <button className="btn" type="button" onClick={openMessages}>
+                <button className="btn btn-secondary" type="button" onClick={openMessages}>
                   <svg className="ico sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/><polyline points="3.5 7 12 13 20.5 7"/></svg>
                   Message
                 </button>
               </>
             )}
-            <button className="btn" type="button" onClick={handleCopyLink}>
+            <button className="btn btn-secondary" type="button" onClick={handleCopyLink}>
               <svg className="ico sm" aria-hidden="true"><use href="#ic-copy"/></svg> {copied ? "Copied ✓" : "Copy link"}
             </button>
-            <a className="btn" href={`https://github.com/${username}/LeetCodeQuestions`} target="_blank" rel="noopener noreferrer">View solutions ↗</a>
+            <a className="btn btn-secondary" href={`https://github.com/${username}/LeetCodeQuestions`} target="_blank" rel="noopener noreferrer">View solutions ↗</a>
           </div>
         </section>
 
@@ -209,75 +251,134 @@ export default function PublicProfileView({ params }: { params: Promise<{ userna
           <FollowListModal handle={username} initialTab={listModal} onClose={() => setListModal(null)} />
         )}
 
+        {/* ── Stats Cards ─────────────────────────────────────────── */}
         <section className="stats">
-          <div className="stat"><div className="n">{fmt(totalSolved)}</div><div className="l">Total solved</div></div>
-          <div className="stat"><div className="n">{data ? platformCount : "—"}</div><div className="l">Platforms</div></div>
-          <div className="stat"><div className="n">{fmt(hardSolved)}</div><div className="l">Hard solved (LC)</div></div>
-          <div className="stat"><div className="n">{fmt(lc?.total)}</div><div className="l">LeetCode solved</div></div>
+          <div className="stat">
+            <div className="l"><span className="stat-icon fire">🔥</span> Total solved</div>
+            <div className="n">{hasAnyData ? fmt(totalSolved) : "—"}</div>
+            {hasAnyData && <div className="d">across all platforms</div>}
+          </div>
+          <div className="stat">
+            <div className="l"><span className="stat-icon code">⚡</span> Platforms</div>
+            <div className="n">{data ? platformCount : "—"}</div>
+            {platformCount > 0 && <div className="d warm">connected</div>}
+          </div>
+          {hasLcData ? (
+            <>
+              <div className="stat">
+                <div className="l"><span className="stat-icon bolt">💪</span> Hard solved</div>
+                <div className="n">{fmt(lc?.hard)}</div>
+                <div className="d pink">LeetCode</div>
+              </div>
+              <div className="stat">
+                <div className="l"><span className="stat-icon star">✅</span> LeetCode</div>
+                <div className="n">{fmt(lc?.total)}</div>
+                <div className="d">problems solved</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="stat">
+                <div className="l"><span className="stat-icon bolt">💪</span> Hard solved</div>
+                <div className="n">—</div>
+              </div>
+              <div className="stat">
+                <div className="l"><span className="stat-icon star">✅</span> LeetCode</div>
+                <div className="n">—</div>
+              </div>
+            </>
+          )}
         </section>
 
+        {/* ── Difficulty + Platform Breakdown ──────────────────────── */}
         <div className="grid g-2">
           <section className="panel">
             <h2>Difficulty</h2>
-            <div className="ringwrap">
-              <div className="ring" role="img" aria-label={`${lc?.easy || 0} Easy, ${lc?.medium || 0} Medium, ${lc?.hard || 0} Hard`}>
-                <div className="rc"><b>{fmt(lc?.total)}</b><span>solved</span></div>
+            {hasLcData ? (
+              <div className="ringwrap">
+                <div className="ring" role="img" aria-label={`${lc?.easy || 0} Easy, ${lc?.medium || 0} Medium, ${lc?.hard || 0} Hard`} style={{ background: ringGradient }}>
+                  <div className="rc"><b>{fmt(lc?.total)}</b><span>solved</span></div>
+                </div>
+                <div className="rleg">
+                  <div className="r"><span className="sw e"></span> Easy <span className="v">{fmt(lc?.easy)}</span></div>
+                  <div className="r"><span className="sw m"></span> Medium <span className="v">{fmt(lc?.medium)}</span></div>
+                  <div className="r"><span className="sw h"></span> Hard <span className="v">{fmt(lc?.hard)}</span></div>
+                </div>
               </div>
-              <div className="rleg">
-                <div className="r"><span className="sw e"></span> Easy <span className="v">{fmt(lc?.easy)}</span></div>
-                <div className="r"><span className="sw m"></span> Medium <span className="v">{fmt(lc?.medium)}</span></div>
-                <div className="r"><span className="sw h"></span> Hard <span className="v">{fmt(lc?.hard)}</span></div>
+            ) : (
+              <div className="prof-empty">
+                <span className="emoji">📊</span>
+                Connect LeetCode to see difficulty breakdown
+                <span className="hint">Easy · Medium · Hard split</span>
               </div>
-            </div>
+            )}
           </section>
 
           <section className="panel">
             <h2>By platform</h2>
-            <div className="pf">
-              {PLATFORM_META.filter((p) => platforms[p.id]).map((p) => {
-                const t = platforms[p.id]?.total || 0;
-                return (
-                  <div className="pf-row" key={p.id}>
-                    <span className="lab"><PlatformChip platformId={p.id} size="sm" showName={false} variant="ghost" />{p.name}</span>
-                    <span className="pf-bar"><i style={{ width: `${Math.max(4, (t / maxTotal) * 100)}%`, background: p.color }}></i></span>
-                    <span className="val">{fmt(t)}</span>
-                  </div>
-                );
-              })}
-              {data && platformCount === 0 && (
-                <p style={{ color: "var(--muted)", fontSize: 14 }}>No platforms connected yet.</p>
-              )}
-            </div>
+            {connectedPlatforms.length > 0 ? (
+              <div className="pf">
+                {connectedPlatforms.map((p) => {
+                  const t = platforms[p.id]?.total || 0;
+                  return (
+                    <div className="pf-row" key={p.id}>
+                      <span className="lab"><PlatformChip platformId={p.id} size="sm" showName={false} variant="ghost" />{p.name}</span>
+                      <span className="pf-bar"><i style={{ width: `${Math.max(4, (t / maxTotal) * 100)}%`, background: p.color }}></i></span>
+                      <span className="val">{fmt(t)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="prof-empty">
+                <span className="emoji">🔗</span>
+                No platforms connected yet
+                <span className="hint">When {displayName} connects LeetCode, Codeforces, or others, stats will appear here.</span>
+              </div>
+            )}
           </section>
         </div>
 
+        {/* ── Submission Activity Heatmap ──────────────────────────── */}
         <section className="panel">
           <h2>Submission activity · last 12 months</h2>
-          <div className="heat" role="img" aria-label="Submission activity heatmap" aria-hidden="true">
-            {heatmapCells.map((cls, idx) => (
-              <i key={idx} className={cls || undefined}></i>
-            ))}
-          </div>
+          {hasHeatmapActivity ? (
+            <>
+              <div className="heat" role="img" aria-label="Submission activity heatmap" aria-hidden="true">
+                {heatmapCells.map((cls, idx) => (
+                  <i key={idx} className={cls || undefined}></i>
+                ))}
+              </div>
+              <div className="heat-legend">
+                Less <i style={{ background: "#efe7df" }}></i><i className="l1"></i><i className="l2"></i><i className="l3"></i><i className="l4"></i> More
+              </div>
+            </>
+          ) : (
+            <div className="prof-empty">
+              <span className="emoji">📅</span>
+              No submission activity yet
+              <span className="hint">Activity will appear here once problems are solved</span>
+            </div>
+          )}
         </section>
 
-        <section className="panel">
-          <h2>Topic strengths</h2>
-          <div className="chips2">
-            <span className="tchip">Arrays <b>210</b></span>
-            <span className="tchip">Dynamic Programming <b>142</b></span>
-            <span className="tchip">Graphs <b>118</b></span>
-            <span className="tchip">Trees <b>96</b></span>
-            <span className="tchip">Greedy <b>84</b></span>
-            <span className="tchip">Binary Search <b>71</b></span>
-            <span className="tchip">Strings <b>63</b></span>
-            <span className="tchip">Math <b>58</b></span>
-          </div>
-        </section>
+        {/* ── Topic Strengths (only if real data exists) ───────────── */}
+        {topicStrengths.length > 0 && (
+          <section className="panel">
+            <h2>Topic strengths</h2>
+            <div className="chips2">
+              {topicStrengths.map(([topic, count]) => (
+                <span className="tchip" key={topic}>{topic} <b>{count}</b></span>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <div className="cta-foot">
+        {/* ── Footer CTA ──────────────────────────────────────────── */}
+        <div className="cta-card">
           <strong>Turn your practice into a profile like this</strong>
           <p>Connect your accounts and CodeVault builds it automatically.</p>
-          <Link className="btn brand" href="/login">Get started free</Link>
+          <Link className="btn btn-primary" href="/login">Get started free</Link>
         </div>
       </div>
     </>

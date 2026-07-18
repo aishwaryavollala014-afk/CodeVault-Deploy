@@ -10,7 +10,7 @@ import { apiFetch } from "@/utils/api";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null; email?: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; githubLogin: string; handle?: string; displayName: string | null; email?: string } | null>(null);
   const [activeSection, setActiveSection] = useState("account");
   const [activeTheme, setActiveTheme] = useState("Light");
 
@@ -259,7 +259,7 @@ export default function SettingsPage() {
     return <CodeVaultLoader text="Loading settings" />;
   }
 
-  const initial = (user.displayName || user.githubLogin).charAt(0).toUpperCase();
+  const initial = (user.displayName || user.handle || user.githubLogin || "user").charAt(0).toUpperCase();
 
   return (
     <>

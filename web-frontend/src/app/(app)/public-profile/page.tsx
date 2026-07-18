@@ -8,7 +8,7 @@ import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 
 export default function PublicProfileSettings() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string; githubLogin: string; displayName: string | null } | null>(null);
+  const [user, setUser] = useState<{ id: string; githubLogin: string; handle?: string; email?: string; displayName: string | null } | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function PublicProfileSettings() {
     return <CodeVaultLoader text="Loading profile" />;
   }
 
-  const username = user.githubLogin;
+  const username = user.handle || user.githubLogin || user.email || "user";
   const initial = username.charAt(0).toUpperCase();
 
   return (
