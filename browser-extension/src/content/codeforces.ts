@@ -120,6 +120,10 @@ async function emit(p: {
     url: p.url,
   };
   sendCapture(submission);
+  // Notify the health monitor that capture is working — resets degraded badge.
+  try {
+    chrome.runtime.sendMessage({ type: 'captureSuccess', platform: 'codeforces' }).catch(() => {});
+  } catch { /* context invalidated */ }
   console.info(`[CodeVault] captured "${submission.title}" (${p.code.length} chars, ${submission.language}) [cf]`);
 }
 
