@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { apiFetch } from "@/utils/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -23,7 +24,7 @@ export function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
-    fetch(`${API_URL}/notifications`, { credentials: 'include' })
+    apiFetch(`${API_URL}/notifications`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) { setItems(d.items || []); setUnread(d.unread || 0); } })
       .catch(() => {});
@@ -49,7 +50,7 @@ export function NotificationBell() {
     const next = !open;
     setOpen(next);
     if (next && unread > 0) {
-      await fetch(`${API_URL}/notifications/read-all`, { method: "POST", credentials: 'include' }).catch(() => {});
+      await apiFetch(`${API_URL}/notifications/read-all`, { method: "POST", credentials: 'include' }).catch(() => {});
       setUnread(0);
       setItems((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
     }
