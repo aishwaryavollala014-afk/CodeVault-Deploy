@@ -67,6 +67,39 @@ function escapeHtml(s: string): string {
   return d.innerHTML;
 }
 
+async function renderHealth(): Promise<void> {
+  const healthRow  = document.getElementById('healthRow')!;
+  const healthText = document.getElementById('healthText')!;
+  const healthMeta = document.getElementById('healthMeta')!;
+
+  try {
+    const state = await chrome.runtime.sendMessage({ type: 'getHealth' }) as { status: string; lastCaptureAt?: string };
+
+    // Remove existing state classes
+    healthRow.classList.remove('health-ok', 'health-degraded', 'health-unknown');
+
+    if (state.status === 'ok') {
+      healthRow.classList.add('health-ok');
+      healthText.textContent = '🟢 Capture working';
+      healthMeta.textContent = state.lastCaptureAt ? `last: ${timeAgo(state.lastCaptureAt)}` : '';
+    } else if (state.status === 'degraded') {
+      healthRow.classList.add('health-degraded');
+      healthText.textContent = '🔴 No recent capture';
+      healthMeta.textContent = state.lastCaptureAt
+        ? `last: ${timeAgo(state.lastCaptureAt)}`
+        : 'never captured';
+    } else {
+      healthRow.classList.add('health-unknown');
+      healthText.textContent = '⚪ Waiting for first capture';
+      healthMeta.textContent = '';
+    }
+  } catch {
+    healthRow.classList.remove('health-ok', 'health-degraded');
+    healthRow.classList.add('health-unknown');
+    healthText.textContent = '⚪ Health unavailable';
+  }
+}
+
 async function render(): Promise<void> {
   const { signedIn: yes } = await getStatus();
   statusEl.className = `status ${yes ? 'on' : 'off'}`;
@@ -76,6 +109,7 @@ async function render(): Promise<void> {
 
   if (yes) {
     void highlightActivePlatform();
+    void renderHealth();
     const res = await getRecent();
     renderRecent(res.ok ? res.items ?? [] : []);
   }
