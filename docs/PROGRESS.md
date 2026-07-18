@@ -143,3 +143,16 @@
 **Keep this honest.** Tick a box in the *same commit* that makes it true. If you can't verify it from the code, leave it unchecked.
 
 </div>
+
+---
+
+## 📱 Mobile app (`mobile/`)
+
+- ✅ Scaffolded (Expo SDK 54 + expo-router), bundle-verified, runs in Expo Go.
+- ✅ Email magic-link auth landing on the real GitHub-linked account; profile hydration + persistence.
+- ✅ Dashboard, Analytics, Repositories, Sync, Inbox + chat, Public profile, Settings, Notifications, Connect.
+- ✅ Recent submissions wired to git-service `/problems`; 12-month activity heatmap; CodeVault branding.
+- 🟠 Problem detail is a stub; message-thread pagination + follow/unfollow minimal.
+- ⛔ GitHub OAuth sign-in (blocked on backend token-handoff).
+
+See [MOBILE_APP.md](MOBILE_APP.md).
