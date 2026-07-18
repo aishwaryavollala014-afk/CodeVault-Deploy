@@ -61,7 +61,7 @@ export default function AnalyticsPage() {
           router.push("/connect");
         }
       } catch (err) {
-        console.error("Failed to fetch stats", err);
+        console.warn("Stats API unreachable — is web-backend (:4000) running?", err);
       } finally {
         setIsLoading(false);
       }
@@ -70,8 +70,19 @@ export default function AnalyticsPage() {
     fetchStats();
   }, [router]);
 
-  if (isLoading || !user || !stats) {
+  if (isLoading || !user) {
     return <CodeVaultLoader text="Loading deep analytics" />;
+  }
+
+  // Stats failed to load (e.g. backend down) — don't spin forever.
+  if (!stats) {
+    return (
+      <div role="alert" style={{ margin: "48px auto", maxWidth: 460, textAlign: "center", padding: 24, borderRadius: 12, background: "#fef3c7", color: "#92400e", border: "1px solid #fde68a" }}>
+        <div style={{ fontSize: 32 }}>⚠️</div>
+        <h2 style={{ margin: "8px 0 4px" }}>Couldn&apos;t load analytics</h2>
+        <p style={{ fontSize: 14 }}>The backend (:4000) looks unreachable. Start web-backend and refresh.</p>
+      </div>
+    );
   }
 
   // Connected platforms present in the stats, in a stable order.
