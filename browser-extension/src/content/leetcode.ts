@@ -169,6 +169,10 @@ async function captureViaGraphQL(submissionId: string): Promise<boolean> {
     url: `https://leetcode.com/problems/${slug}/`,
   };
   sendCapture(submission);
+  // Notify the health monitor that capture is working — resets degraded badge.
+  try {
+    chrome.runtime.sendMessage({ type: 'captureSuccess', platform: 'leetcode' }).catch(() => {});
+  } catch { /* context invalidated */ }
   console.info(`[CodeVault] captured "${submission.title}" (${code.length} chars, ${submission.language}) [graphql]`);
   return true;
 }
@@ -257,6 +261,10 @@ window.addEventListener('message', (ev: MessageEvent) => {
       url: `https://leetcode.com/problems/${meta.slug}/`,
     };
     sendCapture(submission);
+    // Notify the health monitor
+    try {
+      chrome.runtime.sendMessage({ type: 'captureSuccess', platform: 'leetcode' }).catch(() => {});
+    } catch { /* context invalidated */ }
     console.info(`[CodeVault] captured "${meta.title}" (${code.length} chars, ${submission.language}) [monaco-fallback]`);
   }
 });
