@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlatformChip } from '@/components/PlatformChip';
+import { apiFetch } from "@/utils/api";
 
 interface ExistingConnection {
   platform: string;
@@ -42,7 +43,7 @@ export default function ConnectPage() {
   useEffect(() => {
     const fetchConnections = async () => {
       try {
-        const res = await fetch(`${API_URL}/platforms`, {
+        const res = await apiFetch(`${API_URL}/platforms`, {
           credentials: 'include'
         });
 
@@ -98,7 +99,7 @@ export default function ConnectPage() {
       const results = [];
 
       for (const platform of selectedPlatforms) {
-        const res = await fetch(`${API_URL}/platforms/connect`, {
+        const res = await apiFetch(`${API_URL}/platforms/connect`, {
           method: 'POST',
           credentials: 'include',
           headers: {
@@ -137,7 +138,7 @@ export default function ConnectPage() {
     try {
       setDisconnecting(platform);
 
-      const res = await fetch(`${API_URL}/platforms/${platform}`, {
+      const res = await apiFetch(`${API_URL}/platforms/${platform}`, {
         method: 'DELETE',
         credentials: 'include'
       });
