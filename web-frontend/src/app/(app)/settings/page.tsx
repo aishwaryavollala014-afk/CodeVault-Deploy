@@ -6,6 +6,7 @@ import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 import { PLATFORMS, PLATFORM_ORDER } from "@/constants/platforms";
+import { apiFetch } from "@/utils/api";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function SettingsPage() {
 
   // Load existing per-platform repo mappings.
   useEffect(() => {
-    fetch(`${API_URL}/github-repos`, { credentials: 'include' })
+    apiFetch(`${API_URL}/github-repos`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Array<{ platform: string; repoFullName: string }>) => {
         const map: Record<string, string> = {};
@@ -58,7 +59,7 @@ export default function SettingsPage() {
 
   // Load Settings
   useEffect(() => {
-    fetch(`${API_URL}/settings`, { credentials: 'include' })
+    apiFetch(`${API_URL}/settings`, { credentials: 'include' })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (!data || data.error) return;
@@ -96,7 +97,7 @@ export default function SettingsPage() {
     }
     setRepoStatus((s) => ({ ...s, [platform]: "saving" }));
     try {
-      const res = await fetch(`${API_URL}/github-repos`, {
+      const res = await apiFetch(`${API_URL}/github-repos`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -113,7 +114,7 @@ export default function SettingsPage() {
     setAccountError("");
     setAccountSuccess(false);
     try {
-      const res = await fetch(`${API_URL}/settings`, {
+      const res = await apiFetch(`${API_URL}/settings`, {
         method: "PATCH",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -159,7 +160,7 @@ export default function SettingsPage() {
     }
 
     try {
-      await fetch(`${API_URL}/settings`, {
+      await apiFetch(`${API_URL}/settings`, {
         method: "PATCH",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -175,7 +176,7 @@ export default function SettingsPage() {
   const updatePublicProfile = async (enabled: boolean) => {
     setSettingsForm((prev) => ({ ...prev, publicProfileEnabled: enabled }));
     try {
-      await fetch(`${API_URL}/settings`, {
+      await apiFetch(`${API_URL}/settings`, {
         method: "PATCH",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -190,11 +191,11 @@ export default function SettingsPage() {
   const [solved, setSolved] = useState<Record<string, number>>({});
 
   const loadConnections = React.useCallback(() => {
-    fetch(`${API_URL}/platforms`, { credentials: 'include' })
+    apiFetch(`${API_URL}/platforms`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Conn[]) => setConnections(Array.isArray(rows) ? rows : []))
       .catch(() => setConnections([]));
-    fetch(`${API_URL}/stats`, { credentials: 'include' })
+    apiFetch(`${API_URL}/stats`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         const p = d?.platforms || {};
@@ -208,7 +209,7 @@ export default function SettingsPage() {
   useEffect(() => { loadConnections(); }, [loadConnections]);
 
   const disconnectPlatform = async (platform: string) => {
-    await fetch(`${API_URL}/platforms/${platform}`, {
+    await apiFetch(`${API_URL}/platforms/${platform}`, {
       method: "DELETE",
       credentials: 'include',
     }).catch(() => {});
