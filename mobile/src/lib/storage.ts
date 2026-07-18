@@ -29,3 +29,4 @@ export async function deleteItem(key: string): Promise<void> {
 }
 
 export const TOKEN_KEY = 'cv_access_token';
+export const USER_KEY = 'cv_user';

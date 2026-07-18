@@ -21,7 +21,10 @@ export default function Settings() {
   const settings = useQuery({ queryKey: ['settings'], queryFn: fetchSettings });
 
   const connList = asList(conns.data);
-  const autoSync = settings.data?.sync?.autoSync ?? settings.data?.autoSync;
+  const autoSync =
+    settings.data?.settings?.sync?.autoSync ??
+    settings.data?.sync?.autoSync ??
+    settings.data?.autoSync;
 
   async function toggleAutoSync(v: boolean) {
     try {

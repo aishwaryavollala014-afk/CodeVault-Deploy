@@ -6,15 +6,12 @@ import React, {
   useState,
   useCallback,
 } from 'react';
-import { getItem, setItem, deleteItem, TOKEN_KEY } from '../lib/storage';
-import {
-  setAccessToken,
-  setUnauthorizedHandler,
-} from '../api/token';
+import { getItem, setItem, deleteItem, TOKEN_KEY, USER_KEY } from '../lib/storage';
+import { setAccessToken, setUnauthorizedHandler } from '../api/token';
 import {
   requestEmailLogin,
   verifyEmailLogin,
-  fetchMe,
+  fetchSettings,
   logout as apiLogout,
 } from '../api/endpoints';
 
@@ -45,6 +42,11 @@ export function extractToken(input: string): string {
   return m ? decodeURIComponent(m[1]) : s;
 }
 
+async function persistUser(u: User | null) {
+  if (u) await setItem(USER_KEY, JSON.stringify(u));
+  else await deleteItem(USER_KEY);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,41 +57,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else await deleteItem(TOKEN_KEY);
   }, []);
 
+  const clearSession = useCallback(async () => {
+    await applyToken(null);
+    await persistUser(null);
+    setUser(null);
+  }, [applyToken]);
+
   const signOut = useCallback(async () => {
     try {
       await apiLogout();
     } catch {
       /* ignore */
     }
-    await applyToken(null);
-    setUser(null);
-  }, [applyToken]);
+    await clearSession();
+  }, [clearSession]);
 
+  /**
+   * Hydrate the full profile. The JWT / `/auth/me` only carry `userId`, so the
+   * name/handle/email come from `/settings` (keyed by that userId). Also doubles
+   * as a token-validity check — a 401 here rejects and triggers sign-out.
+   */
   const refreshUser = useCallback(async () => {
-    const data = await fetchMe();
-    setUser(data.user ?? data);
+    const s: any = await fetchSettings();
+    setUser((prev) => {
+      const merged: User = {
+        id: s.id ?? prev?.id ?? '',
+        handle: s.handle ?? prev?.handle ?? '',
+        displayName: s.displayName ?? prev?.displayName ?? null,
+        githubLogin: s.githubLogin ?? prev?.githubLogin ?? null,
+        avatarUrl: s.avatarUrl ?? prev?.avatarUrl ?? null,
+        email: s.email ?? prev?.email,
+      };
+      persistUser(merged);
+      return merged;
+    });
   }, []);
 
-  // Bootstrap: restore token, verify it still resolves to a user.
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      applyToken(null);
-      setUser(null);
+      clearSession();
     });
     (async () => {
-      const saved = await getItem(TOKEN_KEY);
-      if (saved) {
-        setAccessToken(saved);
+      const savedToken = await getItem(TOKEN_KEY);
+      if (savedToken) {
+        setAccessToken(savedToken);
+        const savedUser = await getItem(USER_KEY);
+        if (savedUser) {
+          try {
+            setUser(JSON.parse(savedUser)); // instant display
+          } catch {
+            /* ignore */
+          }
+        }
         try {
-          await refreshUser();
+          await refreshUser(); // validate token + hydrate/refresh profile
         } catch {
-          await applyToken(null);
+          await clearSession();
         }
       }
       setLoading(false);
     })();
     return () => setUnauthorizedHandler(null);
-  }, [applyToken, refreshUser]);
+  }, [clearSession, refreshUser]);
 
   const requestLogin = useCallback(async (email: string) => {
     await requestEmailLogin(email);
@@ -97,10 +126,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verify = useCallback(
     async (token: string) => {
-      const data = await verifyEmailLogin(token);
+      const data: any = await verifyEmailLogin(token);
       if (data.accessToken) await applyToken(data.accessToken);
-      setUser(data.user ?? null);
-      if (!data.user) await refreshUser();
+      if (data.user) {
+        setUser(data.user);
+        await persistUser(data.user);
+      }
+      // Enrich/repair from /settings (also covers logins that omit some fields).
+      try {
+        await refreshUser();
+      } catch {
+        /* keep login user */
+      }
     },
     [applyToken, refreshUser],
   );
