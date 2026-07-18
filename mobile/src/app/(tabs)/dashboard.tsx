@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Image } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { fetchStats } from '../../api/endpoints';
@@ -27,6 +27,14 @@ export default function Dashboard() {
 
   return (
     <Screen refreshing={q.isRefetching} onRefresh={q.refetch}>
+      <View style={s.brandRow}>
+        <Image
+          source={require('../../../assets/images/codevault-icon.png')}
+          style={s.brandLogo}
+          resizeMode="contain"
+        />
+        <Text style={s.brandName}>CodeVault</Text>
+      </View>
       <View>
         <Muted>Welcome back</Muted>
         <H1>{user?.displayName || user?.githubLogin || user?.handle}</H1>
@@ -126,6 +134,9 @@ function Legend({ color, label, value }: { color: string; label: string; value: 
 }
 
 const s = StyleSheet.create({
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: space(2) },
+  brandLogo: { width: 28, height: 28 },
+  brandName: { fontSize: 18, fontWeight: '800', color: colors.ink },
   row: { flexDirection: 'row', gap: space(3) },
   diffRow: { flexDirection: 'row', alignItems: 'center', gap: space(4), marginTop: space(3) },
   legend: { flexDirection: 'row', alignItems: 'center', gap: space(2) },

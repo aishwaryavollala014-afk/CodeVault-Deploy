@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../auth/AuthContext';
 import { Button, Muted } from '../../components/ui';
@@ -36,7 +36,11 @@ export default function Login() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={s.brandRow}>
-        <Text style={s.logo}>⌘</Text>
+        <Image
+          source={require('../../../assets/images/codevault-icon.png')}
+          style={s.logo}
+          resizeMode="contain"
+        />
         <Text style={s.brand}>CodeVault</Text>
       </View>
       <Text style={s.title}>Sign in</Text>
@@ -71,7 +75,7 @@ export default function Login() {
 const s = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.bg, padding: space(6), justifyContent: 'center', gap: space(3) },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: space(2), marginBottom: space(2) },
-  logo: { fontSize: 30, color: colors.brand },
+  logo: { width: 40, height: 40 },
   brand: { fontSize: 24, fontWeight: '800', color: colors.ink },
   title: { fontSize: 30, fontWeight: '800', color: colors.ink },
   input: {
