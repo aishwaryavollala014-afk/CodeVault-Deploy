@@ -295,3 +295,12 @@ M3 (analytics + public profile + settings) ─ parallel with M4 after M2
 - [ ] Runbooks for top-5 incidents written
 - [ ] Support channel / contact email live
 - [ ] Staged rollout plan ready (10% → 50% → 100%)
+
+---
+
+## 📱 Mobile app (Expo Go)
+
+- **Done:** SDK 54 scaffold, email magic-link auth, full screen set (overview/analytics/repos/sync/inbox/settings/profile/notifications/connect), recent submissions from git-service, 12-month heatmap, branding.
+- **Next:** GitHub OAuth (needs backend token-handoff), problem-detail question/solution rendering, message pagination, options/preferences, store/build packaging (EAS).
+
+See [MOBILE_APP.md](MOBILE_APP.md).
