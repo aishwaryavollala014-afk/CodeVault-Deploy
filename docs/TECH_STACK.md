@@ -198,3 +198,18 @@ node-cron (trigger) → enqueues job → BullMQ (executes) → sync logic runs
 - [x] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
 - [ ] Tested / verified
 - [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
+
+---
+
+## 📱 Mobile (`mobile/`)
+
+| Layer | Choice |
+|-------|--------|
+| Framework | Expo SDK 54 · React Native 0.81 · React 19 |
+| Routing | expo-router (file-based, root `src/app`) |
+| Server state | TanStack Query + axios (two base URLs: web-backend + git-service) |
+| Auth token | expo-secure-store (Bearer); email magic-link login |
+| Charts | react-native-svg (hand-rolled bars/donut/heatmap — Expo-Go-safe, no native/Skia deps) |
+| Styling | StyleSheet + shared theme mirroring the web palette |
+
+Runs on a phone through Expo Go. See [MOBILE_APP.md](MOBILE_APP.md).
