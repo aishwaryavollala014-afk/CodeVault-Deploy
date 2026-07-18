@@ -30,6 +30,15 @@ export const createApp = (): Application => {
   app.use(express.json());
   app.use(cookieParser());
 
+  // Anti-CSRF Token Middleware (Double Submit Cookie)
+  const { csrfMiddleware } = require('./middlewares/csrf.middleware');
+  app.use(csrfMiddleware);
+
+  // Expose endpoint for frontend to explicitly fetch/initialize the CSRF token if needed
+  app.get('/api/csrf-token', (req: Request, res: Response) => {
+    res.json({ status: 'ok', csrfToken: req.cookies['csrf-token'] });
+  });
+
   // Logging
   app.use(pinoHttp({ logger }));
 
