@@ -232,3 +232,14 @@ All services are **stateless** (JWT auth + Redis for shared state) → scale hor
 - [x] Implemented in code — see [PROGRESS.md](PROGRESS.md) for this area's exact status
 - [x] Tested / verified
 - [ ] Production-hardened (pre-launch items tracked in [`../CERTIFICATES_BEFORE_LAUNCH/`](../CERTIFICATES_BEFORE_LAUNCH/))
+
+---
+
+## 📱 Mobile client (`mobile/`)
+
+A React Native (Expo SDK 54 / expo-router) app that is a **fourth client** alongside the web
+frontend, admin console, and browser extension. It consumes the exact same APIs — `web-backend`
+(`/api/*`) for auth/stats/settings/social and `git-service` (`/api/*`) for sync/repos/problems — so
+there is no mobile-specific backend. Auth uses email magic-link → a Bearer JWT stored in secure
+storage (native cookie jar handles refresh). It runs on a device via Expo Go over the LAN. Details:
+[MOBILE_APP.md](MOBILE_APP.md).
