@@ -262,3 +262,23 @@ Full security blueprint: see the `*_SECURITY.md` docs in this folder.
 **Keep this file honest.** When a feature moves from 🟠/⛔ to ✅, update the row *in the same commit* that wires it.
 
 </div>
+
+---
+
+## 📱 Mobile app (`mobile/`) — Expo Go
+
+Feature-parity client mirroring the web app against the same backends (owner: Gaurav).
+
+| Feature | Status | Source |
+|---------|--------|--------|
+| Email magic-link login (real GitHub-linked account) | ✅ | `web-backend /api/auth/email*` |
+| Dashboard: totals, difficulty donut, per-platform bars, 12-month heatmap | ✅ | `GET /api/stats` |
+| Analytics: ratings, difficulty, topics, languages, activity | ✅ | `GET /api/stats` |
+| Recent submissions (all platforms, tappable) | ✅ | `git-service GET /api/problems` |
+| Repositories & Sync (with "Sync now") | ✅ | `git-service /api/repos`, `/api/sync*` |
+| Inbox + chat thread (send) | ✅ | `web-backend /api/messages*` |
+| Public profile, Settings (connections, auto-sync), Notifications, Connect | ✅ | web-backend |
+| GitHub OAuth sign-in | ⛔ | needs backend token-handoff (deep-link callback limitation) |
+| Problem detail (full question/solution) | 🟠 | stub — next phase |
+
+Full doc: [MOBILE_APP.md](MOBILE_APP.md).
