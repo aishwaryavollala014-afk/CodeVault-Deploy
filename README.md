@@ -386,7 +386,7 @@ npx expo start --lan          # scan the QR with the Expo Go app
 - [x] web-frontend: build real pages from the prototype *(dashboard/analytics/repositories/sync-status + public profile all wired to real data)*
 - [x] web-backend: CodeChef + HackerRank stats (aggregated in `stats.service.ts`)
 - [x] Unified multi‑platform dashboard *(all 4 platforms — LeetCode, Codeforces, CodeChef, HackerRank — aggregated)*
-- [ ] Extend extension full-code capture to CodeChef / HackerRank / Codeforces *(LeetCode done; next up)*
+- [x] Extend extension full-code capture to CodeChef / HackerRank / Codeforces *(code-complete — each mirrors the LeetCode full-code + `question.md` pattern via the platform's own submission endpoint; HackerRank + Codeforces verified pushing live, CodeChef built — final live re-check pending)*
 - [ ] Pricing / plans page (deferred)
 - [ ] AI explanation & next‑problem recommendation
 - [ ] Gamification (streaks, goals, shareable cards)
