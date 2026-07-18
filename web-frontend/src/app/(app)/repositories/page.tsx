@@ -11,6 +11,7 @@ import { RecentCommits } from "@/components/repositories/RecentCommits";
 import { RepositoryMapping, type RepoMapping } from "@/components/repositories/RepositoryMapping";
 
 import { platformName } from "@/constants/platforms";
+import { apiFetch } from "@/utils/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const GIT_URL = process.env.NEXT_PUBLIC_GIT_SERVICE_URL || "http://localhost:5050/api";
@@ -49,11 +50,11 @@ export default function RepositoriesPage() {
   // ── Load connections + basic repo map (manage view) ──
   const loadManageData = useCallback(() => {
     const h = headers();
-    fetch(`${API_URL}/platforms`, { headers: h, credentials: 'include' })
+    apiFetch(`${API_URL}/platforms`, { headers: h, credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: Conn[]) => setConnections(Array.isArray(rows) ? rows : []))
       .catch(() => setConnections([]));
-    fetch(`${API_URL}/github-repos`, { headers: h, credentials: 'include' })
+    apiFetch(`${API_URL}/github-repos`, { headers: h, credentials: 'include' })
       .then((r) => (r.ok ? r.json() : []))
       .then((rows: { platform: string; repoFullName: string; visibility?: string; defaultBranch?: string; folderConvention?: string; fileCount?: number }[]) => {
         const m: Record<string, typeof rows[0]> = {};
@@ -67,7 +68,7 @@ export default function RepositoriesPage() {
   const loadRepos = useCallback(async () => {
     const h = headers();
     try {
-      const res = await fetch(`${GIT_URL}/repos`, { headers: h, credentials: 'include' });
+      const res = await apiFetch(`${GIT_URL}/repos`, { headers: h, credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setRepos(data.items || []);
@@ -89,7 +90,7 @@ export default function RepositoriesPage() {
     try {
       const params = new URLSearchParams({ platform, limit: "30" });
       if (cursor) params.set("cursor", cursor);
-      const res = await fetch(`${GIT_URL}/problems?${params}`, { headers: h, credentials: 'include' });
+      const res = await apiFetch(`${GIT_URL}/problems?${params}`, { headers: h, credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         const items: ProblemFile[] = data.items || [];
@@ -122,7 +123,7 @@ export default function RepositoriesPage() {
     }
     setStatus((s) => ({ ...s, [platform]: "saving" }));
     try {
-      const res = await fetch(`${API_URL}/github-repos`, {
+      const res = await apiFetch(`${API_URL}/github-repos`, {
         method: "POST",
         credentials: 'include',
         headers: h,
@@ -155,7 +156,7 @@ export default function RepositoriesPage() {
     if (!selectedRepo) return;
     setSyncing(true);
     try {
-      await fetch(`${GIT_URL}/sync`, {
+      await apiFetch(`${GIT_URL}/sync`, {
         method: "POST",
         credentials: 'include',
         headers: h,
