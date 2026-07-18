@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { apiFetch } from "@/utils/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 const POLL_MS = 4000;
@@ -66,7 +67,7 @@ function MessagesInner() {
   const stickToBottom = useRef(true);
 
   const loadConversations = useCallback(() => {
-    fetch(`${API_URL}/messages`, { credentials: "include" })
+    apiFetch(`${API_URL}/messages`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) { setConversations(d.conversations || []); } })
       .catch(() => {})
@@ -74,7 +75,7 @@ function MessagesInner() {
   }, []);
 
   const loadChat = useCallback((handle: string) => {
-    fetch(`${API_URL}/messages/${encodeURIComponent(handle)}`, { credentials: "include" })
+    apiFetch(`${API_URL}/messages/${encodeURIComponent(handle)}`, { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!d) return;
@@ -126,7 +127,7 @@ function MessagesInner() {
     setSending(true);
     setDraft("");
     try {
-      const res = await fetch(`${API_URL}/messages/${encodeURIComponent(active)}`, {
+      const res = await apiFetch(`${API_URL}/messages/${encodeURIComponent(active)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
