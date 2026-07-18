@@ -71,6 +71,16 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
+  // Attach CSRF token on mutating requests
+  const mutatingMethods = ["POST", "PUT", "PATCH", "DELETE"];
+  const method = (options.method || "GET").toUpperCase();
+  if (mutatingMethods.includes(method) && typeof document !== "undefined") {
+    const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]*)/);
+    if (match && match[1]) {
+      headers.set("X-CSRF-Token", match[1]);
+    }
+  }
+
   const url = path.startsWith("http") ? path : `${API_URL}${path}`;
 
   let res = await fetch(url, {
