@@ -7,7 +7,7 @@
 </div>
 
 > New here? Start with **[FEATURES.md](FEATURES.md)** for what CodeVault does today, then **[ARCHITECTURE.md](ARCHITECTURE.md)** for how the pieces fit.
-> Service-level docs live in each service's own `README.md` (`web-backend/`, `git-service/`, `web-frontend/`, `browser-extension/`, `database/`).
+> Service-level docs live in each service's own `README.md` (`web-backend/`, `git-service/`, `web-frontend/`, `browser-extension/`, `mobile/`, `database/`).
 
 ---
 
@@ -23,6 +23,7 @@
 | [PROJECT_ANALYSIS.md](PROJECT_ANALYSIS.md) | Market/strengths/risks analysis + strategic next steps. |
 | [TEAM_PLAN.md](TEAM_PLAN.md) | Ownership split (Aishwarya ↔ Gaurav) and git workflow. |
 | [TECH_STACK.md](TECH_STACK.md) | Canonical stack + versions and upgrade rationale. |
+| [MOBILE_APP.md](MOBILE_APP.md) | **Mobile app (Expo Go)** — feature parity, auth, layout, and how to run it. |
 | [FAQ.md](FAQ.md) | Common questions about the product and approach. |
 
 ## 🏗 Architecture & build plans
