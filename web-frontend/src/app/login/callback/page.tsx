@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
+import { apiFetch } from "@/utils/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
@@ -33,7 +34,7 @@ function CallbackHandler() {
 
     const exchangeCode = async () => {
       try {
-        const res = await fetch(`${API_URL}/auth/github`, {
+        const res = await apiFetch(`${API_URL}/auth/github`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
