@@ -8,6 +8,7 @@ import { NetworkMonitor } from "@/components/NetworkMonitor";
 import { NotificationBell } from "@/components/NotificationBell";
 import { MessagesBadge } from "@/components/MessagesBadge";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
+import { apiFetch } from "@/utils/api";
 
 export default function AppLayout({
   children,
@@ -36,7 +37,7 @@ export default function AppLayout({
   const handleLogout = async () => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
     try {
-      await fetch(`${API_URL}/auth/logout`, {
+      await apiFetch(`${API_URL}/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
