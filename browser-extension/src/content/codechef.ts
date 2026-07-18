@@ -86,6 +86,10 @@ async function emit(problemCode: string, code: string, language: string): Promis
     url: `https://www.codechef.com/problems/${problemCode}`,
   };
   sendCapture(submission);
+  // Notify the health monitor that capture is working — resets degraded badge.
+  try {
+    chrome.runtime.sendMessage({ type: 'captureSuccess', platform: 'codechef' }).catch(() => {});
+  } catch { /* context invalidated */ }
   console.info(`[CodeVault] captured "${submission.title}" (${code.length} chars, ${language}) [cc]`);
 }
 
