@@ -29,10 +29,12 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction) 
     });
   }
 
-  // 2. Validate token on mutating requests (except pre-auth/exempt routes)
+  // 2. Validate token on mutating requests (except pre-auth/exempt routes or Bearer token auth)
   const isExempt = CSRF_EXEMPT_PREFIXES.some((p) => req.path.startsWith(p));
+  const isBearerAuth = req.headers.authorization?.startsWith('Bearer ');
   const mutatingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-  if (!isExempt && mutatingMethods.includes(req.method)) {
+  
+  if (!isExempt && !isBearerAuth && mutatingMethods.includes(req.method)) {
     const headerToken = req.headers['x-csrf-token'];
     if (!headerToken || headerToken !== token) {
       return res.status(403).json({
