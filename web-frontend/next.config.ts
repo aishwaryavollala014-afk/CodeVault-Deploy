@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   devIndicators: false,
 
   // Lean production image for Docker/Fly (bundles a minimal Node server).
-  output: "standalone",
 
   // Same-origin proxy for deployment: the browser only ever talks to this frontend's origin,
   // so the session cookie + CSRF work with no cross-domain headaches. In production set the
