@@ -9,12 +9,22 @@ const ACCESS_COOKIE = 'cv_access';
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 const ACCESS_COOKIE_MAX_AGE = 15 * 60 * 1000; // 15 minutes in ms
 
+// Cross-site hosting (frontend + backend on different sites, e.g. app.fly.dev vs api.fly.dev)
+// needs SameSite=None + Secure so the session cookie survives cross-origin requests.
+const CROSS_SITE = env.CROSS_SITE_COOKIES === 'true';
+const COOKIE_SECURE = env.NODE_ENV === 'production' || CROSS_SITE;
+const COOKIE_SAMESITE: 'strict' | 'lax' | 'none' = CROSS_SITE
+  ? 'none'
+  : env.NODE_ENV === 'production'
+    ? 'strict'
+    : 'lax';
+
 /** Set the refresh-token HttpOnly cookie on the response. */
 function setRefreshCookie(res: Response, refreshToken: string): void {
   res.cookie(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAMESITE,
     path: '/api/auth',  // only sent to auth endpoints
     maxAge: REFRESH_COOKIE_MAX_AGE,
   });
@@ -24,8 +34,8 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
 function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAMESITE,
     path: '/api/auth',
   });
 }
@@ -34,8 +44,8 @@ function clearRefreshCookie(res: Response): void {
 function setAccessCookie(res: Response, accessToken: string): void {
   res.cookie(ACCESS_COOKIE, accessToken, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAMESITE,
     path: '/api',  // sent to all API endpoints
     maxAge: ACCESS_COOKIE_MAX_AGE,
   });
@@ -45,8 +55,8 @@ function setAccessCookie(res: Response, accessToken: string): void {
 function clearAccessCookie(res: Response): void {
   res.clearCookie(ACCESS_COOKIE, {
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    secure: COOKIE_SECURE,
+    sameSite: COOKIE_SAMESITE,
     path: '/api',
   });
 }
