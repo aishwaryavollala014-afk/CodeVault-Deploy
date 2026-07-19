@@ -6,6 +6,7 @@ import Link from "next/link";
 import { PlatformChip } from "@/components/PlatformChip";
 import { CodeVaultLoader } from "@/components/CodeVaultLoader";
 import { PLATFORMS, problemUrlFor } from "@/constants/platforms";
+import { ExtensionInstallCard } from "@/components/ExtensionInstallCard";
 
 // dd/mm/yyyy
 function formatDate(tsSeconds: number): string {
@@ -248,6 +249,9 @@ export default function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      {/* EXTENSION INSTALL */}
+      <ExtensionInstallCard />
 
       {/* STAT ROW */}
       <section className="stats" aria-label="Key stats">
