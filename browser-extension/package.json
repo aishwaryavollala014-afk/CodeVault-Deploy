@@ -8,7 +8,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:zip": "npm run build && cd dist && rm -f ../../web-frontend/public/codevault-extension.zip && zip -rq ../../web-frontend/public/codevault-extension.zip . && echo zipped"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
