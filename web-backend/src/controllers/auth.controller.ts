@@ -90,6 +90,25 @@ export class AuthController {
     }
   }
 
+  static async googleCallback(req: Request, res: Response): Promise<void> {
+    try {
+      const { code, redirectUri } = req.body;
+      if (!code || typeof code !== 'string' || !redirectUri || typeof redirectUri !== 'string') {
+        res.status(400).json({ error: 'Authorization code and redirectUri are required' });
+        return;
+      }
+
+      const result = await AuthService.authenticateWithGoogle(code, redirectUri, req);
+
+      setRefreshCookie(res, result.refreshToken);
+      setAccessCookie(res, result.accessToken);
+      res.json(buildAuthResponse(result));
+    } catch (error: any) {
+      logger.error(error, 'Google Auth Controller Error');
+      res.status(500).json({ error: 'Internal server error during authentication' });
+    }
+  }
+
   static async me(req: Request, res: Response): Promise<void> {
     // req.user is guaranteed to exist because of requireAuth middleware
     res.json({ message: 'You are authenticated!', user: req.user });

@@ -11,6 +11,7 @@ const authLimit = rateLimit({ windowSec: 60, max: 20, keyPrefix: 'auth' }); // 2
 const refreshLimit = rateLimit({ windowSec: 60, max: 30, keyPrefix: 'auth-refresh' }); // 30 / min / IP
 
 router.post('/github', authLimit, AuthController.githubCallback);
+router.post('/google', authLimit, AuthController.googleCallback);
 router.post('/email', emailLimit, AuthController.requestEmailLogin);
 router.post('/email/verify', authLimit, AuthController.verifyEmailLogin);
 router.post('/refresh', refreshLimit, AuthController.refresh);

@@ -175,6 +175,99 @@ export class AuthService {
     }
   }
 
+  // Google OAuth — mirrors the GitHub flow. Users are matched by email, so a Google login with
+  // the same address lands on the same account as GitHub/email sign-in.
+  static async authenticateWithGoogle(
+    code: string,
+    redirectUri: string,
+    req: Request,
+  ): Promise<AuthResult> {
+    try {
+      // 1. Exchange the code for an access token (Google requires the exact redirect_uri used).
+      const params = new URLSearchParams({
+        client_id: env.GOOGLE_CLIENT_ID ?? '',
+        client_secret: env.GOOGLE_CLIENT_SECRET ?? '',
+        code,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      });
+      const tokenRes = await axios.post('https://oauth2.googleapis.com/token', params.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+      const accessToken = tokenRes.data.access_token as string | undefined;
+      if (!accessToken) throw new Error('Failed to get access token from Google');
+
+      // 2. Fetch the profile.
+      const infoRes = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const g = infoRes.data as { id: string; email?: string; name?: string; picture?: string };
+      if (!g.email) throw new Error('Google account has no email');
+      const email = g.email.toLowerCase();
+      const { cipher, iv } = encryptToken(accessToken);
+
+      // 3. Upsert User (by email) + OAuthIdentity.
+      const user = await adminPrisma.$transaction(async (tx) => {
+        let u = await tx.user.findFirst({ where: { email } });
+        if (u) {
+          u = await tx.user.update({
+            where: { id: u.id },
+            data: {
+              displayName: u.displayName || g.name || null,
+              avatarUrl: u.avatarUrl || g.picture || null,
+            },
+          });
+        } else {
+          const prefix = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+          let handle = prefix;
+          let n = 0;
+          while (await tx.user.findUnique({ where: { handle } })) {
+            n += 1;
+            handle = `${prefix}${n}`;
+          }
+          u = await tx.user.create({
+            data: {
+              email,
+              handle,
+              displayName: g.name ?? null,
+              avatarUrl: g.picture ?? null,
+              githubLogin: null,
+            },
+          });
+        }
+
+        await tx.oAuthIdentity.upsert({
+          where: { provider_providerUserId: { provider: 'google', providerUserId: String(g.id) } },
+          update: { accessTokenCipher: cipher, tokenIv: iv, scopes: ['openid', 'email', 'profile'] },
+          create: {
+            userId: u.id,
+            provider: 'google',
+            providerUserId: String(g.id),
+            accessTokenCipher: cipher,
+            tokenIv: iv,
+            scopes: ['openid', 'email', 'profile'],
+          },
+        });
+        return u;
+      });
+
+      const tokens = await this.createSession(user.id, req);
+      return {
+        ...tokens,
+        user: {
+          id: user.id,
+          handle: user.handle,
+          githubLogin: user.githubLogin,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+        },
+      };
+    } catch (error: any) {
+      logger.error({ err: error.message }, 'Google authentication failed');
+      throw new Error('Authentication failed');
+    }
+  }
+
   static async sendMagicLink(email: string): Promise<void> {
     try {
       const cleanEmail = email.trim().toLowerCase();
