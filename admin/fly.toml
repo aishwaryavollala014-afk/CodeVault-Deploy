@@ -1,0 +1,20 @@
+# CodeVault admin — Fly.io. See docs/DEPLOY.md.
+app = "codevault-admin"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 3100
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[env]
+  PORT = "3100"
+  NODE_ENV = "production"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
