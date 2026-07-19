@@ -1,0 +1,21 @@
+# CodeVault web-backend — Fly.io. See docs/DEPLOY.md.
+app = "codevault-backend"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  # Always-on: the extension + scheduled work must never hit a cold/stopped machine.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[env]
+  PORT = "4000"
+  NODE_ENV = "production"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
