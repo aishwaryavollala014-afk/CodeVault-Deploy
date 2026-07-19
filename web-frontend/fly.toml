@@ -3,6 +3,11 @@ app = "codevault"
 primary_region = "iad"
 
 [build]
+  # NEXT_PUBLIC_* is baked into the client bundle at BUILD time (not a runtime secret).
+  # "/api" is relative, so the browser hits this app's own origin → the same-origin proxy
+  # (see next.config.ts rewrites) forwards to web-backend. Domain-agnostic.
+  [build.args]
+    NEXT_PUBLIC_API_URL = "/api"
 
 [http_service]
   internal_port = 3000
