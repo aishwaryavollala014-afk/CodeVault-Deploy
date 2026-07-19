@@ -16,5 +16,7 @@ router.post('/email/verify', authLimit, AuthController.verifyEmailLogin);
 router.post('/refresh', refreshLimit, AuthController.refresh);
 router.post('/logout', requireAuth, AuthController.logout);
 router.get('/me', requireAuth, AuthController.me);
+// Extension token handoff — session cookie → long-lived JWT for the browser extension.
+router.get('/extension-token', authLimit, requireAuth, AuthController.extensionToken);
 
 export default router;
